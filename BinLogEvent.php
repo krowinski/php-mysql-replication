@@ -15,6 +15,7 @@ class BinLogEvent {
     public static $FLAGS;
     public static $EXTRA_DATA_LENGTH;
     public static $EXTRA_DATA;
+    public static $SCHEMA_LENGTH;
 
     public static function _init(BinLogPack $pack,$event_type) {
 

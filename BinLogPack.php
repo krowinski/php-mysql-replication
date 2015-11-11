@@ -53,14 +53,15 @@ class BinLogPack {
             return RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
 
 
-
-
-
-
-
-
         } elseif(self::$EVENT_TYPE == 31) {
             return RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE);
+        }elseif(self::$EVENT_TYPE == 30) {
+            return RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE);
+        }elseif(self::$EVENT_TYPE == 32) {
+            return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
+        }elseif(self::$EVENT_TYPE == 16) {
+            var_dump(bin2hex($pack),$this->readUint64());
+            //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }
 
 
@@ -125,6 +126,94 @@ class BinLogPack {
         return $a;
     }
 
+
+    public function read_int24()
+    {
+        list($a, $b, $c) = unpack("CCC", $this->read(3));
+
+        $res = $a | ($b << 8) | ($c << 16);
+        if ($res >= 0x800000)
+            $res -= 0x1000000;
+        return $res;
+    }
+
+    public function read_int24_be()
+    {
+        list($a, $b, $c) = unpack('CCC', $this->read(3));
+        $res = ($a << 16) | ($b << 8) | $c;
+        if ($res >= 0x800000)
+            $res -= 0x1000000;
+        return $res;
+    }
+
+    //
+    public function readUint8()
+    {
+        return unpack('C', $this->read(1))[1];
+    }
+
+    //
+    public function readUint16()
+    {
+        return unpack('S', $this->read(2))[1];
+    }
+
+    public function readUint24()
+    {
+        list($a, $b, $c) = unpack("CCC", $this->read(3));
+        return $a + ($b << 8) + ($c << 16);
+    }
+
+    //
+    public function readUint32()
+    {
+        return unpack('I', $this->read(4))[1];
+    }
+
+    public function readUint40()
+    {
+        list($a, $b) = unpack("CI", $this->read(5));
+        return $a + ($b << 8);
+    }
+
+    public function read_int40_be()
+    {
+        list($a, $b) = unpack("IC", $this->read(5));
+        return $b + ($a << 8);
+    }
+
+    //
+    public function readUint48()
+    {
+        list($a, $b, $c) = unpack("vvv", $this->read(6));
+        return $a + ($b << 16) + ($c << 32);
+    }
+
+    //
+    public function readUint56()
+    {
+        list($a, $b, $c) = unpack("CSI", $this->read(7));
+        return $a + ($b << 8) + ($c << 24);
+    }
+
+    /*
+     * 不支持unsigned long long，溢出
+     */
+    public function readUint64()
+    {
+        $d = $this->read(8);
+        $unpackArr = unpack('I2', $d);
+        //$data = unpack("C*", $d);
+        //$r = $data[1] + ($data[2] << 8) + ($data[3] << 16) + ($data[4] << 24);//+
+        //$r2= ($data[5]) + ($data[6] << 8) + ($data[7] << 16) + ($data[8] << 24);
+
+        return $unpackArr[1] + ($unpackArr[2] << 32);
+    }
+
+    public function readInt64()
+    {
+        return $this->readUint64();
+    }
     
     public function read_uint_by_size($size)
     {
@@ -152,7 +241,4 @@ class BinLogPack {
         return $this->read($length);
     }
 
-    public function readUint8() {
-         return unpack('C', $this->read(1))[1];
-    }
 }

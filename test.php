@@ -291,8 +291,8 @@ class mysqlc {
 
         self::excute("set @master_binlog_checksum= @@global.binlog_checksum");
 
-        $log_name = 'mysql-bin.000046';
-        $postion = 3393;
+        $log_name = 'mysql-bin.000054';
+        $postion = 120;
         $header = pack('l', 11 + strlen($log_name));
 
         // COM_BINLOG_DUMP
@@ -310,7 +310,7 @@ class mysqlc {
 
             self::$_pack = self::_readPacket();
             $binlog = BinLogPack::getInstance();
-            var_dump($binlog->init(self::$_pack));
+            $binlog->init(self::$_pack);
 
 
 
