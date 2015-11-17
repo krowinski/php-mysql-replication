@@ -47,6 +47,11 @@ class BinLogPack {
         self::$EVENT_INFO['size'] = $event_size = unpack('L', $this->read(4))[1];
         self::$EVENT_INFO['pos']  = $log_pos    = unpack('L', $this->read(4))[1];
         self::$EVENT_INFO['flag'] = $flags      = unpack('S', $this->read(2))[1];
+//echo '-------> '.($log_pos)."\n";
+
+        $event_size_without_header = $event_size -23;
+
+        echo 'type is->'.self::$EVENT_TYPE."\n";
 
 
         if (in_array(self::$EVENT_TYPE, [19])) {
@@ -60,8 +65,11 @@ class BinLogPack {
         }elseif(self::$EVENT_TYPE == 32) {
             return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }elseif(self::$EVENT_TYPE == 16) {
-            var_dump(bin2hex($pack),$this->readUint64());
+            //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
+        }elseif(self::$EVENT_TYPE == 4) {
+            //var_dump($this->readUint64(),$this->read($event_size_without_header-8));
+
         }
 
 
@@ -104,14 +112,13 @@ class BinLogPack {
         if($c < MyConst::UNSIGNED_CHAR_COLUMN) {
             return $c;
         } elseif($c == MyConst::UNSIGNED_SHORT_COLUMN) {
-            return self::unpackUint16($this->read(MyConst::UNSIGNED_SHORT_LENGTH));
+            return $this->unpackUint16($this->read(MyConst::UNSIGNED_SHORT_LENGTH));
 
         }elseif($c == MyConst::UNSIGNED_INT24_COLUMN) {
-            return self::unpackInt24($this->read(MyConst::UNSIGNED_INT24_LENGTH));
+            return $this->unpackInt24($this->read(MyConst::UNSIGNED_INT24_LENGTH));
         }
         elseif($c == MyConst::UNSIGNED_INT64_COLUMN) {
-            echo '1111111';exit;
-            //return self.unpack_int64(self.read(MyConst::UNSIGNED_INT64_LENGTH))
+            return $this->unpackInt64($this->read(MyConst::UNSIGNED_INT64_LENGTH));
         }
     }
 
@@ -126,12 +133,23 @@ class BinLogPack {
         return $a;
     }
 
+    public function unpackInt64($data) {
+        $a = (int)(ord($data[0]) & 0xFF);
+        $a += (int)((ord($data[1]) & 0xFF) << 8);
+        $a += (int)((ord($data[2]) & 0xFF) << 16);
+        $a += (int)((ord($data[3]) & 0xFF) << 24);
+        $a += (int)((ord($data[4]) & 0xFF) << 32);
+        $a += (int)((ord($data[5]) & 0xFF) << 40);
+        $a += (int)((ord($data[6]) & 0xFF) << 48);
+        $a += (int)((ord($data[7]) & 0xFF) << 56);
+        return $a;
+    }
 
     public function read_int24()
     {
-        list($a, $b, $c) = unpack("CCC", $this->read(3));
+        $data = unpack("CCC", $this->read(3));
 
-        $res = $a | ($b << 8) | ($c << 16);
+        $res = $data[1] | ($data[2] << 8) | ($data[3] << 16);
         if ($res >= 0x800000)
             $res -= 0x1000000;
         return $res;
@@ -139,8 +157,8 @@ class BinLogPack {
 
     public function read_int24_be()
     {
-        list($a, $b, $c) = unpack('CCC', $this->read(3));
-        $res = ($a << 16) | ($b << 8) | $c;
+        $data = unpack('CCC', $this->read(3));
+        $res = ($data[1] << 16) | ($data[2] << 8) | $data[3];
         if ($res >= 0x800000)
             $res -= 0x1000000;
         return $res;
@@ -160,8 +178,8 @@ class BinLogPack {
 
     public function readUint24()
     {
-        list($a, $b, $c) = unpack("CCC", $this->read(3));
-        return $a + ($b << 8) + ($c << 16);
+        $data = unpack("CCC", $this->read(3));
+        return $data[1] + ($data[2] << 8) + ($data[3] << 16);
     }
 
     //
@@ -172,28 +190,28 @@ class BinLogPack {
 
     public function readUint40()
     {
-        list($a, $b) = unpack("CI", $this->read(5));
-        return $a + ($b << 8);
+        $data = unpack("CI", $this->read(5));
+        return $data[1] + ($data[2] << 8);
     }
 
     public function read_int40_be()
     {
-        list($a, $b) = unpack("IC", $this->read(5));
-        return $b + ($a << 8);
+        $data = unpack("IC", $this->read(5));
+        return $data[2] + ($data[1] << 8);
     }
 
     //
     public function readUint48()
     {
-        list($a, $b, $c) = unpack("vvv", $this->read(6));
-        return $a + ($b << 16) + ($c << 32);
+        $data = unpack("vvv", $this->read(6));
+        return $data[1] + ($data[2] << 16) + ($data[3] << 32);
     }
 
     //
     public function readUint56()
     {
-        list($a, $b, $c) = unpack("CSI", $this->read(7));
-        return $a + ($b << 8) + ($c << 24);
+        $data = unpack("CSI", $this->read(7));
+        return $data[1] + ($data[2] << 8) + ($data[3] << 24);
     }
 
     /*

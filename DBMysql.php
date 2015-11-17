@@ -1,7 +1,5 @@
 <?PHP
 
-require 'DateTimeNamespace.class.php';
-
 define('SLOW_QUERY_MIN',1000);
 define('SLOW_QUERY_SAMPLE',10);
 
@@ -33,7 +31,7 @@ class Logger {
 }
 
 
-class DBMysqlNamespace {
+class DBMysql {
 
     /**
      * 已打开的db handle
@@ -140,7 +138,7 @@ class DBMysqlNamespace {
     /// @return FALSE表示执行失败， 否则返回执行的结果, 结果格式为一个数组，数组中每个元素都是mysqli_fetch_assoc的一条结果
     public static function query(&$handle, $sql) {
         do {
-            $tm = DateTimeNamespace::getMicrosecond();
+            $tm = TimeDate::getMicrosecond();
             if (($result = self::mysqliQueryApi($handle, $sql)) === FALSE){
                 break;
             }
@@ -150,7 +148,7 @@ class DBMysqlNamespace {
                 }
                 return array();
             }
-            $tm_used = intval( (DateTimeNamespace::getMicrosecond() - $tm) / 1000);
+            $tm_used = intval( (TimeDate::getMicrosecond() - $tm) / 1000);
             if( $tm_used > SLOW_QUERY_MIN) {
                 self::logWarn( "ms=$tm_used, SQL=$sql", 'mysqlns.slow' );
             }
@@ -175,10 +173,10 @@ class DBMysqlNamespace {
         if (!self::_checkHandle($handle))
             return FALSE;
         do {
-            $tm = DateTimeNamespace::getMicrosecond();
+            $tm = TimeDate::getMicrosecond();
             if (($result = self::mysqliQueryApi($handle, $sql)) === FALSE)
                 break;
-            $tm_used = intval( (DateTimeNamespace::getMicrosecond() - $tm) / 1000);
+            $tm_used = intval( (TimeDate::getMicrosecond() - $tm) / 1000);
             if( $tm_used > SLOW_QUERY_MIN) {
                 self::logWarn( "ms=$tm_used, SQL=$sql", 'mysqlns.slow' );
             }

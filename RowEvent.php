@@ -8,22 +8,9 @@
 class RowEvent extends BinLogEvent {
 
 
-    public static function _init(BinLogPack $pack, $event_type) {
+    public static function rowInit(BinLogPack $pack, $event_type) {
         parent::_init($pack, $event_type);
-
-        // http://dev.mysql.com/doc/internals/en/rows-event.html
-        // version2
-        // table_id ，php不支持 Q 64 pack
-        $a = (int)(ord(self::$PACK->read(1)) & 0xFF);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 8);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 16);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 24);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 32);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 40);
-        self::$TABLE_ID = $a;
-
-
-
+        self::$TABLE_ID = self::readTableId();
 
         if(in_array(self::$EVENT_TYPE,[30,31,32])) {
             self::$FLAGS    = unpack('S', self::$PACK->read(2))[1];
@@ -36,17 +23,23 @@ class RowEvent extends BinLogEvent {
             self::$FLAGS    = unpack('S', self::$PACK->read(2))[1];
         }
 
-        self::$SCHEMA_LENGTH = unpack("C", self::$PACK->read(1))[1];
+        #Body
+        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
     }
 
-    public static function tableMap(BinLogPack $pack, $event_type) {
-        self::_init($pack, $event_type);
 
+
+    public static function tableMap(BinLogPack $pack, $event_type) {
+        parent::_init($pack, $event_type);
+
+        self::$TABLE_ID = self::readTableId();
+
+        self::$FLAGS    = unpack('S', self::$PACK->read(2))[1];
 
         $data = [];
-//        $data['schema_length'] = unpack("C", $pack->read(1))[1];
+        $data['schema_length'] = unpack("C", $pack->read(1))[1];
 
-        $data['schema_name'] = $pack->read(self::$SCHEMA_LENGTH);
+        $data['schema_name'] = $pack->read($data['schema_length']);
 
         // 00
         self::$PACK->advance(1);
@@ -57,10 +50,10 @@ class RowEvent extends BinLogEvent {
         // 00
         self::$PACK->advance(1);
 
-        $number_of_columns = self::$PACK->readCodedBinary();
+        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
 
         //
-        $column_type_def   = self::$PACK->read($number_of_columns);
+        $column_type_def   = self::$PACK->read(self::$COLUMNS_NUM);
 
 
         self::$TABLE_MAP[self::$TABLE_ID]['schema_name'] = $data['schema_name'];
@@ -85,11 +78,8 @@ class RowEvent extends BinLogEvent {
 
 
         for($i=0;$i<strlen($column_type_def);$i++) {
-
             $type = ord($column_type_def[$i]);
-
             self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = Columns::parse($type, $colums[$i], self::$PACK);
-
 
         }
 
@@ -100,14 +90,14 @@ class RowEvent extends BinLogEvent {
     }
 
     public static function addRow(BinLogPack $pack, $event_type) {
-        self::_init($pack, $event_type);
+        self::rowInit($pack, $event_type);
 
         $result = [];
         // ？？？？
         //$result['extra_data'] = getData($data, );
 //        $result['columns_length'] = unpack("C", self::$PACK->read(1))[1];
         //$result['schema_name']   = getData($data, 29, 28+$result['schema_length'][1]);
-        $len = (int)((self::$SCHEMA_LENGTH + 7) / 8);
+        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
 
 
         $result['bitmap'] = self::$PACK->read($len);
@@ -123,14 +113,14 @@ class RowEvent extends BinLogEvent {
     }
 
     public static function delRow(BinLogPack $pack, $event_type) {
-        self::_init($pack, $event_type);
+        self::rowInit($pack, $event_type);
 
         $result = [];
         // ？？？？
         //$result['extra_data'] = getData($data, );
 //        $result['columns_length'] = unpack("C", self::$PACK->read(1))[1];
         //$result['schema_name']   = getData($data, 29, 28+$result['schema_length'][1]);
-        $len = (int)((self::$SCHEMA_LENGTH + 7) / 8);
+        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
 
 
         $result['bitmap'] = self::$PACK->read($len);
@@ -147,14 +137,14 @@ class RowEvent extends BinLogEvent {
 
     public static function updateRow(BinLogPack $pack, $event_type) {
 
-        self::_init($pack, $event_type);
+        self::rowInit($pack, $event_type);
 
         $result = [];
         // ？？？？
         //$result['extra_data'] = getData($data, );
 //        $result['columns_length'] = unpack("C", self::$PACK->read(1))[1];
         //$result['schema_name']   = getData($data, 29, 28+$result['schema_length'][1]);
-        $len = (int)((self::$SCHEMA_LENGTH + 7) / 8);
+        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
 
 
         $result['bitmap1'] = self::$PACK->read($len);
@@ -203,26 +193,24 @@ class RowEvent extends BinLogEvent {
     private static function _read_column_data($cols_bitmap, $len) {
         $values = [];
 
-        $l = (int)(($len * 8 + 7) / 8);
-
+        //$l = (int)(($len * 8 + 7) / 8);
+        $l = (int)((self::bitCount($cols_bitmap) + 7) / 8);
 
         # null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
         # See http://dev.mysql.com/doc/internals/en/rows-event.html
+
+
+
         $null_bitmap = self::$PACK->read($l);
 
-
-
         $nullBitmapIndex = 0;
-//        $nb_columns = len(self.columns)：
         foreach(self::$TABLE_MAP[self::$TABLE_ID]['fields'] as $i => $value) {
-//            echo $i.'------'.$value['type'] . "\n";
             $column = $value;
             $name = $value['name'];
             $unsigned = $value['unsigned'];
 
 
             if (self::BitGet($cols_bitmap, $i) == 0) {
-
                 $values[$name] = null;
                 continue;
             }
@@ -331,7 +319,7 @@ class RowEvent extends BinLogEvent {
         $config['host'] = '127.0.0.1';
         $config['port'] = '3307';
         $config['password'] = '123456';
-        $db  = DBMysqlNamespace::createDBHandle($config, 'zzq');
+        $db  = DBMysql::createDBHandle($config, 'zzq');
         $sql = "SELECT
 COLUMN_NAME, COLLATION_NAME, CHARACTER_SET_NAME,
 COLUMN_COMMENT, COLUMN_TYPE, COLUMN_KEY
@@ -339,7 +327,7 @@ FROM
 information_schema.columns
 WHERE
 table_schema = '{$schema}' AND table_name = '{$table}'";
-        $result = DBMysqlNamespace::query($db,$sql);
+        $result = DBMysql::query($db,$sql);
 
         return $result;
 

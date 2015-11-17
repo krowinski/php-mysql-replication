@@ -1,21 +1,14 @@
 <?php
 header("Content-type:text/html;charset=utf-8");
 
-require 'DBMysqlNamespace.php';
-require "FieldType.php";
-require "BinLogPack.php";
-require "BinLogEvent.php";
-require "RowEvent.php";
-require "Columns.php";
-
-
-function getData($data, $s , $e) {
-    $n='';
-    for($i=$s;$i<=$e;$i++) {
-        $n .= $data[$i];
-    }
-    return $n;
-}
+require_once 'TimeDate.php';
+require_once 'DBMysql.php';
+require_once "FieldType.php";
+require_once "BinLogPack.php";
+require_once "BinLogEvent.php";
+require_once "RowEvent.php";
+require_once "EventType.php";
+require_once "Columns.php";
 
 class MyConst {
     # Constants from PyMYSQL source code
@@ -93,10 +86,8 @@ class mysqlc {
     private static $_connection_id;
     private static $_character_set;
 
-    private static $_table_map;
     private static $_pack;
     private static $_pack_key = 0;
-    private static $_event_type;
 
     public function __construct($user, $pass, $port, $db) {
         self::$_user = $user;
@@ -291,8 +282,8 @@ class mysqlc {
 
         self::excute("set @master_binlog_checksum= @@global.binlog_checksum");
 
-        $log_name = 'mysql-bin.000054';
-        $postion = 120;
+        $log_name = 'mysql-bin.000061';
+        $postion = 4;
         $header = pack('l', 11 + strlen($log_name));
 
         // COM_BINLOG_DUMP
@@ -314,164 +305,9 @@ class mysqlc {
 
 
 
-
-
-
-
-/*
-
-            $real = [];
-            if (in_array(self::$_event_type, [19, 31, 30, 32])) {
-                // http://dev.mysql.com/doc/internals/en/rows-event.html
-                // version2
-                // table_id ，php不支持 Q 64 pack
-                $a = (int)(ord(Pack::read(1)) & 0xFF);
-                $a += (int)((ord(Pack::read(1)) & 0xFF) << 8);
-                $a += (int)((ord(Pack::read(1)) & 0xFF) << 16);
-                $a += (int)((ord(Pack::read(1)) & 0xFF) << 24);
-                $a += (int)((ord(Pack::read(1)) & 0xFF) << 32);
-                $a += (int)((ord(Pack::read(1)) & 0xFF) << 40);
-                $result['table_id'] = $a;
-
-                $flags = unpack('S', Pack::read(2))[1];
-
-
-
-                // TABLE_MAP_EVENT
-                if(self::$_event_type == 19) {
-
-                    var_dump(bin2hex(self::$_pack));//exit;
-                    $real = self::_tableMap($result['table_id']);
-                    var_dump(self::$_table_map);
-                } elseif(self::$_event_type == 31) {
-                    $real = self::_updateEvent();
-                }
-
-
-                var_dump(array_merge($result,$real));
-
-            }
-*/
-
-
         }
     }
 
-    private static function _tableMap($tableId) {
-
-        if(isset(self::$_table_map[$tableId]['init']) && self::$_table_map[$tableId]['init']  === true)
-            //return;
-
-        $data = [];
-        $data['schema_length'] = unpack("C", Pack::read(1))[1];
-
-        $data['schema_name'] = Pack::read($data['schema_length']);
-
-        // 00
-        Pack::advance(1);
-
-        $data['table_length'] = unpack("C", Pack::read(1))[1];
-        $data['table_name'] = Pack::read($data['table_length']);
-
-        // 00
-        Pack::advance(1);
-
-        $number_of_columns = Pack::readCodedBinary();
-
-        //
-        $column_type_def   = Pack::read($number_of_columns);
-        $columns=[];
-        self::$_table_map[$tableId]['schema_name'] = $data['schema_name'];
-        self::$_table_map[$tableId]['table_name'] = $data['table_name'];
-
-
-        for($i=0;$i<strlen($column_type_def);$i++) {
-            self::$_table_map[$tableId]['fields'][$i]['type'] = ord($column_type_def[$i]);
-
-
-        }
-
-        //var_dump(self::$_table_map);return;
-
-
-
-
-
-        self::$_table_map[$tableId]['init'] = true;
-
-        self::_readCodedBinary();
-
-        //
-
-        // fields 相应属性
-        self::getFields($data['schema_name'], $data['table_name'], $tableId);
-
-
-
-
-
-        return $data;
-
-    }
-
-    private static function _parseColumnDefinition() {
-
-
-
-    }
-
-    private static function _updateEvent() {
-        $result = [];
-        $result['extra_length'] = unpack('S', Pack::read(2));
-        // ？？？？
-        //$result['extra_data'] = getData($data, );
-        $result['columns_length'] = unpack("C", Pack::read(1))[1];
-        //$result['schema_name']   = getData($data, 29, 28+$result['schema_length'][1]);
-        $len = (int)(($result['columns_length'] + 7) / 8);
-
-
-        $result['bitmap1'] = bin2hex(Pack::read($len));
-        if (self::$_event_type == 31) {
-            $result['bitmap2'] = bin2hex(Pack::read($len));
-        }
-
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $l = (int)(($len * 8 + 7) / 8);
-        $result['null_bit'] = Pack::read($l);
-        return $result;
-    }
-
-
-
-    public static function update() {
-
-    }
-
-
-    /**
-     * Read a 'Length Coded Binary' number from the data buffer.
-     * Length coded numbers can be anywhere from 1 to 9 bytes depending
-     * on the value of the first byte.
-     * From PyMYSQL source code
-     */
-    private static function _readCodedBinary() {
-        $c = ord(Pack::read(1));
-        if($c == MyConst::NULL_COLUMN) {
-            return '';
-        }
-        if($c < MyConst::UNSIGNED_CHAR_COLUMN) {
-            return $c;
-        } elseif($c == MyConst::UNSIGNED_SHORT_COLUMN) {
-            return self::unpackUint16(Pack::read(MyConst::UNSIGNED_SHORT_LENGTH));
-
-        }elseif($c == MyConst::UNSIGNED_INT24_COLUMN) {
-            return self::unpackUint24(Pack::read(MyConst::UNSIGNED_INT24_LENGTH));
-        }
-        elseif($c == MyConst::UNSIGNED_INT64_COLUMN) {
-            echo '1111111';exit;
-            //return self.unpack_int64(self.read(MyConst::UNSIGNED_INT64_LENGTH))
-        }
-    }
 
     public static function unpackUint16($data) {
         return unpack("S",$data[0] . $data[1])[1];
@@ -484,45 +320,7 @@ class mysqlc {
         return $a;
     }
 
-    private static function getFields($schema, $table, $tableId) {
-        $config['username'] = 'root';
-        $config['host'] = '127.0.0.1';
-        $config['port'] = '3307';
-        $config['password'] = '123456';
-        $db  = DBMysqlNamespace::createDBHandle($config, 'zzq');
-        $sql = "SELECT
-COLUMN_NAME, COLLATION_NAME, CHARACTER_SET_NAME,
-COLUMN_COMMENT, COLUMN_TYPE, COLUMN_KEY
-FROM
-information_schema.columns
-WHERE
-table_schema = '{$schema}' AND table_name = '{$table}'";
-        $result = DBMysqlNamespace::query($db,$sql);
-
-        foreach($result as $key => $value) {
-
-            $dType = self::$_table_map[$tableId]['fields'][$key];
-            //
-            $type = $value['COLUMN_TYPE'];
-            //
-
-            $unsigned = stripos($type, 'unsigned') === false ? false : true;
-
-
-            self::$_table_map[$tableId]['fields'][$key] = $value;
-        }
-
-
-    }
-
 }
-
-//$result = sha1($pass, true) ^ sha1('^rA/c&4oS5L]n2NrqbxT' . sha1(sha1($pass, true), true),true);
-//var_dump(bin2hex($result));exit;
-
-
-//var_dump($result);exit;
-
 
 
 $mysql = new mysqlc('root', '123456', 3307, 'mysql');
