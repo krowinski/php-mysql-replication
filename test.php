@@ -1,14 +1,17 @@
 <?php
 header("Content-type:text/html;charset=utf-8");
 
+require_once "Config.php";
 require_once 'TimeDate.php';
 require_once 'DBMysql.php';
+require_once "DbHelper.php";
 require_once "FieldType.php";
 require_once "BinLogPack.php";
 require_once "BinLogEvent.php";
 require_once "RowEvent.php";
 require_once "EventType.php";
 require_once "Columns.php";
+require_once "Command.php";
 
 class MyConst {
     # Constants from PyMYSQL source code
@@ -80,6 +83,7 @@ class mysqlc {
     private static $_pass;
     private static $_port;
     private static $_db;
+    private static $_host;
 
     private static $_protocol_version;
     private static $_server_version;
@@ -89,11 +93,31 @@ class mysqlc {
     private static $_pack;
     private static $_pack_key = 0;
 
-    public function __construct($user, $pass, $port, $db) {
-        self::$_user = $user;
-        self::$_pass = $pass;
-        self::$_port = $port;
-        self::$_db   = $db;
+    // 日志pos file
+    private static $_pos;
+    private static $_file;
+
+    // 数据库配置 获取master binlog pos、file、checksum...
+    public static $DB_CONFIG;
+
+
+    /**
+     * @param int $pos log默认开始位置
+     * @param null $file
+     */
+    public function __construct($pos = 4, $file = null) {
+
+
+        // 初始化日志位置
+        if($pos) self::$_pos = $pos;
+        if($file) self::$_file = $file;
+
+        // 认证auth
+        self::$_host = Config::$DB_CONFIG['host'];
+        self::$_user = Config::$DB_CONFIG['username'];
+        self::$_pass = Config::$DB_CONFIG['password'];
+        self::$_port = Config::$DB_CONFIG['port'];
+        self::$_db   = Config::$DB_CONFIG['db_name'];
 
         self::$_socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         socket_set_block(self::$_socket);
@@ -112,7 +136,7 @@ class mysqlc {
 
 
     private function _connect() {
-        socket_connect(self::$_socket, 'localhost', 3307);
+        socket_connect(self::$_socket, self::$_host, self::$_port);
         //
         self::_serverInfo();
         self::auth();
@@ -257,18 +281,6 @@ class mysqlc {
     }
 
 
-    private static function _packRead($length) {
-
-        $n='';
-        for($i = self::$_pack_key;$i<self::$_pack_key+$length;$i++) {
-            $n .= self::$_pack[$i];
-        }
-
-        self::$_pack_key += $length;
-
-        return $n;
-    }
-
     public static function excute($sql) {
         $chunk_size = strlen($sql) + 1;
         $prelude = pack('LC',$chunk_size, 0x03);
@@ -280,31 +292,38 @@ class mysqlc {
     public static function getBinlogStream()
     {
 
-        self::excute("set @master_binlog_checksum= @@global.binlog_checksum");
+        // checksum
+        if(DbHelper::isCheckSum()){
+            self::excute("set @master_binlog_checksum= @@global.binlog_checksum");
+            //self::_readPacket();
+        }
 
-        $log_name = 'mysql-bin.000061';
-        $postion = 4;
-        $header = pack('l', 11 + strlen($log_name));
+
+        // 开始读取的二进制日志位置
+        if(!self::$_file) {
+            $logInfo = DbHelper::getPos();
+            self::$_file = $logInfo['File'];
+            if(!self::$_pos)
+             self::$_pos  = $logInfo['Position'];
+        }
+
+        $header   = pack('l', 11 + strlen(self::$_file));
 
         // COM_BINLOG_DUMP
-        $data = $header . chr(0x12);
-        $data .= pack('L', 4);
+        $data = $header . chr(Command::COM_BINLOG_DUMP);
+        $data .= pack('L', self::$_pos);
         $data .= pack('s', 0);
         $data .= pack('L', 3);
-        $data .= $log_name;
+        $data .= self::$_file;
 
         self::_write($data);
 
         self::_readPacket();
 
         while (1) {
-
             self::$_pack = self::_readPacket();
             $binlog = BinLogPack::getInstance();
             $binlog->init(self::$_pack);
-
-
-
         }
     }
 
@@ -323,6 +342,5 @@ class mysqlc {
 }
 
 
-$mysql = new mysqlc('root', '123456', 3307, 'mysql');
+$mysql = new mysqlc();
 mysqlc::getBinlogStream();
-//var_dump(mysqlc::read(400));

@@ -74,7 +74,7 @@ class RowEvent extends BinLogEvent {
 
 
         // fields 相应属性
-        $colums = self::getFields($data['schema_name'], $data['table_name']);
+        $colums = DbHelper::getFields($data['schema_name'], $data['table_name']);
 
 
         for($i=0;$i<strlen($column_type_def);$i++) {
@@ -311,27 +311,6 @@ class RowEvent extends BinLogEvent {
         }
 
         return $values;
-    }
-
-
-    private static function getFields($schema, $table) {
-        $config['username'] = 'root';
-        $config['host'] = '127.0.0.1';
-        $config['port'] = '3307';
-        $config['password'] = '123456';
-        $db  = DBMysql::createDBHandle($config, 'zzq');
-        $sql = "SELECT
-COLUMN_NAME, COLLATION_NAME, CHARACTER_SET_NAME,
-COLUMN_COMMENT, COLUMN_TYPE, COLUMN_KEY
-FROM
-information_schema.columns
-WHERE
-table_schema = '{$schema}' AND table_name = '{$table}'";
-        $result = DBMysql::query($db,$sql);
-
-        return $result;
-
-
     }
 
 }
