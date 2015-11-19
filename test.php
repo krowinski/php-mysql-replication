@@ -207,6 +207,8 @@ class mysqlc {
         //capability_flag_1 (2) -- lower 2 bytes of the Protocol::CapabilityFlags (optional)
         $i = $i + 2;
 
+
+
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
         self::$_character_set = $pack[$i];
         $i++;
@@ -216,6 +218,7 @@ class mysqlc {
 
         //capability_flags_2 (2) -- upper 2 bytes of the Protocol::CapabilityFlags
         $i = $i + 2;
+
 
         //auth_plugin_data_len (1) -- length of the combined auth_plugin_data, if auth_plugin_data_len is > 0
         $salt_len = ord($pack[$i]);
@@ -342,5 +345,5 @@ class mysqlc {
 }
 
 
-$mysql = new mysqlc();
+$mysql = new mysqlc(4,'mysql-bin.000069');
 mysqlc::getBinlogStream();

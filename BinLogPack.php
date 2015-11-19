@@ -45,12 +45,14 @@ class BinLogPack {
         self::$EVENT_INFO['type'] = self::$EVENT_TYPE = unpack('C', $this->read(1))[1];
         self::$EVENT_INFO['id']   = $server_id  = unpack('L', $this->read(4))[1];
         self::$EVENT_INFO['size'] = $event_size = unpack('L', $this->read(4))[1];
-        self::$EVENT_INFO['pos']  = $log_pos    = unpack('L', $this->read(4))[1];
+        //position of the next event
+        self::$EVENT_INFO['pos']  = $log_pos    = unpack('L', $this->read(4))[1];//
         self::$EVENT_INFO['flag'] = $flags      = unpack('S', $this->read(2))[1];
 
         $event_size_without_header = $event_size -23;
 
-        echo 'type is->'.self::$EVENT_TYPE."\n";
+        echo 'next pos -> '.$log_pos;
+        echo ' --  typeEvent -> '.self::$EVENT_TYPE."\n";
 
 
         if (in_array(self::$EVENT_TYPE, [19])) {
@@ -67,7 +69,8 @@ class BinLogPack {
             //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }elseif(self::$EVENT_TYPE == 4) {
-            var_dump($this->readUint64(),$this->read($event_size_without_header-8));
+            echo 'pos -> '.$this->readUint64()."\n";
+            echo 'filename -> '.$this->read($event_size_without_header-8)."\n";
 
         }
 
