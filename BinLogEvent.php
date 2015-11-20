@@ -9,7 +9,12 @@ class BinLogEvent {
 
 
     public static $EVENT_TYPE;
+
     public static $TABLE_ID;
+    public static $TABLE_NAME;
+
+    public static $SCHEMA_NAME;
+
     public static $TABLE_MAP;
     public static $PACK;
     public static $FLAGS;

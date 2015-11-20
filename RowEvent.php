@@ -12,7 +12,7 @@ class RowEvent extends BinLogEvent {
         parent::_init($pack, $event_type);
         self::$TABLE_ID = self::readTableId();
 
-        if(in_array(self::$EVENT_TYPE,[30,31,32])) {
+        if(in_array(self::$EVENT_TYPE,[ConstEventType::DELETE_ROWS_EVENT_V2,ConstEventType::WRITE_ROWS_EVENT_V2,ConstEventType::UPDATE_ROWS_EVENT_V2])) {
             self::$FLAGS    = unpack('S', self::$PACK->read(2))[1];
 
             self::$EXTRA_DATA_LENGTH = unpack('S', self::$PACK->read(2))[1];
@@ -39,13 +39,13 @@ class RowEvent extends BinLogEvent {
         $data = [];
         $data['schema_length'] = unpack("C", $pack->read(1))[1];
 
-        $data['schema_name'] = $pack->read($data['schema_length']);
+        $data['schema_name'] = self::$SCHEMA_NAME = $pack->read($data['schema_length']);
 
         // 00
         self::$PACK->advance(1);
 
         $data['table_length'] = unpack("C", self::$PACK->read(1))[1];
-        $data['table_name'] = $pack->read($data['table_length']);
+        $data['table_name'] = self::$TABLE_NAME = $pack->read($data['table_length']);
 
         // 00
         self::$PACK->advance(1);
@@ -55,20 +55,19 @@ class RowEvent extends BinLogEvent {
         //
         $column_type_def   = self::$PACK->read(self::$COLUMNS_NUM);
 
+        // 避免重复读取 表信息
+        if(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['table_id'] == self::$TABLE_ID)
+            return $data;
 
-        self::$TABLE_MAP[self::$TABLE_ID]['schema_name'] = $data['schema_name'];
-        self::$TABLE_MAP[self::$TABLE_ID]['table_name'] = $data['table_name'];
-
-
-
-
-        //var_dump(self::$_table_map);return;
-
-
-
+        self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME] = array(
+            'schema_name' => $data['schema_name'],
+            'table_name'  => $data['table_name'],
+            'table_id'    => self::$TABLE_ID
+        );
 
 
-        self::$TABLE_MAP[self::$TABLE_ID]['init'] = true;
+
+
 
         self::$PACK->readCodedBinary();
 
@@ -79,7 +78,7 @@ class RowEvent extends BinLogEvent {
 
         for($i=0;$i<strlen($column_type_def);$i++) {
             $type = ord($column_type_def[$i]);
-            self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = Columns::parse($type, $colums[$i], self::$PACK);
+            self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'][$i] = Columns::parse($type, $colums[$i], self::$PACK);
 
         }
 
@@ -102,14 +101,9 @@ class RowEvent extends BinLogEvent {
 
         $result['bitmap'] = self::$PACK->read($len);
 
-
-
         //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
         $value['now'] = self::_read_column_data($result['bitmap'],$len);
-
-        var_dump($value);
-
-        return $result;
+        return $value;
     }
 
     public static function delRow(BinLogPack $pack, $event_type) {
@@ -130,9 +124,7 @@ class RowEvent extends BinLogEvent {
         //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
         $value['del'] = self::_read_column_data($result['bitmap'],$len);
 
-        var_dump($value);
-
-        return $result;
+        return $value;
     }
 
     public static function updateRow(BinLogPack $pack, $event_type) {
@@ -156,9 +148,8 @@ class RowEvent extends BinLogEvent {
         $value['beform'] = self::_read_column_data($result['bitmap1'],$len);
         $value['after'] = self::_read_column_data($result['bitmap2'],$len);
 
-        var_dump($value);
 
-        return $result;
+        return $value;
     }
 
     public static function BitGet($bitmap, $position) {
@@ -204,7 +195,7 @@ class RowEvent extends BinLogEvent {
         $null_bitmap = self::$PACK->read($l);
 
         $nullBitmapIndex = 0;
-        foreach(self::$TABLE_MAP[self::$TABLE_ID]['fields'] as $i => $value) {
+        foreach(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'] as $i => $value) {
             $column = $value;
             $name = $value['name'];
             $unsigned = $value['unsigned'];
@@ -278,11 +269,12 @@ class RowEvent extends BinLogEvent {
                         datetime.datetime.fromtimestamp(
                             self::$PACK->read_int_be_by_size(4)), column)
             */
-            elseif ($column['type'] == FieldType::LONGLONG)
+            elseif ($column['type'] == FieldType::LONGLONG) {
                 if ($unsigned)
                     $values[$name] = self::$PACK->readUint64();
                 else
                     $values[$name] = self::$PACK->readInt64();
+            }
             /*
             elseif ($column['type'] == FieldType::YEAR:
                 $values[$name] = self::$PACK->read_uint8() + 1900

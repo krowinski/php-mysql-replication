@@ -22,11 +22,11 @@ class DBConstNamespace {
 class Logger {
 
     public static function logError($message, $category ) {
-        file_put_contents('nuomi_error.log',$category . '|' . date('Y-m-d H:i:s') . '|'. $message . "\n", FILE_APPEND);
+        file_put_contents('error.log',$category . '|' . date('Y-m-d H:i:s') . '|'. $message . "\n", FILE_APPEND);
     }
 
     public static function logWarn($message, $category ) {
-        file_put_contents('nuomi_warm.log', $category . '|' .date('Y-m-d H:i:s') .'|'. $message . "\n", FILE_APPEND);
+        file_put_contents('warm.log', $category . '|' .date('Y-m-d H:i:s') .'|'. $message . "\n", FILE_APPEND);
     }
 }
 

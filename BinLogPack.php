@@ -1,5 +1,6 @@
 <?php
 /**
+ * 解析binlog
  * Created by PhpStorm.
  * User: baidu
  * Date: 15/11/7
@@ -26,7 +27,7 @@ class BinLogPack {
     }
 
 
-    public function init($pack) {
+    public function init($pack, $checkSum = true) {
 
         if(!self::$_instance) {
             self::$_instance = new self();
@@ -49,33 +50,39 @@ class BinLogPack {
         self::$EVENT_INFO['pos']  = $log_pos    = unpack('L', $this->read(4))[1];//
         self::$EVENT_INFO['flag'] = $flags      = unpack('S', $this->read(2))[1];
 
-        $event_size_without_header = $event_size -23;
+        $event_size_without_header = $checkSum === true ? ($event_size -23) : $event_size - 19;
 
         echo 'next pos -> '.$log_pos;
         echo ' --  typeEvent -> '.self::$EVENT_TYPE."\n";
 
 
-        if (in_array(self::$EVENT_TYPE, [19])) {
-            return RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
-
-
-        } elseif(self::$EVENT_TYPE == 31) {
+        if (self::$EVENT_TYPE == ConstEventType::TABLE_MAP_EVENT) {
+            RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
+            return ;
+        } elseif(in_array(self::$EVENT_TYPE,[ConstEventType::UPDATE_ROWS_EVENT_V2,ConstEventType::UPDATE_ROWS_EVENT_V1])) {
             return RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE);
-        }elseif(self::$EVENT_TYPE == 30) {
+        }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2])) {
             return RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE);
-        }elseif(self::$EVENT_TYPE == 32) {
+        }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2])) {
             return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }elseif(self::$EVENT_TYPE == 16) {
+            return;
             //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }elseif(self::$EVENT_TYPE == 4) {
+            return;
             echo 'pos -> '.$this->readUint64()."\n";
             echo 'filename -> '.$this->read($event_size_without_header-8)."\n";
+
+        }elseif(self::$EVENT_TYPE == ConstEventType::GTID_LOG_EVENT) {
+            return;
 
         }
 
 
     }
+
+//    private function
 
     public function read($length) {
         $length = (int)$length;
@@ -108,19 +115,19 @@ class BinLogPack {
 
     public function readCodedBinary(){
         $c = ord($this->read(1));
-        if($c == MyConst::NULL_COLUMN) {
+        if($c == ConstMy::NULL_COLUMN) {
             return '';
         }
-        if($c < MyConst::UNSIGNED_CHAR_COLUMN) {
+        if($c < ConstMy::UNSIGNED_CHAR_COLUMN) {
             return $c;
-        } elseif($c == MyConst::UNSIGNED_SHORT_COLUMN) {
-            return $this->unpackUint16($this->read(MyConst::UNSIGNED_SHORT_LENGTH));
+        } elseif($c == ConstMy::UNSIGNED_SHORT_COLUMN) {
+            return $this->unpackUint16($this->read(ConstMy::UNSIGNED_SHORT_LENGTH));
 
-        }elseif($c == MyConst::UNSIGNED_INT24_COLUMN) {
-            return $this->unpackInt24($this->read(MyConst::UNSIGNED_INT24_LENGTH));
+        }elseif($c == ConstMy::UNSIGNED_INT24_COLUMN) {
+            return $this->unpackInt24($this->read(ConstMy::UNSIGNED_INT24_LENGTH));
         }
-        elseif($c == MyConst::UNSIGNED_INT64_COLUMN) {
-            return $this->unpackInt64($this->read(MyConst::UNSIGNED_INT64_LENGTH));
+        elseif($c == ConstMy::UNSIGNED_INT64_COLUMN) {
+            return $this->unpackInt64($this->read(ConstMy::UNSIGNED_INT64_LENGTH));
         }
     }
 

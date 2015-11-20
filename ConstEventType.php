@@ -5,7 +5,7 @@
  * Date: 15/11/16
  * Time: 上午11:36
  */
-class EventType {
+class ConstEventType {
 
     const UNKNOWN_EVENT    = 0,
     START_EVENT_V3         = 1,

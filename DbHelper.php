@@ -24,7 +24,7 @@ class DbHelper {
                 WHERE
                 table_schema = '{$schema}' AND table_name = '{$table}'";
         $result = DBMysql::query($db,$sql);
-
+        DBMysql::releaseDBHandle($db);
         return $result;
     }
 
@@ -35,7 +35,8 @@ class DbHelper {
     public static function isCheckSum() {
         $db  = DBMysql::createDBHandle(Config::$DB_CONFIG, Config::$DB_CONFIG['db_name']);
         $sql = "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM'";
-        $res =DBMysql::getRow($db,$sql);
+        $res = DBMysql::getRow($db,$sql);
+        DBMysql::releaseDBHandle($db);
         if($res['Value'] == 'NONE') return false;
         return true;
     }
@@ -45,8 +46,10 @@ class DbHelper {
      * @return FALSE表示执行失败
      */
     public static function getPos() {
-        $db  = DBMysql::createDBHandle(Config::$DB_CONFIG, Config::$DB_CONFIG['db_name']);
-        $sql = "SHOW MASTER STATUS";
-        return DBMysql::getRow($db,$sql);
+        $db     = DBMysql::createDBHandle(Config::$DB_CONFIG, Config::$DB_CONFIG['db_name']);
+        $sql    = "SHOW MASTER STATUS";
+        $result = DBMysql::getRow($db,$sql);
+        DBMysql::releaseDBHandle($db);
+        return $result;
     }
 }
