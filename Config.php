@@ -8,10 +8,10 @@
 class Config {
 
     public static $DB_CONFIG = array(
-        'username' => 'slave',
+        'username' => 'root',
         'host'     => '127.0.0.1',
         'port'     => '3307',
-        'password' => 'shiyiya_123!@#',
+        'password' => '123456',
         'db_name'  => 'zzq'
     );
 
