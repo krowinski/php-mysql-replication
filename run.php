@@ -1,6 +1,4 @@
 <?php
-header("Content-type:text/html;charset=utf-8");
-
 require_once "Config.php";
 require_once 'TimeDate.php';
 require_once 'DBMysql.php';
@@ -45,8 +43,10 @@ class mysqlc {
     private static $_GTID;
 
     /**
-     * @param int $pos log默认开始位置
-     * @param null $file
+     * @param int $pos  开始日志position 默认从4开始
+     * @param null $file 开始文件 mysql-bin.000070，默认从最新更新文件
+     * @param bool|false $gtid
+     * @param string $slave_id
      */
     public function __construct($pos = 4, $file = null, $gtid = false, $slave_id = '') {
 
@@ -165,6 +165,8 @@ class mysqlc {
             //self::_readPacket();
         }
 
+        self::_writeRegisterSlaveCommand();
+
         // 开始读取的二进制日志位置
         if(!self::$_FILE) {
             $logInfo = DbHelper::getPos();
@@ -184,7 +186,12 @@ class mysqlc {
 
         self::_write($data);
 
-        self::_readPacket();
+        //
+        $result = self::_readPacket();
+        $msg    = AuthPack::success($result);
+        if($msg['status'] === false) {
+            var_export($msg);exit;
+        }
 
         while (1) {
             self::$_PACK = self::_readPacket();
@@ -194,8 +201,32 @@ class mysqlc {
                 var_export($result);
         }
     }
+
+    private static function _writeRegisterSlaveCommand() {
+        $header   = pack('l', 18);
+
+        // COM_BINLOG_DUMP
+        $data  = $header . chr(ConstCommand::COM_REGISTER_SLAVE);
+        $data .= pack('L', self::$_SLAVE_SERVER_ID);
+        $data .= chr(0);
+        $data .= chr(0);
+        $data .= chr(0);
+
+        $data .= pack('s', '');
+
+        $data .= pack('L', 0);
+        $data .= pack('L', 1);
+
+        self::_write($data);
+
+        $result = self::_readPacket();
+        $msg    = AuthPack::success($result);
+        if($msg['status'] === false) {
+            var_export($msg);exit;
+        }
+    }
 }
 
 
-$mysql = new mysqlc(4,'mysql-bin.000070');
+$mysql = new mysqlc(4,'mysql-bin.000060');
 mysqlc::getBinlogStream();

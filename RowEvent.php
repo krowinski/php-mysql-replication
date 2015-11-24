@@ -202,6 +202,7 @@ class RowEvent extends BinLogEvent {
 
 
             if (self::BitGet($cols_bitmap, $i) == 0) {
+                exit;
                 $values[$name] = null;
                 continue;
             }

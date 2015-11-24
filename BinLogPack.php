@@ -70,7 +70,7 @@ class BinLogPack {
             //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
         }elseif(self::$EVENT_TYPE == 4) {
-            return;
+
             echo 'pos -> '.$this->readUint64()."\n";
             echo 'filename -> '.$this->read($event_size_without_header-8)."\n";
 

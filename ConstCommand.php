@@ -6,5 +6,6 @@
  * Time: 上午12:17
  */
 class ConstCommand {
-    const COM_BINLOG_DUMP = 0x12;
+    const COM_BINLOG_DUMP    = 0x12;
+    const COM_REGISTER_SLAVE = 0x15;
 }

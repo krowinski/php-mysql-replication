@@ -59,4 +59,8 @@ class ConstEventType {
     const DELETE_ROWS_EVENT_V2 = 32;
 
 
+    public static $EVENT = [
+
+    ];
+
 }
