@@ -37,8 +37,8 @@ class DbHelper {
         $sql = "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM'";
         $res = DBMysql::getRow($db,$sql);
         DBMysql::releaseDBHandle($db);
-        if($res['Value'] == 'NONE') return false;
-        return true;
+        if($res) return true;
+        return false;
     }
 
     /**

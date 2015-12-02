@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ERROR);
+date_default_timezone_set("PRC");
 require_once "Config.php";
 require_once 'TimeDate.php';
 require_once 'DBMysql.php';
@@ -71,7 +73,7 @@ class mysqlc {
         socket_set_block(self::$_SOCKET);
         socket_set_option(self::$_SOCKET, SOL_SOCKET, SO_KEEPALIVE, 1);
         // socket_set_option(self::$_SOCKET,SOL_SOCKET,SO_SNDTIMEO,['sec' => 2, 'usec' => 500000]);
-        // socket_set_option(self::$_SOCKET,SOL_SOCKET,SO_RCVTIMEO,['sec' => 2, 'usec' => 500000]);
+//         socket_set_option(self::$_SOCKET,SOL_SOCKET,SO_RCVTIMEO,['sec' => 2, 'usec' => 500000]);
 
         self::$_FLAG = Capability::$CAPABILITIES ;//| S::$MULTI_STATEMENTS;
         if(self::$_DB) {
@@ -101,8 +103,18 @@ class mysqlc {
         return socket_write(self::$_SOCKET, $data, strlen($data));
     }
 
-    private static function _readBytes($len) {
-        return socket_read(self::$_SOCKET, $len);
+    private static function _readBytes($data_len) {
+
+        $bytes_read = 0;
+        $body       = '';
+        while ($bytes_read < $data_len) {
+            $resp = socket_read(self::$_SOCKET, $data_len - $bytes_read);
+            $body .= $resp;
+            $bytes_read += strlen($resp);
+        }
+
+
+        return $body;
     }
 
 
@@ -119,7 +131,9 @@ class mysqlc {
         //序号 1byte 确认消息的顺序
         $pack_num = unpack("C",$header[3])[1];
 
-        return self::_readBytes($a);
+        $result = self::_readBytes($a);
+        //echo '消息长度'.$a.'  read -> '.strlen($result)."\n";
+        return $result;
     }
 
     /**
@@ -142,6 +156,9 @@ class mysqlc {
         //
         $result = self::_readPacket();
         // 认证是否成功
+
+
+        //var_dump(bin2hex($result));exit;
         $msg    = AuthPack::success($result);
         if($msg['status'] === false) {
             var_export($msg);exit;
@@ -228,5 +245,5 @@ class mysqlc {
 }
 
 
-$mysql = new mysqlc(4,'mysql-bin.000060');
+$mysql = new mysqlc();
 mysqlc::getBinlogStream();

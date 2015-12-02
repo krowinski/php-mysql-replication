@@ -66,6 +66,7 @@ class AuthPack {
             for($i = 9; $i < strlen($pack); $i ++) {
                 $error_msg .= $pack[$i];
             }
+
             return ['status' => false, 'code' => $error_code, 'msg' => $error_msg];
         }
 

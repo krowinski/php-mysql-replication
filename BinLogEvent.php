@@ -17,6 +17,7 @@ class BinLogEvent {
 
     public static $TABLE_MAP;
     public static $PACK;
+    public static $PACK_SIZE;
     public static $FLAGS;
     public static $EXTRA_DATA_LENGTH;
     public static $EXTRA_DATA;
@@ -42,10 +43,11 @@ class BinLogEvent {
         4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
         ];
 
-    public static function _init(BinLogPack $pack,$event_type) {
+    public static function _init(BinLogPack $pack,$event_type, $size = 0) {
 
-        self::$PACK = $pack;
+        self::$PACK       = $pack;
         self::$EVENT_TYPE = $event_type;
+        self::$PACK_SIZE  = $size;
     }
 
     public static function readTableId()

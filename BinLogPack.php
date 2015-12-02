@@ -50,6 +50,7 @@ class BinLogPack {
         self::$EVENT_INFO['pos']  = $log_pos    = unpack('L', $this->read(4))[1];//
         self::$EVENT_INFO['flag'] = $flags      = unpack('S', $this->read(2))[1];
 
+
         $event_size_without_header = $checkSum === true ? ($event_size -23) : $event_size - 19;
 
         echo 'next pos -> '.$log_pos;
@@ -60,11 +61,11 @@ class BinLogPack {
             RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
             return ;
         } elseif(in_array(self::$EVENT_TYPE,[ConstEventType::UPDATE_ROWS_EVENT_V2,ConstEventType::UPDATE_ROWS_EVENT_V1])) {
-            return RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE);
+            return RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2])) {
-            return RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE);
+            return RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2])) {
-            return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
+            return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(self::$EVENT_TYPE == 16) {
             return;
             //var_dump(bin2hex($pack),$this->readUint64());
@@ -142,6 +143,7 @@ class BinLogPack {
         return $a;
     }
 
+    //ok
     public function unpackInt64($data) {
         $a = (int)(ord($data[0]) & 0xFF);
         $a += (int)((ord($data[1]) & 0xFF) << 8);
@@ -205,8 +207,9 @@ class BinLogPack {
 
     public function read_int40_be()
     {
-        $data = unpack("IC", $this->read(5));
-        return $data[2] + ($data[1] << 8);
+        $data1= unpack("N", $this->read(4))[1];
+        $data2 = unpack("C", $this->read(1))[1];
+        return $data2 + ($data1 << 8);
     }
 
     //
@@ -266,6 +269,34 @@ class BinLogPack {
     {
         $length = $this->read_uint_by_size($size);
         return $this->read($length);
+    }
+
+    public function read_int_be_by_size($size) {
+        //Read a big endian integer values based on byte number
+        if ($size == 1)
+            return unpack('c', $this->read($size))[1];
+        elseif( $size == 2)
+            return unpack('n', $this->read($size))[1];
+        elseif( $size == 3)
+            return $this->read_int24_be();
+        elseif( $size == 4)
+            return unpack('N', $this->read($size))[1];
+        elseif( $size == 5)
+            return $this->read_int40_be();
+        //TODO
+        elseif( $size == 8)
+            return unpack('N', $this->read($size))[1];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isComplete($size) {
+        // 20解析server_id ...
+        if(self::$_PACK_KEY + 1 - 20 < $size) {
+            return false;
+        }
+        return true;
     }
 
 }
