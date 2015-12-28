@@ -112,8 +112,6 @@ class mysqlc {
             $body .= $resp;
             $bytes_read += strlen($resp);
         }
-
-
         return $body;
     }
 
@@ -155,14 +153,9 @@ class mysqlc {
         self::_write($data);
         //
         $result = self::_readPacket();
+
         // 认证是否成功
-
-
-        //var_dump(bin2hex($result));exit;
-        $msg    = AuthPack::success($result);
-        if($msg['status'] === false) {
-            var_export($msg);exit;
-        }
+        AuthPack::success($result);
     }
 
 
@@ -179,7 +172,6 @@ class mysqlc {
         $checkSum = DbHelper::isCheckSum();
         if($checkSum){
             self::excute("set @master_binlog_checksum= @@global.binlog_checksum");
-            //self::_readPacket();
         }
 
         self::_writeRegisterSlaveCommand();
@@ -205,10 +197,7 @@ class mysqlc {
 
         //
         $result = self::_readPacket();
-        $msg    = AuthPack::success($result);
-        if($msg['status'] === false) {
-            var_export($msg);exit;
-        }
+        AuthPack::success($result);
 
         while (1) {
             self::$_PACK = self::_readPacket();
@@ -237,10 +226,7 @@ class mysqlc {
         self::_write($data);
 
         $result = self::_readPacket();
-        $msg    = AuthPack::success($result);
-        if($msg['status'] === false) {
-            var_export($msg);exit;
-        }
+        AuthPack::success($result);
     }
 }
 

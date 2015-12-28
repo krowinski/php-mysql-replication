@@ -22,8 +22,8 @@ class AuthPack {
         $data .= pack('L', ConstAuth::$PACK_MAX_LENGTH);
 
 
-        // Charset  1byte
-        $data .=chr(8);
+        // Charset  1byte utf8=>33
+        $data .=chr(33);
 
 
         // 空 bytes23
@@ -35,7 +35,7 @@ class AuthPack {
         $result = sha1($pass, true) ^ sha1($salt . sha1(sha1($pass, true), true),true);
 
         //转码 8是 latin1
-        $user = iconv('utf8', 'latin1', $user);
+        //$user = iconv('utf8', 'latin1', $user);
 
         //
         $data = $data . $user . chr(0) . chr(strlen($result)) . $result;
@@ -66,8 +66,8 @@ class AuthPack {
             for($i = 9; $i < strlen($pack); $i ++) {
                 $error_msg .= $pack[$i];
             }
-
-            return ['status' => false, 'code' => $error_code, 'msg' => $error_msg];
+            var_dump(['code' => $error_code, 'msg' => $error_msg]);
+            exit;
         }
 
     }

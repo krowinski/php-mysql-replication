@@ -56,6 +56,7 @@ class ServerInfo {
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
         self::$INFO['character_set'] = $pack[$i];
+
         $i++;
 
         //status_flags (2) -- Protocol::StatusFlags (optional)

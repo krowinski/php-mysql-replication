@@ -204,7 +204,6 @@ class RowEvent extends BinLogEvent
 
 
             if (self::BitGet($cols_bitmap, $i) == 0) {
-                exit;
                 $values[$name] = null;
                 continue;
             }
@@ -321,7 +320,7 @@ class RowEvent extends BinLogEvent
             */
             $nullBitmapIndex += 1;
         }
-        unset($values['title']);
+        $values['table_name'] = self::$TABLE_NAME;
         return $values;
     }
 
@@ -441,7 +440,7 @@ class RowEvent extends BinLogEvent
         while(!self::$PACK->isComplete(self::$PACK_SIZE)) {
 
             $value['beform'] = self::_read_column_data($result['bitmap1'], $len);
-            $value['after'] = self::_read_column_data($result['bitmap2'], $len,true);
+            $value['after'] = self::_read_column_data($result['bitmap2'], $len);
             $rows[] = $value;
         }
         return $rows;
