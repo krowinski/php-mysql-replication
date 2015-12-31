@@ -55,7 +55,8 @@ class Columns {
     }
 
     private static function _read_string_metadata($packet, $column_schema){
-        $metadata = ($packet->read_uint8() << 8) + $packet->read_uint8();
+
+        $metadata = ($packet->readUint8() << 8) + $packet->readUint8();
         $real_type = $metadata >> 8;
         if($real_type == FieldType::SET || $real_type == FieldType::ENUM) {
             self::$field['type'] = $real_type;

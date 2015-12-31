@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit', '1024M');
 error_reporting(E_ERROR);
 date_default_timezone_set("PRC");
 require_once "Config.php";
@@ -33,16 +34,17 @@ class mysqlc {
 
     private static $_SALT;
 
-    private static $_PACK;
-
 
     // 日志pos file
     private static $_POS;
     private static $_FILE;
 
     // 模拟从库id 不能和主库冲突
-    private static $_SLAVE_SERVER_ID = 10;
+    private static $_SLAVE_SERVER_ID = 100;
     private static $_GTID;
+
+
+    public static $FILE_POS;
 
     /**
      * @param int $pos  开始日志position 默认从4开始
@@ -58,9 +60,20 @@ class mysqlc {
         // 复制方式
         self::$_GTID = $gtid;
 
-        // 初始化日志位置
-        if($pos) self::$_POS   = $pos;
-        if($file) self::$_FILE = $file;
+        // 读取位置
+        if($file && $pos) {
+            self::$_POS   = $pos;
+            self::$_FILE = $file;
+        } else{
+            // 记录binlog读取到的位置
+            mysqlc::$FILE_POS = dirname(__FILE__) .'/'.  Config::$BINLOG_NAME_PATH;
+            list($filename, $pos) = mysqlc::getFilePos();
+            if($filename) {
+                self::$_POS   = $pos;
+                self::$_FILE  = $filename;
+            }
+        }
+
 
         // 认证auth
         self::$_HOST = Config::$DB_CONFIG['host'];
@@ -68,6 +81,7 @@ class mysqlc {
         self::$_PASS = Config::$DB_CONFIG['password'];
         self::$_PORT = Config::$DB_CONFIG['port'];
         self::$_DB   = Config::$DB_CONFIG['db_name'];
+
 
         self::$_SOCKET = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         socket_set_block(self::$_SOCKET);
@@ -140,7 +154,6 @@ class mysqlc {
      */
     private static function _serverInfo() {
         $pack   = self::_readPacket();
-
         ServerInfo::run($pack);
         // 加密salt
         self::$_SALT = ServerInfo::getSalt();
@@ -180,8 +193,9 @@ class mysqlc {
         if(!self::$_FILE) {
             $logInfo = DbHelper::getPos();
             self::$_FILE = $logInfo['File'];
-            if(!self::$_POS)
-             self::$_POS = $logInfo['Position'];
+            if(!self::$_POS) {
+                self::$_POS = $logInfo['Position'];
+            }
         }
 
         $header   = pack('l', 11 + strlen(self::$_FILE));
@@ -195,17 +209,51 @@ class mysqlc {
 
         self::_write($data);
 
-        //
+        //认证
         $result = self::_readPacket();
         AuthPack::success($result);
 
+        //解析binlog
+        self::_analysisBinLog($checkSum);
+
+    }
+
+    /**
+     * @breif 解析binlog
+     * @param $checkSum
+     */
+    private static function _analysisBinLog($checkSum) {
+        $count = 0;
         while (1) {
-            self::$_PACK = self::_readPacket();
+            $pack   = self::_readPacket();
             $binlog = BinLogPack::getInstance();
-            $result = $binlog->init(self::$_PACK, $checkSum);
-            if($result !== null)
-                var_export($result);
+            $result = $binlog->init($pack, $checkSum);
+
+            // memory
+            echo round(memory_get_usage()/1024/1024, 2).'MB'."\n";
+
+            if($result) {
+                // deal result
+                if(self::_dealResult($result)) {
+                    $count++;
+                    if($count%Config::$BINLOG_COUNT == 0) {
+                        $count = 0;
+                        if(!self::putFilePos()) {
+                            echo 'write file pos fail';exit;
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    /**
+     * @brief 处理binlog解析出的数据
+     * @param $data
+     * @return int
+     */
+    private static function _dealResult($data) {
+        return file_put_contents('data.log',json_encode($data)."\n",FILE_APPEND);
     }
 
     private static function _writeRegisterSlaveCommand() {
@@ -228,8 +276,38 @@ class mysqlc {
         $result = self::_readPacket();
         AuthPack::success($result);
     }
+
+    /**
+     * @brief 读取当前binlog的位置
+     * @return array|bool
+     */
+    public static function getFilePos() {
+
+        $filename =  $pos = '';
+        if(file_exists(self::$FILE_POS)) {
+            $data = file_get_contents(self::$FILE_POS);
+            list($filename, $pos) = explode("|", $data);
+        }
+        if($filename && $pos) {
+            return array($filename, $pos);
+        } else{
+            return false;
+        }
+    }
+
+    /**
+     * @brief 写入当前binlog的位置
+     * @return array|bool
+     */
+    public static function putFilePos() {
+        list($filename, $pos) = BinLogPack::getFilePos();
+        return file_put_contents(self::$FILE_POS, $filename.'|'.$pos);
+    }
 }
 
 
 $mysql = new mysqlc();
 mysqlc::getBinlogStream();
+
+//nohup /home/work/php54/bin/php run.php > log_0 2>&1 &
+//home/work/php54/bin/php run.php

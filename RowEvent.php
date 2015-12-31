@@ -57,14 +57,22 @@ class RowEvent extends BinLogEvent
         //
         $column_type_def = self::$PACK->read(self::$COLUMNS_NUM);
 
+        //
+        if(!isset(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME])) {
+            file_put_contents('tablename', self::$SCHEMA_NAME.'-'.self::$TABLE_NAME."\n",FILE_APPEND);
+        }
+
         // 避免重复读取 表信息
-        if (self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['table_id'] == self::$TABLE_ID)
+        if (isset(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['table_id'])
+            && self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['table_id']== self::$TABLE_ID) {
             return $data;
+        }
+
 
         self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME] = array(
-            'schema_name' => $data['schema_name'],
+            'schema_name'=> $data['schema_name'],
             'table_name' => $data['table_name'],
-            'table_id' => self::$TABLE_ID
+            'table_id'   => self::$TABLE_ID
         );
 
 
@@ -74,13 +82,14 @@ class RowEvent extends BinLogEvent
         // fields 相应属性
         $colums = DbHelper::getFields($data['schema_name'], $data['table_name']);
 
+        self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'] = [];
 
         for ($i = 0; $i < strlen($column_type_def); $i++) {
             $type = ord($column_type_def[$i]);
             self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'][$i] = Columns::parse($type, $colums[$i], self::$PACK);
 
         }
-
+        file_put_contents('tableid', self::$TABLE_ID."\n",FILE_APPEND);
 
         return $data;
 

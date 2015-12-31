@@ -15,7 +15,8 @@ class AuthPack {
      * @param string $db
      * @return string
      */
-    public static function initPack($flag, $user, $pass, $salt, $db = '') {
+    public static function  initPack($flag, $user, $pass, $salt, $db = '') {
+
         $data = pack('L',$flag);
 
         // max-length 4bytes，最大16M 占3bytes

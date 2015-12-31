@@ -18,6 +18,8 @@ class BinLogPack {
 
     private static $_instance = null;
 
+    private static $_FILE_NAME;
+
 
     public static function getInstance() {
         if(!self::$_instance) {
@@ -40,7 +42,7 @@ class BinLogPack {
 
 
 
-        self::advance(1);
+        $this->advance(1);
 
         self::$EVENT_INFO['time'] = $timestamp  = unpack('L', $this->read(4))[1];
         self::$EVENT_INFO['type'] = self::$EVENT_TYPE = unpack('C', $this->read(1))[1];
@@ -53,32 +55,40 @@ class BinLogPack {
 
         $event_size_without_header = $checkSum === true ? ($event_size -23) : $event_size - 19;
 
-        echo 'next pos -> '.$log_pos;
-        echo ' --  typeEvent -> '.self::$EVENT_TYPE."\n";
 
 
+        $data = [];
+
+
+
+
+        // 映射fileds相关信息
         if (self::$EVENT_TYPE == ConstEventType::TABLE_MAP_EVENT) {
             RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
-            return ;
         } elseif(in_array(self::$EVENT_TYPE,[ConstEventType::UPDATE_ROWS_EVENT_V2,ConstEventType::UPDATE_ROWS_EVENT_V1])) {
-            return RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data =  RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2])) {
-            return RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data = RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2])) {
-            return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data = RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
         }elseif(self::$EVENT_TYPE == 16) {
-            return;
             //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
-        }elseif(self::$EVENT_TYPE == 4) {
-
-            echo 'pos -> '.$this->readUint64()."\n";
-            echo 'filename -> '.$this->read($event_size_without_header-8)."\n";
-
+        }elseif(self::$EVENT_TYPE == ConstEventType::ROTATE_EVENT) {
+            $log_pos = $this->readUint64();
+            self::$_FILE_NAME = $this->read($event_size_without_header-8);
         }elseif(self::$EVENT_TYPE == ConstEventType::GTID_LOG_EVENT) {
-            return;
+            //gtid event
+
+        }elseif(self::$EVENT_TYPE == 15) {
+
+        } elseif(self::$EVENT_TYPE == ConstEventType::QUERY_EVENT) {
 
         }
+        echo self::$_FILE_NAME;
+        echo '-- next pos -> '.$log_pos;
+        echo ' --  typeEvent -> '.self::$EVENT_TYPE."\n";
+        return $data;
 
 
     }
@@ -297,6 +307,11 @@ class BinLogPack {
             return false;
         }
         return true;
+    }
+
+
+    public static function getFilePos() {
+        return array(self::$_FILE_NAME, self::$EVENT_INFO['pos']);
     }
 
 }

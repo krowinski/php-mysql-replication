@@ -15,5 +15,10 @@ class Config {
         'db_name'  => 'zzq'
     );
 
+    // 默认100次mysql操作记录一次 pos，filename到文件
+    public static $BINLOG_COUNT = 100;
+    // 记录的文件名字
+    public static $BINLOG_NAME_PATH  = 'file-pos';
+
 
 }

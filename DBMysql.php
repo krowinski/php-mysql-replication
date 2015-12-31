@@ -293,7 +293,7 @@ class DBMysql {
         return false;
     }
 
-    private static function _reconnectHandle(&$handle) {
+    private static function _reconnectHandle($handle) {
 
         //MySQL server has gone away
         $errno = @mysqli_errno($handle);
