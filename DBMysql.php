@@ -136,16 +136,14 @@ class DBMysql {
     /// @param[in] handle $handle, 操作数据库的句柄
     /// @param[in] string $sql, 具体执行的sql语句
     /// @return FALSE表示执行失败， 否则返回执行的结果, 结果格式为一个数组，数组中每个元素都是mysqli_fetch_assoc的一条结果
-    public static function query(&$handle, $sql) {
+    public static function query($handle, $sql) {
         do {
             $tm = TimeDate::getMicrosecond();
             if (($result = self::mysqliQueryApi($handle, $sql)) === FALSE){
                 break;
             }
             if ($result === true) {
-                if (rand(1, 1) == 1) {
-                    self::logWarn("err.func.query,SQL=$sql", 'mysqlns.query' );
-                }
+                self::logWarn("err.func.query,SQL=$sql", 'mysqlns.query' );
                 return array();
             }
             $tm_used = intval( (TimeDate::getMicrosecond() - $tm) / 1000);
@@ -275,50 +273,13 @@ class DBMysql {
     }
 
 
-    public static function mysqliQueryApi(&$handle, $sql) {
+    public static function mysqliQueryApi($handle, $sql) {
         do {
             $result = mysqli_query($handle, $sql);
 
-            if ($result === FALSE || $result === null) {
-                echo "xxxxxx\n";
-                if (self::_reconnectHandle($handle)) {
-                    $result = mysqli_query($handle, $sql);;
-                }
-                if ($result === FALSE) {
-                    break;
-                }
-            }
             return $result;
         } while (0);
         return false;
-    }
-
-    private static function _reconnectHandle($handle) {
-
-        //MySQL server has gone away
-        $errno = @mysqli_errno($handle);
-
-        self::logError(sprintf("handle_ping Error: handle='%s,%s'",$errno,var_export($handle, true)), 'mysqlns.handle.ping');
-
-
-        // 做1000次重试
-        $tryCount = 1000;
-
-        $config   = self::$_HANDLE_CONFIG;
-
-        do {
-            $handle = self::createDBHandle($config, $config['db_name']);
-
-            if($handle) {
-                break;
-            }
-            $tryCount --;
-            sleep(1);
-        } while ($tryCount > 0);
-        if (!$handle) {
-            return false;
-        }
-        return true;
     }
 
     /// 记录统一的错误日志
