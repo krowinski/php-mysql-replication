@@ -16,8 +16,8 @@ BinLogPack.php打印了事件类型
 
 
 ## 配置mysql，打开mysql的binlog，配置binlog格式为row
- log-bin=mysql-bin
- server-id=1
- binlog_format=row
+ log-bin=mysql-bin 
+ server-id=1 
+ binlog_format=row 
 
 
