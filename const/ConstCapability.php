@@ -4,11 +4,11 @@
  * http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags
  * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
  * Created by PhpStorm.
- * User: baidu
+ * User: zhaozhiqiang
  * Date: 15/11/19
  * Time: 下午2:54
  */
-class Capability {
+class ConstCapability {
 
     public static $LONG_PASSWORD;
     public static $FOUND_ROWS;
@@ -51,4 +51,4 @@ class Capability {
             self::$PROTOCOL_41 | self::$SECURE_CONNECTION);
     }
 }
-Capability::init();
+ConstCapability::init();

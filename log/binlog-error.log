@@ -1,0 +1,564 @@
+mysqlBinlog|2016-01-10 13:16:17|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:17|mysql server has gone away
+binlog|2016-01-10 13:16:17|try count1
+binlog|2016-01-10 13:16:17|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))
+mysqlBinlog|2016-01-10 13:16:22|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:22|mysql server has gone away
+binlog|2016-01-10 13:16:22|try count2
+binlog|2016-01-10 13:16:22|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))
+mysqlBinlog|2016-01-10 13:16:27|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:27|mysql server has gone away
+binlog|2016-01-10 13:16:27|try count3
+binlog|2016-01-10 13:16:27|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))
+mysqlBinlog|2016-01-10 13:16:32|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:32|mysql server has gone away
+binlog|2016-01-10 13:16:32|try count4
+binlog|2016-01-10 13:16:32|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))
+mysqlBinlog|2016-01-10 13:16:37|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:37|mysql server has gone away
+binlog|2016-01-10 13:16:37|try count5
+binlog|2016-01-10 13:16:37|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))
+mysqlBinlog|2016-01-10 13:16:42|mysql server has gone away
+mysqlBinlog|2016-01-10 13:16:42|mysql server has gone away
+binlog|2016-01-10 13:16:42|try count6
+binlog|2016-01-10 13:16:42|BinLogException::__set_state(array(
+   'message' => 'BinLogException::__set_state(array(
+   \'message\' => \'read less 4\',
+   \'string\' => \'\',
+   \'code\' => 0,
+   \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+   \'line\' => 167,
+   \'trace\' => 
+  array (
+    0 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 205,
+      \'function\' => \'_readBytes\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php\',
+      \'line\' => 295,
+      \'function\' => \'_readPacket\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      \'file\' => \'/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php\',
+      \'line\' => 31,
+      \'function\' => \'analysisBinLog\',
+      \'class\' => \'Connect\',
+      \'type\' => \'::\',
+      \'args\' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   \'previous\' => NULL,
+))',
+   'string' => '',
+   'code' => 0,
+   'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+   'line' => 181,
+   'trace' => 
+  array (
+    0 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 205,
+      'function' => '_readBytes',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => 4,
+      ),
+    ),
+    1 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/Connect.php',
+      'line' => 295,
+      'function' => '_readPacket',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+      ),
+    ),
+    2 => 
+    array (
+      'file' => '/Users/baidu/Documents/baidu/python-mysql-replication-master/php-mysql/run.php',
+      'line' => 31,
+      'function' => 'analysisBinLog',
+      'class' => 'Connect',
+      'type' => '::',
+      'args' => 
+      array (
+        0 => false,
+      ),
+    ),
+  ),
+   'previous' => NULL,
+))

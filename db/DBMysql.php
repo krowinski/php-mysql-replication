@@ -1,9 +1,5 @@
 <?PHP
 
-define('SLOW_QUERY_MIN',1000);
-define('SLOW_QUERY_SAMPLE',10);
-
-
 class DBConstNamespace {
     // 数据库编码相关
     const ENCODING_GBK      = 0; ///< GBK 编码定义
@@ -18,17 +14,6 @@ class DBConstNamespace {
 
 }
 
-
-class Logger {
-
-    public static function logError($message, $category ) {
-        file_put_contents('error.log',$category . '|' . date('Y-m-d H:i:s') . '|'. $message . "\n", FILE_APPEND);
-    }
-
-    public static function logWarn($message, $category ) {
-        file_put_contents('warm.log', $category . '|' .date('Y-m-d H:i:s') .'|'. $message . "\n", FILE_APPEND);
-    }
-}
 
 
 class DBMysql {
@@ -111,8 +96,6 @@ class DBMysql {
             return $handle;
         } while (FALSE);
 
-
-
         // to_do, 连接失败
         self::logError( sprintf("Connect failed:time=%s", date('Y-m-d H:i:s',time())), 'mysqlns.connect');
         return FALSE;
@@ -138,17 +121,12 @@ class DBMysql {
     /// @return FALSE表示执行失败， 否则返回执行的结果, 结果格式为一个数组，数组中每个元素都是mysqli_fetch_assoc的一条结果
     public static function query($handle, $sql) {
         do {
-            $tm = TimeDate::getMicrosecond();
             if (($result = self::mysqliQueryApi($handle, $sql)) === FALSE){
                 break;
             }
             if ($result === true) {
                 self::logWarn("err.func.query,SQL=$sql", 'mysqlns.query' );
                 return array();
-            }
-            $tm_used = intval( (TimeDate::getMicrosecond() - $tm) / 1000);
-            if( $tm_used > SLOW_QUERY_MIN) {
-                self::logWarn( "ms=$tm_used, SQL=$sql", 'mysqlns.slow' );
             }
             $res = array();
             while($row = mysqli_fetch_assoc($result)) {
@@ -171,14 +149,8 @@ class DBMysql {
         if (!self::_checkHandle($handle))
             return FALSE;
         do {
-            $tm = TimeDate::getMicrosecond();
             if (($result = self::mysqliQueryApi($handle, $sql)) === FALSE)
                 break;
-            $tm_used = intval( (TimeDate::getMicrosecond() - $tm) / 1000);
-            if( $tm_used > SLOW_QUERY_MIN) {
-                self::logWarn( "ms=$tm_used, SQL=$sql", 'mysqlns.slow' );
-            }
-
             $row = mysqli_fetch_assoc($result);
             mysqli_free_result($result);
             return $row;
@@ -282,17 +254,19 @@ class DBMysql {
         return false;
     }
 
-    /// 记录统一的错误日志
+    /**
+     * @breif 记录统一错误日志
+     */
     protected static function logError($message, $category) {
-        if( class_exists('Logger') ) {
-            Logger::logError( $message, $category );
-        }
+        Log::error( $message, $category , Config::$LOG['mysql']['error']);
     }
 
-    /// 记录统一的警告日志
+    /**
+     * @breif 记录统一警告日志
+     */
     protected static function logWarn($message, $category) {
-        if( class_exists('Logger') ) {
-            Logger::logWarn( $message, $category );
-        }
+
+        Log::warn( $message, $category , Config::$LOG['mysql']['warn']);
+
     }
 }
