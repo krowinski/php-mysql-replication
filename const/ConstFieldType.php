@@ -5,7 +5,7 @@
  * Date: 15/11/7
  * Time: 下午1:13
  */
-class FieldType {
+class ConstFieldType {
 
     const DECIMAL = 0;
     const TINY = 1;

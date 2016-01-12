@@ -2,11 +2,11 @@
 /**
  * 获取mysql相关信息 执行query
  * Created by PhpStorm.
- * User: baidu
+ * User: zhaozhiqiang
  * Date: 15/11/17
  * Time: 下午1:17
  */
-class DbHelper {
+class DBHelper {
 
     /**
      * @brief 获取字段相关信息

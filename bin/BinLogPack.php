@@ -85,9 +85,14 @@ class BinLogPack {
         } elseif(self::$EVENT_TYPE == ConstEventType::QUERY_EVENT) {
 
         }
-        echo self::$_FILE_NAME;
-        echo '-- next pos -> '.$log_pos;
-        echo ' --  typeEvent -> '.self::$EVENT_TYPE."\n";
+
+        if(DEBUG) {
+            $msg  = self::$_FILE_NAME;
+            $msg .= '-- next pos -> '.$log_pos;
+			$msg .= ' --  typeEvent -> '.self::$EVENT_TYPE;
+			Log::out($msg);
+        }
+
         return $data;
 
 

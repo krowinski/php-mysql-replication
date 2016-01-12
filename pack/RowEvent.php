@@ -25,7 +25,7 @@ class RowEvent extends BinLogEvent
             self::$FLAGS = unpack('S', self::$PACK->read(2))[1];
         }
 
-        #Body
+        // Body
         self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
     }
 
@@ -57,10 +57,6 @@ class RowEvent extends BinLogEvent
         //
         $column_type_def = self::$PACK->read(self::$COLUMNS_NUM);
 
-        //
-        if(!isset(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME])) {
-            file_put_contents('tablename', self::$SCHEMA_NAME.'-'.self::$TABLE_NAME."\n",FILE_APPEND);
-        }
 
         // 避免重复读取 表信息
         if (isset(self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['table_id'])
@@ -80,16 +76,18 @@ class RowEvent extends BinLogEvent
 
 
         // fields 相应属性
-        $colums = DbHelper::getFields($data['schema_name'], $data['table_name']);
+        $colums = DBHelper::getFields($data['schema_name'], $data['table_name']);
 
         self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'] = [];
 
         for ($i = 0; $i < strlen($column_type_def); $i++) {
-            $type = ord($column_type_def[$i]);
-            self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'][$i] = Columns::parse($type, $colums[$i], self::$PACK);
+			$type = ord($column_type_def[$i]);
+			if(!isset($colums[$i])){
+				Log::warn(var_export($colums, true).var_export($data, true), 'tableMap', Config::$LOG['binlog']['error']);
+			}
+            self::$TABLE_MAP[self::$SCHEMA_NAME][self::$TABLE_NAME]['fields'][$i] = BinLogColumns::parse($type, $colums[$i], self::$PACK);
 
         }
-        file_put_contents('tableid', self::$TABLE_ID."\n",FILE_APPEND);
 
         return $data;
 
@@ -219,17 +217,17 @@ class RowEvent extends BinLogEvent
 
             if (self::_is_null($null_bitmap, $nullBitmapIndex)) {
                 $values[$name] = null;
-            } elseif ($column['type'] == FieldType::TINY) {
+            } elseif ($column['type'] == ConstFieldType::TINY) {
                 if ($unsigned)
                     $values[$name] = unpack("C", self::$PACK->read(1))[1];
                 else
                     $values[$name] = unpack("c", self::$PACK->read(1))[1];
-            } elseif ($column['type'] == FieldType::SHORT) {
+            } elseif ($column['type'] == ConstFieldType::SHORT) {
                 if ($unsigned)
                     $values[$name] = unpack("S", self::$PACK->read(2))[1];
                 else
                     $values[$name] = unpack("s", self::$PACK->read(2))[1];
-            } elseif ($column['type'] == FieldType::LONG) {
+            } elseif ($column['type'] == ConstFieldType::LONG) {
 
                 if ($unsigned) {
                     $values[$name] = unpack("I", self::$PACK->read(4))[1];
@@ -238,41 +236,41 @@ class RowEvent extends BinLogEvent
                     $values[$name] = unpack("i", self::$PACK->read(4))[1];
 
                 }
-            } elseif ($column['type'] == FieldType::INT24) {
+            } elseif ($column['type'] == ConstFieldType::INT24) {
                 if ($unsigned)
                     $values[$name] = self::$PACK->read_uint24();
                 else
                     $values[$name] = self::$PACK->read_int24();
-            } elseif ($column['type'] == FieldType::FLOAT)
+            } elseif ($column['type'] == ConstFieldType::FLOAT)
                 $values[$name] = unpack("f", self::$PACK->read(4))[1];
-            elseif ($column['type'] == FieldType::DOUBLE)
+            elseif ($column['type'] == ConstFieldType::DOUBLE)
                 $values[$name] = unpack("d", self::$PACK->read(8))[1];
-            elseif ($column['type'] == FieldType::VARCHAR ||
-                $column['type'] == FieldType::STRING
+            elseif ($column['type'] == ConstFieldType::VARCHAR ||
+                $column['type'] == ConstFieldType::STRING
             ) {
                 if ($column['max_length'] > 255)
                     $values[$name] = self::_read_string(2, $column);
                 else
                     $values[$name] = self::_read_string(1, $column);
-            } elseif ($column['type'] == FieldType::NEWDECIMAL) {
+            } elseif ($column['type'] == ConstFieldType::NEWDECIMAL) {
                 //$values[$name] = self.__read_new_decimal(column)
-            } elseif ($column['type'] == FieldType::BLOB) {
+            } elseif ($column['type'] == ConstFieldType::BLOB) {
                 //ok
                 //echo 'length_size->>>> '.($column['length_size'])."\n";
                 $values[$name] = self::_read_string($column['length_size'], $column);
 
             }
-            elseif ($column['type'] == FieldType::DATETIME) {
+            elseif ($column['type'] == ConstFieldType::DATETIME) {
 
                 $values[$name] = self::_read_datetime();
-            } elseif ($column['type'] == FieldType::DATETIME2) {
+            } elseif ($column['type'] == ConstFieldType::DATETIME2) {
                 //ok
                 $values[$name] = self::_read_datetime2($column);
-            }elseif ($column['type'] == FieldType::TIME2) {
+            }elseif ($column['type'] == ConstFieldType::TIME2) {
 
                 $values[$name] = self::_read_time2($column);
             }
-            elseif ($column['type'] == FieldType::TIMESTAMP2){
+            elseif ($column['type'] == ConstFieldType::TIMESTAMP2){
                 //ok
                 $time = date('Y-m-d H:i:m',self::$PACK->read_int_be_by_size(4));
                 // 微妙
@@ -280,36 +278,36 @@ class RowEvent extends BinLogEvent
                 $values[$name] = $time;
             }
                 /*
-            elseif ($column['type'] == FieldType::TIME:
+            elseif ($column['type'] == ConstFieldType::TIME:
                 $values[$name] = self.__read_time()
-            elseif ($column['type'] == FieldType::DATE:
+            elseif ($column['type'] == ConstFieldType::DATE:
                 $values[$name] = self.__read_date()
-            elseif ($column['type'] == FieldType::TIMESTAMP:
+            elseif ($column['type'] == ConstFieldType::TIMESTAMP:
                 $values[$name] = datetime.datetime.fromtimestamp(
                         self::$PACK->read_uint32())
 
             # For new date format:
 
-            elseif ($column['type'] == FieldType::TIME2:
+            elseif ($column['type'] == ConstFieldType::TIME2:
                 $values[$name] = self.__read_time2(column)
-            elseif ($column['type'] == FieldType::TIMESTAMP2:
+            elseif ($column['type'] == ConstFieldType::TIMESTAMP2:
                 $values[$name] = self.__add_fsp_to_time(
                         datetime.datetime.fromtimestamp(
                             self::$PACK->read_int_be_by_size(4)), column)
             */
-            elseif ($column['type'] == FieldType::LONGLONG) {
+            elseif ($column['type'] == ConstFieldType::LONGLONG) {
                 if ($unsigned)
                     $values[$name] = self::$PACK->readUint64();
                 else
                     $values[$name] = self::$PACK->readInt64();
             }
             /*
-            elseif ($column['type'] == FieldType::YEAR:
+            elseif ($column['type'] == ConstFieldType::YEAR:
                 $values[$name] = self::$PACK->read_uint8() + 1900
-            elseif ($column['type'] == FieldType::ENUM:
+            elseif ($column['type'] == ConstFieldType::ENUM:
                 $values[$name] = column.enum_values[
                     self::$PACK->read_uint_by_size(column.size) - 1]
-            elseif ($column['type'] == FieldType::SET:
+            elseif ($column['type'] == ConstFieldType::SET:
                 # We read set columns as a bitmap telling us which options
                 # are enabled
                 bit_mask = self::$PACK->read_uint_by_size(column.size)
@@ -318,9 +316,9 @@ class RowEvent extends BinLogEvent
                 if bit_mask & 2 ** idx
                 ) or None
 
-            elseif ($column['type'] == FieldType::BIT:
+            elseif ($column['type'] == ConstFieldType::BIT:
                 $values[$name] = self.__read_bit(column)
-            elseif ($column['type'] == FieldType::GEOMETRY:
+            elseif ($column['type'] == ConstFieldType::GEOMETRY:
                 $values[$name] = self::$PACK->read_length_coded_pascal_string(
                         column.length_size)
             else:
@@ -450,7 +448,7 @@ class RowEvent extends BinLogEvent
 
             $value['beform'] = self::_read_column_data($result['bitmap1'], $len);
             $value['after'] = self::_read_column_data($result['bitmap2'], $len);
-            $rows[] = $value;
+            $rows[] = $value['after'];
         }
         return $rows;
     }

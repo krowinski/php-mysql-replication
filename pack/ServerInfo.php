@@ -14,7 +14,6 @@ class ServerInfo {
 
     public static function run($pack) {
 
-
         $i = 0;
         $length = strlen($pack);
         self::$INFO['protocol_version'] = ord($pack[$i]);
@@ -23,8 +22,7 @@ class ServerInfo {
         //version
         self::$INFO['server_version'] = '';
         $start = $i;
-        for($i = $start; $i < $length; $i++)
-        {
+        for($i = $start; $i < $length; $i++) {
             if($pack[$i] === chr(0)) {
                 $i++;
                 break;

@@ -5,7 +5,7 @@
  * Date: 15/11/19
  * Time: 下午2:51
  */
-class AuthPack {
+class PackAuth {
 
     /**
      * @param $flag
@@ -24,7 +24,7 @@ class AuthPack {
 
 
         // Charset  1byte utf8=>33
-        $data .=chr(33);
+        $data .= chr(33);
 
 
         // 空 bytes23
@@ -44,7 +44,8 @@ class AuthPack {
             $data .= $db . chr(0);
         }
 
-        $str = pack("L", strlen($data));//  V L 小端，little endian
+        // V L 小端，little endian
+        $str = pack("L", strlen($data));
         $s =$str[0].$str[1].$str[2];
 
         $data = $s . chr(1) . $data;
