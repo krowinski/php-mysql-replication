@@ -20,10 +20,18 @@ class Config {
 
     // 记录当前执行到的pos，filename
     public static $BINLOG_NAME_PATH  = 'file-pos';
+
     public static $OUT  = 'out.log';
 
 
-    // log
+
+    // log记录
+    public static $LOG_ERROR_PATH  = 'log/error.log';
+    public static $LOG_WARN_PATH   = 'log/warn.log';
+    public static $LOG_NOTICE_PATH = 'log/notice.log';
+
+
+
     public static $LOG = [
         'binlog' => [
             'error' => 'log/binlog-error.log'
@@ -39,6 +47,7 @@ class Config {
         ],
     ];
 
+
 	public static function init() {
 	
         self::$BINLOG_NAME_PATH  = ROOT . 'file-pos';
@@ -52,3 +61,4 @@ class Config {
 }
 
 Config::init();
+

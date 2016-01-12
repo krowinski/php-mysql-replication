@@ -8,10 +8,11 @@
 class Log {
 
 
-	public static function out($message, $category = 'out') {
-		$file = Config::$OUT;
+
+    public static function out($message, $category = 'out') {
+        $file = Config::$OUT;
         return self::_write($message, $category, $file);
-	}
+    }
     public static function error($message, $category, $file) {
         return self::_write($message, $category, $file);
     }
@@ -22,15 +23,15 @@ class Log {
 
     public static function notice($message, $category, $file ) {
         return self::_write($message, $category, $file);
-	}
+    }
 
 
-	private static function _write($message, $category, $file) {
-		return	file_put_contents(
+    private static function _write($message, $category, $file) {
+        return	file_put_contents(
             $file,
             $category . '|' . date('Y-m-d H:i:s') . '|'. $message . "\n",
             FILE_APPEND
         );
 
-	}
+    }
 }

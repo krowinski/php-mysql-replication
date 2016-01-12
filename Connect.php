@@ -290,7 +290,7 @@ class Connect {
 
         // debug
         if(DEBUG) {
-			Log::out(round(memory_get_usage()/1024/1024, 2).'MB');
+            Log::out(round(memory_get_usage()/1024/1024, 2).'MB');
         }
 
         //持久化当前读到的file pos
@@ -305,7 +305,7 @@ class Connect {
 
         if($flag) {
             if(!self::putFilePos()) {
-				Log::out('write file pos fail');exit;
+                Log::out('write file pos fail');exit;
             }
         }
         return $result;
