@@ -15,7 +15,7 @@
 Connect::analysisBinLog bool true存储当前的file  pos
 本例中 通过读取binlog存储到kafka中
 kafka-client 用不到了github开源的一个项目  https://github.com/nmred/kafka-php
-BinLogPack.php打印了事件类型
+BinLogPack.php打印了事件类型  
 
 
 ## 配置mysql，打开mysql的binlog，配置binlog格式为row
