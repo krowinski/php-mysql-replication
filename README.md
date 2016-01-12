@@ -11,10 +11,10 @@
 ## Config.php 配置文件
 
 
-运行run.php 目前只支持row模式
-Connect::analysisBinLog bool true存储当前的file  pos
-本例中 通过读取binlog存储到kafka中
-kafka-client 用不到了github开源的一个项目  https://github.com/nmred/kafka-php
+运行run.php 目前只支持row模式  
+Connect::analysisBinLog bool true存储当前的file  pos  
+本例中 通过读取binlog存储到kafka中  
+kafka-client 用不到了github开源的一个项目  https://github.com/nmred/kafka-php  
 BinLogPack.php打印了事件类型  
 
 
