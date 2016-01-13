@@ -3,6 +3,7 @@
 参考python版本：https://github.com/noplay/python-mysql-replication
 
 ## 运行环境
+ 目前只支持数据库utf8编码  
  php版本>=5.4  
  mysql版本>=5.5  
  需要安装php  sockets扩展  
