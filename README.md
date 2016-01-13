@@ -24,4 +24,9 @@ BinLogPack.php打印了事件类型
  server-id=1  
  binlog_format=row   
 
+## 持久化
+ file-pos 保存了当前读取到binlog的filename和pos，保证程序异常退出后能继续读取binlog  
+ 新项目运行时 要删除file-pos，从当前show master status,读取到的filename pos开始读取  
+ 可以设置file-pos，程序则从当前设置的位置读取binlog
+
 
