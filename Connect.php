@@ -1,22 +1,22 @@
 <?php
 
-require_once "config/Config.php";
-require_once 'db/TimeDate.php';
-require_once 'db/DBMysql.php';
-require_once "db/DBHelper.php";
-require_once "db/Log.php";
-require_once "const/ConstFieldType.php";
-require_once "bin/BinLogPack.php";
-require_once "bin/BinLogEvent.php";
-require_once "pack/RowEvent.php";
-require_once "const/ConstEventType.php";
-require_once "bin/BinLogColumns.php";
-require_once "const/ConstCommand.php";
-require_once "const/ConstAuth.php";
-require_once "pack/ServerInfo.php";
-require_once "const/ConstCapability.php";
-require_once "pack/PackAuth.php";
-require_once "const/ConstMy.php";
+require_once ROOT . "config/Config.php";
+require_once ROOT . 'db/TimeDate.php';
+require_once ROOT . 'db/DBMysql.php';
+require_once ROOT . "db/DBHelper.php";
+require_once ROOT . "db/Log.php";
+require_once ROOT . "const/ConstFieldType.php";
+require_once ROOT . "bin/BinLogPack.php";
+require_once ROOT . "bin/BinLogEvent.php";
+require_once ROOT . "pack/RowEvent.php";
+require_once ROOT . "const/ConstEventType.php";
+require_once ROOT . "bin/BinLogColumns.php";
+require_once ROOT . "const/ConstCommand.php";
+require_once ROOT . "const/ConstAuth.php";
+require_once ROOT . "pack/ServerInfo.php";
+require_once ROOT . "const/ConstCapability.php";
+require_once ROOT . "pack/PackAuth.php";
+require_once ROOT . "const/ConstMy.php";
 
 
 class Connect {
@@ -49,11 +49,7 @@ class Connect {
     // checksum是否开启
     private static $_CHECKSUM = false;
 
-    // 持久化file pos 计数器
-    private static $_COUNT = 0;
 
-    // 标记连接状态
-    private static $_CONNECTION = false;
 
     /**
      * @param int $pos  开始日志position 默认从4开始
@@ -127,8 +123,6 @@ class Connect {
 
         //
         self::getBinlogStream();
-
-        self::$_CONNECTION = TRUE;
     }
 
 
@@ -154,20 +148,31 @@ class Connect {
             while ($bytes_read < $data_len) {
                 $resp = socket_read(self::$_SOCKET, $data_len - $bytes_read);
 
+                //
+                if($resp === false) {
+                    self::_goneAway('remote host has closed the connection');
+                    throw new BinLogException(
+                        sprintf(
+                        'remote host has closed. error:%s, msg:%s',
+                        socket_last_error(),
+                        socket_strerror(socket_last_error())
+                    ));
+                }
+
                 // server kill connection or server gone away
-				if(strlen($resp) == 0){
+                if(strlen($resp) === 0){
                     self::_goneAway('read less data');
                     throw new BinLogException("read less " . ($data_len - strlen($body)));
                 }
                 $body .= $resp;
                 $bytes_read += strlen($resp);
             }
-			if(strlen($body) < $data_len){
+            if(strlen($body) < $data_len){
                 self::_goneAway('read undone data');
                 throw new BinLogException("read less " . ($data_len - strlen($body)));
             }
             return $body;
-		}catch (Exception $e) {
+        }catch (Exception $e) {
             self::_goneAway('socekt read fail!');
             throw new BinLogException(var_export($e, true));
         }
@@ -179,16 +184,8 @@ class Connect {
      */
 	private static function _goneAway($msg) {
         Log::error($msg . 'mysql server has gone away', 'mysqlBinlog', Config::$LOG['binlog']['error']);
-        self::$_CONNECTION = false;
     }
 
-    /**
-     * @breif mysql 是否可用
-     * @return bool
-     */
-    private static function connection() {
-        return self::$_CONNECTION;
-    }
 
 
     private static function _readPacket() {
@@ -285,6 +282,9 @@ class Connect {
 
         $pack   = self::_readPacket();
 
+        // 校验数据包格式
+        PackAuth::success($pack);
+
         $binlog = BinLogPack::getInstance();
         $result = $binlog->init($pack, self::$_CHECKSUM);
 
@@ -296,9 +296,9 @@ class Connect {
         //持久化当前读到的file pos
         if($flag) {
             return self::_sync($result, $flag);
-		}else{
-		    if($result) return $result;
-		}
+        }else{
+            if($result) return $result;
+        }
     }
 
     private static function _sync($result, $flag) {
@@ -358,7 +358,7 @@ class Connect {
      * @brief 写入当前binlog的位置
      * @return array|bool
      */
-	public static function putFilePos() {
+    public static function putFilePos() {
         list($filename, $pos) = BinLogPack::getFilePos();
         $data = sprintf("%s|%s|%s", $filename, $pos, date('Y-m-d H:i:s'));
         return file_put_contents(self::$FILE_POS, $data);

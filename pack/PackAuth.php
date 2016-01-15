@@ -54,7 +54,7 @@ class PackAuth {
     }
 
     /**
-     * @breif 校验数据包是否认证成功
+     * @breif 校验数据包格式是否正确，验证是否成功
      * @param $pack
      * @return array
      */

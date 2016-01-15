@@ -18,7 +18,10 @@ class BinLogPack {
 
     private static $_instance = null;
 
+    // 持久化记录 file pos  不能在next event 为dml操作记录
+    // 获取不到table map
     private static $_FILE_NAME;
+    private static $_POS;
 
 
     public static function getInstance() {
@@ -67,10 +70,13 @@ class BinLogPack {
             RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
         } elseif(in_array(self::$EVENT_TYPE,[ConstEventType::UPDATE_ROWS_EVENT_V2,ConstEventType::UPDATE_ROWS_EVENT_V1])) {
             $data =  RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            self::$_POS = self::$EVENT_INFO['pos'];
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2])) {
             $data = RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            self::$_POS = self::$EVENT_INFO['pos'];
         }elseif(in_array(self::$EVENT_TYPE,[ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2])) {
             $data = RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            self::$_POS = self::$EVENT_INFO['pos'];
         }elseif(self::$EVENT_TYPE == 16) {
             //var_dump(bin2hex($pack),$this->readUint64());
             //return RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE);
@@ -316,7 +322,7 @@ class BinLogPack {
 
 
     public static function getFilePos() {
-        return array(self::$_FILE_NAME, self::$EVENT_INFO['pos']);
+        return array(self::$_FILE_NAME, self::$_POS);
     }
 
 }

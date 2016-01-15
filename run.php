@@ -23,7 +23,7 @@ $count    = 0;
 
 while(1) {
 
-	try {
+    try {
         $flag = false;
         $tryCount++;
         Connect::init();
@@ -31,6 +31,7 @@ while(1) {
             $result = Connect::analysisBinLog($flag);
             $flag = false;
             if ($result) {
+                var_dump($result);
                 $data[] = $result;
                 $count++;
                 Log::out($count);
@@ -50,7 +51,7 @@ while(1) {
             }
         }
     } catch (BinLogException $e) {
-        Log::error('try count' . $tryCount, 'binlog', Config::$LOG['binlog']['error']);
+        Log::error('try count ' . $tryCount, 'binlog', Config::$LOG['binlog']['error']);
         Log::error(var_export($e, true), 'binlog', Config::$LOG['binlog']['error']);
         sleep(5);
     }
@@ -59,5 +60,6 @@ while(1) {
 
 
 function pushToKafka($data) {
+    return true;
     //return Deal::push($data);
 }
