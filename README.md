@@ -32,6 +32,6 @@ BinLogPack.php打印了事件类型
  
 ## 联系我
  任何问题可以mail  
- zhaozhiqiang173@163.com  
+ zhaozhiqiang1734@163.com  
 
 
