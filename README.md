@@ -13,9 +13,9 @@
 
 
 运行run.php 目前只支持row模式  
-项目中  可以用supervisor监控 run.php 进程
+项目中  可以用supervisor监控 run.php 进程  
 Connect::analysisBinLog bool true存储当前的file  pos  
-本例中 通过读取binlog存储到kafka中  kafka版本 0.8.2.0
+本例中 通过读取binlog存储到kafka中  kafka版本 0.8.2.0  
 kafka-client 用到了github开源的一个项目  https://github.com/nmred/kafka-php  
 BinLogPack.php打印了事件类型  
 
@@ -28,6 +28,10 @@ BinLogPack.php打印了事件类型
 ## 持久化
  file-pos 保存了当前读取到binlog的filename和pos，保证程序异常退出后能继续读取binlog  
  新项目运行时 要删除file-pos，从当前show master status,读取到的filename pos开始读取  
- 可以设置file-pos，程序则从当前设置的位置读取binlog
+ 可以设置file-pos，程序则从当前设置的位置读取binlog  
+ 
+## 联系我
+ 任何问题可以mail  
+ zhaozhiqiang173@163.com  
 
 
