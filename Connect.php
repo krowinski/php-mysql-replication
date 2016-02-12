@@ -14,6 +14,7 @@ require_once ROOT . "bin/BinLogColumns.php";
 require_once ROOT . "const/ConstCommand.php";
 require_once ROOT . "const/ConstAuth.php";
 require_once ROOT . "pack/ServerInfo.php";
+require_once ROOT . "pack/Gtid.php";
 require_once ROOT . "const/ConstCapability.php";
 require_once ROOT . "pack/PackAuth.php";
 require_once ROOT . "const/ConstMy.php";
@@ -41,7 +42,7 @@ class Connect {
     private static $_GTID;
 
     // 模拟从库id 不能和主库冲突
-    private static $_SLAVE_SERVER_ID = 100;
+    private static $_SLAVE_SERVER_ID = 3;
 
     // 持久化file pos文件存储位置
     public static $FILE_POS;
@@ -65,13 +66,7 @@ class Connect {
         // 复制方式
         self::$_GTID = $gtid;
 
-        // 记录binlog读取到的位置
-        self::$FILE_POS = Config::$BINLOG_NAME_PATH;
-        list($filename, $pos) = self::getFilePos();
-        if($filename) {
-            self::$_POS   = $pos;
-            self::$_FILE  = $filename;
-        }
+
 
 
         // 认证auth
@@ -127,8 +122,9 @@ class Connect {
 
 
 
-    private static function _write($data) {
-        if(socket_write(self::$_SOCKET, $data, strlen($data))=== false )
+    private static function _write($data)
+    {
+        if(false === socket_write(self::$_SOCKET, $data, strlen($data)))
         {
             throw new BinLogException( sprintf( "Unable to write to socket: %s", socket_strerror( socket_last_error())));
         }
@@ -248,14 +244,9 @@ class Connect {
 
         self::_writeRegisterSlaveCommand();
 
-        // 开始读取的二进制日志位置
-        if(!self::$_FILE) {
-            $logInfo = DBHelper::getPos();
-            self::$_FILE = $logInfo['File'];
-            if(!self::$_POS) {
-                self::$_POS = $logInfo['Position'];
-            }
-        }
+        /*
+        self::$_POS = 1;
+        self::$_FILE = 'dupa.bin';
 
         $header   = pack('l', 11 + strlen(self::$_FILE));
 
@@ -265,14 +256,53 @@ class Connect {
         $data .= pack('s', 0);
         $data .= pack('L', self::$_SLAVE_SERVER_ID);
         $data .= self::$_FILE;
+        */
 
-        self::_write($data);
 
-        //认证
+
+        $COM_BINLOG_DUMP_GTID = 0x1e;
+
+        $Gtid = new GtidSet(self::$_GTID);
+        $encoded_data_size = $Gtid->encoded_length();
+
+        $header_size =
+            2 +  # binlog_flags
+            4 +  # server_id
+            4 +  # binlog_name_info_size
+            4 +  # empty binlog name
+            8 +  # binlog_pos_info_size
+            4;
+
+        $prelude = pack('l', $header_size + $encoded_data_size) . chr($COM_BINLOG_DUMP_GTID);
+        $prelude .= pack('S', 0);
+        $prelude .= pack('I', self::$_SLAVE_SERVER_ID);
+        $prelude .= pack('I', 3);
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= pack('Q', 4);
+
+        $prelude .= pack('I', $Gtid->encoded_length());
+        $prelude .= $Gtid->encoded();
+
+
+        $field=bin2hex($prelude);
+        $field=chunk_split($field,2,"\\x");
+        $field= "\\x" . substr($field,0,-2);
+
+     //  echo $field; die(PHP_EOL);
+
+        self::_write($prelude);
+
         $result = self::_readPacket();
+
+        //var_dump($result);
+
         PackAuth::success($result);
 
     }
+
+
 
     /**
      * @breif 解析binlog
@@ -281,6 +311,8 @@ class Connect {
     public static function analysisBinLog($flag = false) {
 
         $pack   = self::_readPacket();
+
+        //var_dump($pack);
 
         // 校验数据包格式
         PackAuth::success($pack);

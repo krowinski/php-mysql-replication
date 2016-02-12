@@ -9,10 +9,6 @@ define('ROOT', dirname(__FILE__) .'/');
 
 class BinLogException extends Exception
 {
-    public function __construct($errmsg)
-    {
-        parent::__construct($errmsg);
-    }
 }
 
 require_once "Connect.php";
@@ -26,7 +22,7 @@ while(1) {
     try {
         $flag = false;
         $tryCount++;
-        Connect::init();
+        Connect::init('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-1242');
         while (1) {
             $result = Connect::analysisBinLog($flag);
             $flag = false;
@@ -34,20 +30,7 @@ while(1) {
                 var_dump($result);
                 $data[] = $result;
                 $count++;
-                Log::out($count);
-                if($count%100 == 0) {
-                    while(1) {
-                        if(pushToKafka($data) === true) {
-                            $count = 0;
-                            $data  = [];
-                            $flag  = true;
-                            Log::out("push to kafka success");
-                            break;
-                        } else{
-                            sleep(5);
-                        }
-                    }
-                }
+
             }
         }
     } catch (BinLogException $e) {
