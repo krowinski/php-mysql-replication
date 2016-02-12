@@ -49,10 +49,6 @@ class DBMysql {
         do {
             if (!is_array($db_config_array))
                 break;
-            if (!is_string($db_name))
-                break;
-            if (strlen($db_name) == 0)
-                break;
             if (!array_key_exists('host', $db_config_array))
                 break;
             if (!array_key_exists('username', $db_config_array))
@@ -74,12 +70,12 @@ class DBMysql {
             if (strlen($password) == 0)
                 break;
 
-            $handle = @mysqli_connect($host, $username, $password, $db_name, $port);
+            $handle = mysqli_connect($host, $username, $password, $db_name, $port);
             // 如果连接失败，再重试2次
             for ($i = 1; ($i < 3) && (FALSE === $handle); $i++) {
                 // 重试前需要sleep 50毫秒
                 usleep(50000);
-                $handle = @mysqli_connect($host, $username, $password, $db_name, $port);
+                $handle = mysqli_connect($host, $username, $password, $db_name, $port);
             }
             if (FALSE === $handle)
                 break;

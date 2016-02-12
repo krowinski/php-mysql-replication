@@ -10,7 +10,7 @@ class Config {
 			'host'     => '192.168.1.100',
 			'port'     => '3306',
 			'password' => 'root',
-			'db_name'  => 'test'
+			'db_name'  => ''
 	);
 
 
