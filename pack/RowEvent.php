@@ -238,7 +238,7 @@ class RowEvent extends BinLogEvent
                 }
             } elseif ($column['type'] == ConstFieldType::INT24) {
                 if ($unsigned)
-                    $values[$name] = self::$PACK->read_uint24();
+                    $values[$name] = self::$PACK->readUint24();
                 else
                     $values[$name] = self::$PACK->read_int24();
             } elseif ($column['type'] == ConstFieldType::FLOAT)

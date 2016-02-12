@@ -16,6 +16,9 @@ class BinLogEvent {
     public static $SCHEMA_NAME;
 
     public static $TABLE_MAP;
+    /**
+     * @var BinLogPack
+     */
     public static $PACK;
     public static $PACK_SIZE;
     public static $FLAGS;
