@@ -47,8 +47,7 @@ class ConstCapability {
         self::$SECURE_CONNECTION = 1 << 15;
         self::$MULTI_STATEMENTS = 1 << 16;
         self::$MULTI_RESULTS = 1 << 17;
-        self::$CAPABILITIES = (self::$LONG_PASSWORD | self::$LONG_FLAG | self::$TRANSACTIONS |
-            self::$PROTOCOL_41 | self::$SECURE_CONNECTION);
+        self::$CAPABILITIES = (self::$LONG_PASSWORD | self::$LONG_FLAG | self::$TRANSACTIONS | self::$PROTOCOL_41 | self::$SECURE_CONNECTION);
     }
 }
 ConstCapability::init();

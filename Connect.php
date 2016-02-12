@@ -263,7 +263,7 @@ class Connect
         self::$_CHECKSUM = DBHelper::isCheckSum();
         if (self::$_CHECKSUM)
         {
-            self::excute('set @master_binlog_checksum= @@global.binlog_checksum');
+            self::execute('set @master_binlog_checksum= @@global.binlog_checksum');
         }
 
         // self::_writeRegisterSlaveCommand();
@@ -314,7 +314,7 @@ class Connect
      * @param $sql
      * @throws BinLogException
      */
-    public static function excute($sql)
+    public static function execute($sql)
     {
         $chunk_size = strlen($sql) + 1;
         $prelude = pack('LC', $chunk_size, 0x03);
