@@ -1,9 +1,7 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: baidu
- * Date: 15/11/7
- * Time: 下午1:13
+ * Class ConstFieldType
  */
 class ConstFieldType {
 
@@ -40,5 +38,4 @@ class ConstFieldType {
 
     const CHAR = self::TINY;
     const INTERVAL = self::ENUM;
-
 }

@@ -1,17 +1,27 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: fazi
- * Date: 11.02.2016
- * Time: 20:48
+ * Class Gtid
  */
 class Gtid
 {
+    /**
+     * @var string
+     */
     private $gtid = '';
+    /**
+     * @var array
+     */
     private $intervals = [];
+    /**
+     * @var mixed|string
+     */
     private $sid = '';
 
+    /**
+     * Gtid constructor.
+     * @param $gtid
+     */
     public function __construct($gtid)
     {
         $this->gtid = $gtid;
@@ -24,13 +34,13 @@ class Gtid
             $this->intervals[] = explode('-', $k);
         }
         $this->sid = str_replace('-', '', $this->sid);
-
-
     }
 
+    /**
+     * @return string
+     */
     public function encode()
     {
-        // binascii.unhexlify ==  pack('H*', $sid);
         $buffer = pack('H*', $this->sid);
         $buffer .= pack('Q', count($this->intervals));
 
@@ -48,11 +58,12 @@ class Gtid
             }
         }
 
-        //var_dump($this->sid,$interval);
-
         return $buffer;
     }
 
+    /**
+     * @return int
+     */
     public function encoded_length()
     {
         return (16 + 8 + 2 * 8 * count($this->intervals));
@@ -60,6 +71,9 @@ class Gtid
 }
 
 
+/**
+ * Class GtidSet
+ */
 class GtidSet
 {
     /**
@@ -67,6 +81,10 @@ class GtidSet
      */
     private $gtids;
 
+    /**
+     * GtidSet constructor.
+     * @param $gtids
+     */
     public function __construct($gtids)
     {
         foreach (explode(',', $gtids) as $gtid)
@@ -75,6 +93,9 @@ class GtidSet
         }
     }
 
+    /**
+     * @return int
+     */
     public function encoded_length()
     {
         $l = 8;
@@ -84,11 +105,12 @@ class GtidSet
             $l += $gtid->encoded_length();
         }
 
-        var_dump($l);
-
         return $l;
     }
 
+    /**
+     * @return string
+     */
     public function encoded()
     {
         $s = pack('Q', count($this->gtids));
@@ -101,4 +123,3 @@ class GtidSet
         return $s;
     }
 }
-
