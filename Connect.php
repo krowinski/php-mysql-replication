@@ -269,9 +269,6 @@ class Connect
         // self::_writeRegisterSlaveCommand();
 
         /*
-        self::$_POS = 1;
-        self::$_FILE = 'dupa.bin';
-
         $header   = pack('l', 11 + strlen(self::$_FILE));
 
         // COM_BINLOG_DUMP
@@ -347,10 +344,9 @@ class Connect
     }
 
     /**
-     * @param bool|false $flag
      * @return array
      */
-    public static function analysisBinLog($flag = false)
+    public static function analysisBinLog()
     {
         $pack = self::_readPacket();
         PackAuth::success($pack);
@@ -365,33 +361,11 @@ class Connect
             Log::out(round(memory_get_usage() / 1024 / 1024, 2) . 'MB');
         }
 
-        if ($flag)
-        {
-            return self::_sync($result, $flag);
-        }
-        else if ($result)
+        if ($result)
         {
             return $result;
         }
         return null;
-    }
-
-    /**
-     * @param $result
-     * @param $flag
-     * @return mixed
-     */
-    private static function _sync($result, $flag)
-    {
-        if ($flag)
-        {
-            if (!self::putFilePos())
-            {
-                Log::out('write file pos fail');
-                exit;
-            }
-        }
-        return $result;
     }
 
     /**
@@ -404,24 +378,12 @@ class Connect
         return file_put_contents(self::$FILE_POS, $data);
     }
 
-    /**
-     * @return array|bool
-     */
-    public static function getFilePos()
+    public function __destruct()
     {
-        $filename = $pos = '';
-        if (file_exists(self::$FILE_POS))
-        {
-            $data = file_get_contents(self::$FILE_POS);
-            list($filename, $pos, $date) = explode('|', $data);
-        }
-        if ($filename && $pos)
-        {
-            return [$filename, $pos];
-        }
-        else
-        {
-            return false;
-        }
+        var_dump('sockettttsss');
+        socket_shutdown(self::$_SOCKET);
+        socket_close(self::$_SOCKET);
+        self::$_SOCKET = null;
+        die;
     }
 }
