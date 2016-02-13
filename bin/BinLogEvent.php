@@ -92,14 +92,7 @@ class BinLogEvent
      */
     public static function readTableId()
     {
-        $a = (int)(ord(self::$PACK->read(1)) & 0xFF);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 8);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 16);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 24);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 32);
-        $a += (int)((ord(self::$PACK->read(1)) & 0xFF) << 40);
-
-        return $a;
+        return unpack('P', self::$PACK->read(6) . chr(0) . chr(0))[1];
     }
 
     /**
