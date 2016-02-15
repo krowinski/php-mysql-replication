@@ -162,10 +162,10 @@ class RowEvent extends BinLogEvent
      * @param array $result
      * @return array
      */
-    private static function  _getAddRows(array $result)
+    private static function _getAddRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE))
+        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -181,11 +181,6 @@ class RowEvent extends BinLogEvent
     private static function _read_column_data($cols_bitmap)
     {
         $values = [];
-
-        if ([] === self::$fields)
-        {
-            return $values;
-        }
 
         $l = (int)((self::bitCount($cols_bitmap) + 7) / 8);
 
@@ -256,7 +251,7 @@ class RowEvent extends BinLogEvent
             }
             elseif ($column['type'] == ConstFieldType::FLOAT)
             {
-                $values[$name] = unpack('f', self::$PACK->read(4))[1];
+                $values[$name] = round(unpack('f', self::$PACK->read(4))[1], 4);
             }
             elseif ($column['type'] == ConstFieldType::DOUBLE)
             {
@@ -374,8 +369,6 @@ class RowEvent extends BinLogEvent
             }
 
             $nullBitmapIndex += 1;
-
-            //var_dump($values[$name]);
         }
 
 
@@ -440,7 +433,6 @@ class RowEvent extends BinLogEvent
      */
     private static function __read_new_decimal(array $column)
     {
-        var_dump($column);
         $digits_per_integer = 9;
         $compressed_bytes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4];
         $integral = $column['precision'] - $column['decimals'];
@@ -460,6 +452,7 @@ class RowEvent extends BinLogEvent
             $mask = -1;
             $res = '-';
         }
+        self::$PACK->unread(pack('C', ($value ^ 0x80)));
 
         $size = $compressed_bytes[$comp_integral];
         if ($size > 0)
@@ -467,12 +460,10 @@ class RowEvent extends BinLogEvent
             $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
             $res .= $value;
         }
-        self::$PACK->unread(pack('C', ($value ^ 0x80)));
-
 
         for ($i = 0; $i < $uncomp_integral; $i++)
         {
-            $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
+            $value = self::$PACK->read_int_be_by_size(4) ^ $mask;
             $res .= sprintf('%09d', $value);
         }
 
@@ -480,7 +471,7 @@ class RowEvent extends BinLogEvent
 
         for ($i = 0; $i < $uncomp_fractional; $i++)
         {
-            $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
+            $value = self::$PACK->read_int_be_by_size(4) ^ $mask;
             $res .= sprintf('%09d', $value);
         }
 
@@ -491,7 +482,7 @@ class RowEvent extends BinLogEvent
             $res .= sprintf('%0' . $comp_fractional . 'd', $value);
         }
 
-        return bcadd($res, 0, $comp_fractional);
+        return bcmul($res, 1, $column['precision']);
     }
 
     /**
@@ -685,7 +676,7 @@ class RowEvent extends BinLogEvent
     private static function _getDelRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE))
+        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -725,7 +716,7 @@ class RowEvent extends BinLogEvent
     private static function _getUpdateRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE))
+        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $value['beform'] = self::_read_column_data($result['bitmap1']);
             $value['after'] = self::_read_column_data($result['bitmap2']);

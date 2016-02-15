@@ -1,5 +1,5 @@
 {
-  "name": "krowinski/mysql-replication",
+  "name": "krowinski/php-mysql-replication",
   "description": "php-mysql-replication",
   "keywords": [
     "mysql",
@@ -9,7 +9,7 @@
   ],
   "type": "library",
   "require": {
-    "php": ">=5.4",
+    "php": ">=5.6",
     "doctrine/dbal": "^2.5"
   },
   "require-dev": {

@@ -63,10 +63,6 @@ class BinLogStream
             $this->onlyDatabases
         );
 
-        Connect::setGtid($this->BinLogPack->getGtid());
-        Connect::setPos($this->BinLogPack->getPos());
-        Connect::setFile($this->BinLogPack->getFile());
-
         if ($result)
         {
             return $result;

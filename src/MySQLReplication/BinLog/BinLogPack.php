@@ -42,14 +42,6 @@ class BinLogPack
     private static $_GTID;
 
     /**
-     * @return array
-     */
-    public static function getFilePos()
-    {
-        return [self::$_FILE_NAME, self::$_POS];
-    }
-
-    /**
      * @param $pack
      * @param bool|true $checkSum
      * @param array $ignoredEvents
@@ -68,19 +60,17 @@ class BinLogPack
         self::$_PACK_KEY = 0;
         self::$EVENT_INFO = [];
 
+        // ok value on first
         $this->advance(1);
 
-        self::$EVENT_INFO['time'] = $timestamp = $this->readUInt32();
-        self::$EVENT_INFO['type'] = self::$EVENT_TYPE = $this->readUInt8();
-        self::$EVENT_INFO['id'] = $server_id =  $this->readUInt32();
-        self::$EVENT_INFO['size'] = $event_size =  $this->readUInt32();
-        self::$EVENT_INFO['pos'] = $log_pos =  $this->readUInt32();
-        self::$EVENT_INFO['flag'] = $flags = $this->readUInt16();
+        self::$EVENT_INFO = unpack('Vtime/Ctype/Vid/Vsize/Vpos/vflag', $this->read(19));
 
-        $event_size_without_header = $checkSum === true ? ($event_size - 23) : $event_size - 19;
+        self::$EVENT_TYPE = self::$EVENT_INFO['type'];
+        $event_size = self::$EVENT_INFO['size'];
+
+        $event_size_without_header = $checkSum === true ? ($event_size - 23) : ($event_size - 19);
 
         $data = [];
-
 
         if (in_array(self::$EVENT_TYPE, $ignoredEvents))
         {
@@ -173,14 +163,10 @@ class BinLogPack
     public function read($length)
     {
         $length = (int)$length;
-        $n = '';
-        for ($i = self::$_PACK_KEY; $i < self::$_PACK_KEY + $length; $i++)
-        {
-            $n .= self::$_PACK[$i];
-        }
+        $return = substr(self::$_PACK,0,$length);
         self::$_PACK_KEY += $length;
-
-        return $n;
+        self::$_PACK = substr(self::$_PACK, $length);
+        return $return;
     }
 
     /**
@@ -193,6 +179,7 @@ class BinLogPack
     public function unread($data)
     {
         self::$_PACK_KEY -= strlen($data);
+        self::$_PACK = $data . self::$_PACK;
     }
 
     /**
@@ -200,31 +187,8 @@ class BinLogPack
      */
     public function readUInt64()
     {
-        return unpack('P', $this->read(8))[1];
-    }
-
-    /**
-     * @return string
-     */
-    public function getGtid()
-    {
-        return self::$_GTID;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPos()
-    {
-        return self::$_POS;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFile()
-    {
-        return self::$_FILE_NAME;
+        $data = unpack('V*', $this->read(8));
+        return bcadd($data[1], bcmul($data[2], bcpow(2, 32)));
     }
 
     /**
@@ -257,7 +221,7 @@ class BinLogPack
         }
         elseif ($c == ConstMy::UNSIGNED_INT64_COLUMN)
         {
-            return$this->readUInt64();
+            return $this->readUInt64();
         }
         return $c;
     }
@@ -422,7 +386,7 @@ class BinLogPack
         }
         elseif ($size == 4)
         {
-            return unpack('N', $this->read($size))[1];
+            return unpack('i', implode('',array_reverse(str_split($this->read(4)))))[1];
         }
         elseif ($size == 5)
         {
