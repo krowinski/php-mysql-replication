@@ -283,30 +283,6 @@ class Connect
     }
 
     /**
-     * @param $gtid
-     */
-    public static function setGtid($gtid)
-    {
-        self::$_GTID = $gtid;
-    }
-
-    /**
-     * @param $pos
-     */
-    public static function setPos($pos)
-    {
-        self::$_POS = $pos;
-    }
-
-    /**
-     * @param $file
-     */
-    public static function setFile($file)
-    {
-        self::$_FILE = $file;
-    }
-
-    /**
      * @return bool
      */
     public static function getCheckSum()

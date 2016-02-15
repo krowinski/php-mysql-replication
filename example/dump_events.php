@@ -2,6 +2,8 @@
 error_reporting(E_ALL);
 date_default_timezone_set('UTC');
 
+ini_set('memory_limit', '8M');
+
 include __DIR__ . '/../vendor/autoload.php';
 
 function dpack($pack)
@@ -17,11 +19,11 @@ use MySQLReplication\Service\BinLogStream;
 
 // $gtid = '', $slave_id = '', $logFile = '', $logPos = '', array $ignoredEvents = [], array $onlyTables = [], $onlyDatabases = []
 $binLogStream = new BinLogStream(
-    "9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-11719",
+    "9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-13476",
     '',
     '',
     '',
-    [ ConstEventType::XID_EVENT, ConstEventType::QUERY_EVENT, ConstEventType::GTID_LOG_EVENT, ConstEventType::ROTATE_EVENT ]);
+    [ ]);
 //$binLogStream = new BinLogStream('', 'mysql-bin.000028', '4');
 while (1)
 {
