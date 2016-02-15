@@ -1,12 +1,10 @@
 <?php
+namespace MySQLReplication\Definitions;
+
 /**
  * Capability Flags
  * http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags
  * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
- * Created by PhpStorm.
- * User: zhaozhiqiang
- * Date: 15/11/19
- * Time: 下午2:54
  */
 class ConstCapability {
 
