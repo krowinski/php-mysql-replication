@@ -1,11 +1,7 @@
 <?php
-/**
- * mysql server info
- * Created by PhpStorm.
- * User: baidu
- * Date: 15/11/19
- * Time: 下午2:36
- */
+
+namespace MySQLReplication\Pack;
+
 class ServerInfo {
 
 

@@ -1,0 +1,31 @@
+{
+  "name": "krowinski/mysql-replication",
+  "description": "php-mysql-replication",
+  "keywords": [
+    "mysql",
+    "replication",
+    "binlog",
+    "php"
+  ],
+  "type": "library",
+  "require": {
+    "php": ">=5.4",
+    "doctrine/dbal": "^2.5"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "*"
+  },
+  "license": "WTFPL",
+  "authors": [
+    {
+      "name": "KR",
+      "email": "kacper.rowinski@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "MySQLReplication\\": "src/MySQLReplication/"
+    }
+  },
+  "minimum-stability": "stable"
+}

@@ -1,5 +1,7 @@
 <?php
 
+namespace MySQLReplication\Definitions;
+
 /**
  * Class ConstFieldType
  */

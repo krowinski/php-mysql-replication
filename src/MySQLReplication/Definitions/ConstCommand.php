@@ -1,5 +1,7 @@
 <?php
 
+namespace MySQLReplication\Definitions;
+
 class ConstCommand
 {
     const COM_BINLOG_DUMP    = 0x12;

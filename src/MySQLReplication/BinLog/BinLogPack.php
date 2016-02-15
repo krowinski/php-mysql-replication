@@ -1,5 +1,12 @@
 <?php
 
+namespace MySQLReplication\BinLog;
+
+use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\Definitions\ConstMy;
+use MySQLReplication\Exception\BinLogException;
+use MySQLReplication\Pack\RowEvent;
+
 /**
  * Class BinLogPack
  */
@@ -21,10 +28,6 @@ class BinLogPack
      * @var string
      */
     private static $_PACK;
-    /**
-     * @var null
-     */
-    private static $_instance = null;
     /**
      * @var string
      */
@@ -49,52 +52,58 @@ class BinLogPack
     /**
      * @param $pack
      * @param bool|true $checkSum
+     * @param array $ignoredEvents
+     * @param array $onlyTables
+     * @param array $onlyDatabases
      * @return array
      */
-    public function init($pack, $checkSum = true)
+    public function init(
+        $pack,
+        $checkSum = true,
+        array $ignoredEvents = [],
+        array $onlyTables = [],
+        array $onlyDatabases = [])
     {
-        if (!self::$_instance)
-        {
-            self::$_instance = new self();
-        }
-
-        //
         self::$_PACK = $pack;
         self::$_PACK_KEY = 0;
         self::$EVENT_INFO = [];
 
         $this->advance(1);
 
-        self::$EVENT_INFO['time'] = $timestamp = unpack('L', $this->read(4))[1];
-        self::$EVENT_INFO['type'] = self::$EVENT_TYPE = unpack('C', $this->read(1))[1];
-        self::$EVENT_INFO['id'] = $server_id = unpack('L', $this->read(4))[1];
-        self::$EVENT_INFO['size'] = $event_size = unpack('L', $this->read(4))[1];
-        self::$EVENT_INFO['pos'] = $log_pos = unpack('L', $this->read(4))[1];
-        self::$EVENT_INFO['flag'] = $flags = unpack('S', $this->read(2))[1];
-
-
+        self::$EVENT_INFO['time'] = $timestamp = $this->readUInt32();
+        self::$EVENT_INFO['type'] = self::$EVENT_TYPE = $this->readUInt8();
+        self::$EVENT_INFO['id'] = $server_id =  $this->readUInt32();
+        self::$EVENT_INFO['size'] = $event_size =  $this->readUInt32();
+        self::$EVENT_INFO['pos'] = $log_pos =  $this->readUInt32();
+        self::$EVENT_INFO['flag'] = $flags = $this->readUInt16();
 
         $event_size_without_header = $checkSum === true ? ($event_size - 23) : $event_size - 19;
 
         $data = [];
 
+
+        if (in_array(self::$EVENT_TYPE, $ignoredEvents))
+        {
+            return $data;
+        }
+
         if (self::$EVENT_TYPE == ConstEventType::TABLE_MAP_EVENT)
         {
-            $data['table_event_map'] = RowEvent::tableMap(self::getInstance(), self::$EVENT_TYPE);
+            $data = RowEvent::tableMap($this, self::$EVENT_TYPE);
         }
         elseif (in_array(self::$EVENT_TYPE, [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::updateRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data = RowEvent::updateRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
             self::$_POS = self::$EVENT_INFO['pos'];
         }
         elseif (in_array(self::$EVENT_TYPE, [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::addRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data = RowEvent::addRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
             self::$_POS = self::$EVENT_INFO['pos'];
         }
         elseif (in_array(self::$EVENT_TYPE, [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::delRow(self::getInstance(), self::$EVENT_TYPE, $event_size_without_header);
+            $data = RowEvent::delRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
             self::$_POS = self::$EVENT_INFO['pos'];
         }
         elseif (self::$EVENT_TYPE == ConstEventType::XID_EVENT)
@@ -143,19 +152,7 @@ class BinLogPack
             ];
         }
 
-        if (DEBUG)
-        {
-            $msg = self::$_FILE_NAME;
-            $msg .= '-- next pos -> ' . $log_pos;
-            $msg .= '-- typeEvent -> ' . self::$EVENT_TYPE;
-            $msg .= '-- gtid next -> ' . self::$_GTID;
-            Log::out($msg);
-        }
-
-        if (!empty($data))
-        {
-            $data['event'] = self::$EVENT_INFO;
-        }
+        $data['event'] = self::$EVENT_INFO;
 
         return $data;
     }
@@ -171,7 +168,7 @@ class BinLogPack
     /**
      * @param int $length
      * @return string
-     * @throws Exception
+     * @throws BinLogException
      */
     public function read($length)
     {
@@ -199,18 +196,6 @@ class BinLogPack
     }
 
     /**
-     * @return BinLogPack|null
-     */
-    public static function getInstance()
-    {
-        if (!self::$_instance)
-        {
-            self::$_instance = new self();
-        }
-        return self::$_instance;
-    }
-
-    /**
      * @return mixed
      */
     public function readUInt64()
@@ -224,6 +209,22 @@ class BinLogPack
     public function getGtid()
     {
         return self::$_GTID;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPos()
+    {
+        return self::$_POS;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFile()
+    {
+        return self::$_FILE_NAME;
     }
 
     /**
@@ -287,7 +288,7 @@ class BinLogPack
     /**
      * @param $size
      * @return string
-     * @throws Exception
+     * @throws BinLogException
      */
     public function read_length_coded_pascal_string($size)
     {
@@ -299,7 +300,7 @@ class BinLogPack
      * Read a little endian integer values based on byte number
      * @param $size
      * @return mixed
-     * @throws Exception
+     * @throws BinLogException
      */
     public function read_uint_by_size($size)
     {
@@ -336,7 +337,7 @@ class BinLogPack
             return $this->readUInt64();
         }
 
-        throw new Exception('$size ' . $size . ' not handled');
+        throw new BinLogException('$size ' . $size . ' not handled');
     }
 
     /**
@@ -403,7 +404,7 @@ class BinLogPack
      * Read a big endian integer values based on byte number
      * @param $size
      * @return int
-     * @throws Exception
+     * @throws BinLogException
      */
     public function read_int_be_by_size($size)
     {
@@ -421,7 +422,7 @@ class BinLogPack
         }
         elseif ($size == 4)
         {
-            return unpack('i', $this->read($size))[1];
+            return unpack('N', $this->read($size))[1];
         }
         elseif ($size == 5)
         {
@@ -432,7 +433,7 @@ class BinLogPack
             return unpack('l', $this->read($size))[1];
         }
 
-        throw new Exception('$size ' . $size . ' not handled');
+        throw new BinLogException('$size ' . $size . ' not handled');
     }
 
     /**
@@ -454,7 +455,7 @@ class BinLogPack
      */
     public function read_int40_be()
     {
-        $data = unpack('IC', $this->read(5));
+        $data = unpack('NC', $this->read(5));
         return $data[2] + ($data[1] << 8);
     }
 

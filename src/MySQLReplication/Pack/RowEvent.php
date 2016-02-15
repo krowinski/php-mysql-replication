@@ -1,5 +1,14 @@
 <?php
 
+namespace MySQLReplication\Pack;
+
+use MySQLReplication\BinLog\BinLogColumns;
+use MySQLReplication\BinLog\BinLogEvent;
+use MySQLReplication\BinLog\BinLogPack;
+use MySQLReplication\DataBase\DBHelper;
+use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\Definitions\ConstFieldType;
+
 /**
  * Class RowEvent
  */
@@ -9,44 +18,10 @@ class RowEvent extends BinLogEvent
      * @var []
      */
     private static $fields;
-
     /**
-     * @param BinLogPack $pack
-     * @param $event_type
-     * @param $size
-     * @throws Exception
+     * @var bool
      */
-    public static function rowInit(BinLogPack $pack, $event_type, $size)
-    {
-        parent::_init($pack, $event_type, $size);
-
-        self::$TABLE_ID = self::readTableId();
-
-        self::$FLAGS = unpack('v', self::$PACK->read(2))[1];
-
-        if (in_array(self::$EVENT_TYPE, [
-            ConstEventType::DELETE_ROWS_EVENT_V2,
-            ConstEventType::WRITE_ROWS_EVENT_V2,
-            ConstEventType::UPDATE_ROWS_EVENT_V2
-        ]))
-        {
-            self::$EXTRA_DATA_LENGTH = unpack('v', self::$PACK->read(2))[1];
-
-            self::$EXTRA_DATA = self::$PACK->read(self::$EXTRA_DATA_LENGTH / 8);
-        }
-
-        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
-
-
-        self::$fields = [];
-        if (self::$TABLE_MAP[self::$TABLE_ID]) {
-            self::$fields = self::$TABLE_MAP[self::$TABLE_ID];
-        }
-        if ([] == self::$fields) {
-            //remove cache  can be empty (drop table)
-            unset(self::$TABLE_MAP[self::$TABLE_ID]);
-        }
-    }
+    private static $process = true;
 
     /**
      * This evenement describe the structure of a table.
@@ -89,7 +64,9 @@ class RowEvent extends BinLogEvent
 
         $columns = DBHelper::getFields($data['schema_name'], $data['table_name']);
 
-        self::$TABLE_MAP[self::$TABLE_ID] = [];
+        self::$TABLE_MAP[self::$TABLE_ID]['fields'] = [];
+        self::$TABLE_MAP[self::$TABLE_ID]['database'] = $data['schema_name'];
+        self::$TABLE_MAP[self::$TABLE_ID]['table_name'] = $data['table_name'];
 
         // if you drop tables and parse of logs you will get empty scheme
         if (empty($columns))
@@ -100,11 +77,7 @@ class RowEvent extends BinLogEvent
         for ($i = 0; $i < strlen($column_type_def); $i++)
         {
             $type = ord($column_type_def[$i]);
-            if (!isset($columns[$i]))
-            {
-                Log::warn(var_export($columns, true) . var_export($data, true), 'tableMap', Config::$LOG['binlog']['error']);
-            }
-            self::$TABLE_MAP[self::$TABLE_ID][$i] = BinLogColumns::parse($type, $columns[$i], self::$PACK);
+            self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = BinLogColumns::parse($type, $columns[$i], self::$PACK);
         }
 
         return $data;
@@ -114,11 +87,13 @@ class RowEvent extends BinLogEvent
      * @param BinLogPack $pack
      * @param $event_type
      * @param $size
+     * @param $onlyTables
+     * @param $onlyDatabases
      * @return mixed
      */
-    public static function addRow(BinLogPack $pack, $event_type, $size)
+    public static function addRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
     {
-        self::rowInit($pack, $event_type, $size);
+        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
 
         $result = [];
 
@@ -136,99 +111,72 @@ class RowEvent extends BinLogEvent
      * @param BinLogPack $pack
      * @param $event_type
      * @param $size
-     * @return mixed
+     * @param array $onlyTables
+     * @param array $onlyDatabases
      */
-    public static function delRow(BinLogPack $pack, $event_type, $size)
+    private static function rowInit(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
     {
-        self::rowInit($pack, $event_type, $size);
+        parent::_init($pack, $event_type, $size);
 
-        $result = [];
+        self::$TABLE_ID = self::readTableId();
 
-        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+        self::$FLAGS = unpack('v', self::$PACK->read(2))[1];
 
-        $result['bitmap'] = self::$PACK->read($len);
-
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $value['del'] = self::_getDelRows($result);
-
-        return $value;
-    }
-
-    /**
-     * @param BinLogPack $pack
-     * @param $event_type
-     * @param $size
-     * @return mixed
-     */
-    public static function updateRow(BinLogPack $pack, $event_type, $size)
-    {
-        self::rowInit($pack, $event_type, $size);
-
-        $result = [];
-
-        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
-
-        $result['bitmap1'] = self::$PACK->read($len);
-        $result['bitmap2'] = self::$PACK->read($len);
-
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $value['update'] = self::_getUpdateRows($result);
-
-        return $value;
-    }
-
-    /**
-     * @param $bitmap
-     * @param $position
-     * @return int
-     */
-    public static function BitGet($bitmap, $position)
-    {
-        $bit = $bitmap[intval($position / 8)];
-        if (is_string($bit))
+        if (in_array(self::$EVENT_TYPE, [
+            ConstEventType::DELETE_ROWS_EVENT_V2,
+            ConstEventType::WRITE_ROWS_EVENT_V2,
+            ConstEventType::UPDATE_ROWS_EVENT_V2
+        ]))
         {
-            $bit = ord($bit);
+            self::$EXTRA_DATA_LENGTH = unpack('v', self::$PACK->read(2))[1];
+
+            self::$EXTRA_DATA = self::$PACK->read(self::$EXTRA_DATA_LENGTH / 8);
         }
 
-        return $bit & (1 << ($position & 7));
+        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
+
+
+        self::$fields = [];
+        if (self::$TABLE_MAP[self::$TABLE_ID])
+        {
+            self::$fields = self::$TABLE_MAP[self::$TABLE_ID]['fields'];
+
+            if (!empty($onlyTables) && !in_array(self::$TABLE_MAP[self::$TABLE_ID]['table_name'], $onlyTables))
+            {
+                self::$process = false;
+            }
+
+            if (!empty($onlyTables) && !in_array(self::$TABLE_MAP[self::$TABLE_ID]['database'], $onlyDatabases))
+            {
+                self::$process = false;
+            }
+        }
+        if ([] == self::$fields)
+        {
+            //remove cache  can be empty (drop table)
+            unset(self::$TABLE_MAP[self::$TABLE_ID]);
+        }
     }
 
     /**
-     * @param $null_bitmap
-     * @param $position
-     * @return int
+     * @param array $result
+     * @return array
      */
-    public static function _is_null($null_bitmap, $position)
+    private static function  _getAddRows(array $result)
     {
-        $bit = $null_bitmap[intval($position / 8)];
-        if (is_string($bit))
+        $rows = [];
+        while (!self::$PACK->isComplete(self::$PACK_SIZE))
         {
-            $bit = ord($bit);
+            $rows[] = self::_read_column_data($result['bitmap']);
         }
 
-        return $bit & (1 << ($position % 8));
-    }
-
-    /**
-     * @param $size
-     * @param $column
-     * @return string
-     */
-    private static function _read_string($size, $column)
-    {
-        $string = self::$PACK->read_length_coded_pascal_string($size);
-        if ($column['character_set_name'])
-        {
-            $string = iconv($column['character_set_name'], ini_get('default_charset'), $string);
-        }
-
-        return $string;
+        return $rows;
     }
 
     /**
      * @param $cols_bitmap
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
     private static function _read_column_data($cols_bitmap)
     {
@@ -438,16 +386,124 @@ class RowEvent extends BinLogEvent
     }
 
     /**
-     * //TODO
+     * @param $bitmap
+     * @param $position
+     * @return int
+     */
+    public static function BitGet($bitmap, $position)
+    {
+        $bit = $bitmap[intval($position / 8)];
+        if (is_string($bit))
+        {
+            $bit = ord($bit);
+        }
+
+        return $bit & (1 << ($position & 7));
+    }
+
+    /**
+     * @param $null_bitmap
+     * @param $position
+     * @return int
+     */
+    public static function _is_null($null_bitmap, $position)
+    {
+        $bit = $null_bitmap[intval($position / 8)];
+        if (is_string($bit))
+        {
+            $bit = ord($bit);
+        }
+
+        return $bit & (1 << ($position % 8));
+    }
+
+    /**
+     * @param $size
+     * @param $column
+     * @return string
+     */
+    private static function _read_string($size, $column)
+    {
+        $string = self::$PACK->read_length_coded_pascal_string($size);
+        if ($column['character_set_name'])
+        {
+            $string = iconv($column['character_set_name'], ini_get('default_charset'), $string);
+        }
+
+        return $string;
+    }
+
+    /**
+     * Read MySQL's new decimal format introduced in MySQL 5
+     * @param $column
+     * @return string
+     */
+    private static function __read_new_decimal(array $column)
+    {
+        var_dump($column);
+        $digits_per_integer = 9;
+        $compressed_bytes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4];
+        $integral = $column['precision'] - $column['decimals'];
+        $uncomp_integral = (int)($integral / $digits_per_integer);
+        $uncomp_fractional = (int)($column['decimals'] / $digits_per_integer);
+        $comp_integral = $integral - ($uncomp_integral * $digits_per_integer);
+        $comp_fractional = $column['decimals'] - ($uncomp_fractional * $digits_per_integer);
+
+        $value = self::$PACK->readUInt8();
+        if (0 != ($value & 0x80))
+        {
+            $mask = 0;
+            $res = '';
+        }
+        else
+        {
+            $mask = -1;
+            $res = '-';
+        }
+
+        $size = $compressed_bytes[$comp_integral];
+        if ($size > 0)
+        {
+            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
+            $res .= $value;
+        }
+        self::$PACK->unread(pack('C', ($value ^ 0x80)));
+
+
+        for ($i = 0; $i < $uncomp_integral; $i++)
+        {
+            $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
+            $res .= sprintf('%09d', $value);
+        }
+
+        $res .= '.';
+
+        for ($i = 0; $i < $uncomp_fractional; $i++)
+        {
+            $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
+            $res .= sprintf('%09d', $value);
+        }
+
+        $size = $compressed_bytes[$comp_fractional];
+        if ($size > 0)
+        {
+            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
+            $res .= sprintf('%0' . $comp_fractional . 'd', $value);
+        }
+
+        return bcadd($res, 0, $comp_fractional);
+    }
+
+    /**
+     * TODO
      * @return float|null
      */
     private static function _read_datetime()
     {
-
         $value = self::$PACK->readUInt64();
         if ($value == 0)  # nasty mysql 0000-00-00 dates
         {
-            return null;
+            return '';
         }
 
         $date = $value / 1000000;
@@ -456,43 +512,32 @@ class RowEvent extends BinLogEvent
         $year = (int)($date / 10000);
         $month = (int)(($date % 10000) / 100);
         $day = (int)($date % 100);
-        if ($year == 0 or $month == 0 or $day == 0)
+        if ($year == 0 || $month == 0 || $day == 0)
         {
-            return null;
+            return '';
         }
 
-        var_dump($year, $month, $date);
-        exit;
-//
-//        $date = datetime.datetime(
-//        year=year,
-//        month=month,
-//        day=day,
-//        hour=int(time / 10000),
-//        minute=int((time % 10000) / 100),
-//        second=int(time % 100))
-        return $date;
-
+        $date = new \DateTime();
+        $date->setDate($year, $month, $day);
+        return $date->format('Y-m-d');
     }
 
     /**
+     * Date Time
+     * 1 bit  sign           (1= non-negative, 0= negative)
+     * 17 bits year*13+month  (year 0-9999, month 0-12)
+     * 5 bits day            (0-31)
+     * 5 bits hour           (0-23)
+     * 6 bits minute         (0-59)
+     * 6 bits second         (0-59)
+     * ---------------------------
+     * 40 bits = 5 bytes
      * @param $column
      * @return string
-     * @throws Exception
+     * @throws \Exception
      */
     private static function  _read_datetime2($column)
     {
-        /*DATETIME
-        1 bit  sign           (1= non-negative, 0= negative)
-        17 bits year*13+month  (year 0-9999, month 0-12)
-         5 bits day            (0-31)
-         5 bits hour           (0-23)
-         6 bits minute         (0-59)
-         6 bits second         (0-59)
-        ---------------------------
-        40 bits = 5 bytes
-        */
-
         $data = self::$PACK->read_int_be_by_size(5);
 
         $year_month = self::_read_binary_slice($data, 1, 17, 40);
@@ -552,21 +597,21 @@ class RowEvent extends BinLogEvent
      *
      * @param array $column
      * @return int|string
-     * @throws Exception
+     * @throws \Exception
      */
     private static function _add_fsp_to_time(array $column)
     {
         $read = 0;
         $time = '';
-        if ($column['fsp'] == 1 or $column['fsp'] == 2)
+        if ($column['fsp'] == 1 || $column['fsp'] == 2)
         {
             $read = 1;
         }
-        elseif ($column['fsp'] == 3 or $column['fsp'] == 4)
+        elseif ($column['fsp'] == 3 || $column['fsp'] == 4)
         {
             $read = 2;
         }
-        elseif ($column ['fsp'] == 5 or $column['fsp'] == 6)
+        elseif ($column ['fsp'] == 5 || $column['fsp'] == 6)
         {
             $read = 3;
         }
@@ -586,20 +631,51 @@ class RowEvent extends BinLogEvent
     }
 
     /**
-     * @param array $result
-     * @return array
+     * @return string
      */
-    private static function _getUpdateRows(array $result)
+    private static function _read_date()
     {
-        $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE))
+        $time = self::$PACK->readUInt24();
+        if (0 == $time)
         {
-            $value['beform'] = self::_read_column_data($result['bitmap1']);
-            $value['after'] = self::_read_column_data($result['bitmap2']);
-            $rows[] = $value['after'];
+            return '';
         }
 
-        return $rows;
+        $year = ($time & ((1 << 15) - 1) << 9) >> 9;
+        $month = ($time & ((1 << 4) - 1) << 5) >> 5;
+        $day = ($time & ((1 << 5) - 1));
+        if ($year == 0 || $month == 0 || $day == 0)
+        {
+            return '';
+        }
+
+        $date = new \DateTime();
+        $date->setDate($year, $month, $day);
+        return $date->format('Y-m-d');
+    }
+
+    /**
+     * @param BinLogPack $pack
+     * @param $event_type
+     * @param $size
+     * @param $onlyTables
+     * @param $onlyDatabases
+     * @return mixed
+     */
+    public static function delRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
+    {
+        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
+
+        $result = [];
+
+        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+
+        $result['bitmap'] = self::$PACK->read($len);
+
+        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
+        $value['del'] = self::_getDelRows($result);
+
+        return $value;
     }
 
     /**
@@ -618,102 +694,44 @@ class RowEvent extends BinLogEvent
     }
 
     /**
+     * @param BinLogPack $pack
+     * @param $event_type
+     * @param $size
+     * @param $onlyTables
+     * @param $onlyDatabases
+     * @return mixed
+     */
+    public static function updateRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
+    {
+        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
+
+        $result = [];
+
+        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+
+        $result['bitmap1'] = self::$PACK->read($len);
+        $result['bitmap2'] = self::$PACK->read($len);
+
+        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
+        $value['update'] = self::_getUpdateRows($result);
+
+        return $value;
+    }
+
+    /**
      * @param array $result
      * @return array
      */
-    private static function  _getAddRows(array $result)
+    private static function _getUpdateRows(array $result)
     {
         $rows = [];
         while (!self::$PACK->isComplete(self::$PACK_SIZE))
         {
-            $rows[] = self::_read_column_data($result['bitmap']);
+            $value['beform'] = self::_read_column_data($result['bitmap1']);
+            $value['after'] = self::_read_column_data($result['bitmap2']);
+            $rows[] = $value['after'];
         }
 
         return $rows;
-    }
-
-    /**
-     * Read MySQL's new decimal format introduced in MySQL 5
-     * @param $column
-     * @return string
-     */
-    private static function __read_new_decimal(array $column)
-    {
-        $digits_per_integer = 9;
-        $compressed_bytes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4];
-        $integral = $column['precision'] - $column['decimals'];
-        $uncomp_integral = (int)($integral / $digits_per_integer);
-        $uncomp_fractional = (int)($column['decimals'] / $digits_per_integer);
-        $comp_integral = $integral - ($uncomp_integral * $digits_per_integer);
-        $comp_fractional = $column['decimals'] - ($uncomp_fractional * $digits_per_integer);
-
-        $value = self::$PACK->readUInt8();
-        if (0 != ($value & 0x80))
-        {
-            $mask = 0;
-            $res = '';
-        }
-        else
-        {
-            $mask = -1;
-            $res = '-';
-        }
-
-        $size = $compressed_bytes[$comp_integral];
-        if ($size > 0)
-        {
-            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
-            $res .= $value;
-        }
-        self::$PACK->unread(pack('C', ($value ^ 0x80)));
-
-        for ($i = 0; $i < $uncomp_integral; $i++)
-        {
-            $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
-            $res .= sprintf('%09d', $value);
-        }
-
-        if ($uncomp_fractional > 0)
-        {
-            $res .= '.';
-
-            for ($i = 0; $i < $uncomp_fractional; $i++)
-            {
-                $value = unpack('N', self::$PACK->read(4))[1] ^ $mask;
-                $res .= sprintf('%09d', $value);
-            }
-        }
-
-        $size = $compressed_bytes[$comp_fractional];
-        if ($size > 0)
-        {
-            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
-            $res .= sprintf('%0' . $comp_fractional . 'd', $value);
-        }
-
-        return bcadd($res, 0, $comp_fractional);
-    }
-
-    /**
-     * @return string
-     */
-    private static function _read_date()
-    {
-        $time = self::$PACK->readUInt24();
-        if (0 == $time) {
-            return '';
-        }
-
-        $year = ($time & ((1 << 15) - 1) << 9) >> 9;
-        $month = ($time & ((1 << 4) - 1) << 5) >> 5;
-        $day = ($time & ((1 << 5) - 1));
-        if ($year == 0 or $month == 0 or $day == 0)
-        {
-            return '';
-        }
-
-        $date = new DateTime();
-        $date->setDate($year, $month, $day);
-        return $date->format('Y-m-d');
     }
 }

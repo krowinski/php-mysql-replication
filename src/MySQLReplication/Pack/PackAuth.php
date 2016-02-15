@@ -1,5 +1,10 @@
 <?php
 
+namespace MySQLReplication\Pack;
+
+use MySQLReplication\Definitions\ConstAuth;
+use MySQLReplication\Exception\BinLogException;
+
 /**
  * Class PackAuth
  */
@@ -14,7 +19,7 @@ class PackAuth
      * @return string
      * @link http://dev.mysql.com/doc/internals/en/secure-password-authentication.html#packet-Authentication::Native41
      */
-    public static function  initPack($flag, $user, $pass, $salt, $db = '')
+    public static function initPack($flag, $user, $pass, $salt, $db = '')
     {
         $data = pack('L', $flag);
         $data .= pack('L', ConstAuth::$PACK_MAX_LENGTH);
@@ -40,7 +45,7 @@ class PackAuth
     /**
      * @param $pack
      * @return array
-     * @throws Exception
+     * @throws BinLogException
      */
     public static function success($pack)
     {
@@ -57,7 +62,7 @@ class PackAuth
             {
                 $error_msg .= $pack[$i];
             }
-            throw new Exception($error_msg, $error_code);
+            throw new BinLogException($error_msg, $error_code);
         }
     }
 }

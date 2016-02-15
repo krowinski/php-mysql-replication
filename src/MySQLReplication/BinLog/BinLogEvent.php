@@ -1,5 +1,7 @@
 <?php
 
+namespace MySQLReplication\BinLog;
+
 /**
  * Class BinLogEvent
  */

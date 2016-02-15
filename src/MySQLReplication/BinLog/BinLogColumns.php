@@ -1,5 +1,9 @@
 <?php
 
+namespace MySQLReplication\BinLog;
+
+use MySQLReplication\Definitions\ConstFieldType;
+
 /**
  * Class BinLogColumns
  */
