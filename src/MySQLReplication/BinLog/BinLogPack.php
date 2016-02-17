@@ -38,6 +38,7 @@ class BinLogPack
     /**
      * @param $pack
      * @param bool|true $checkSum
+     * @param array $onlyEvents
      * @param array $ignoredEvents
      * @param array $onlyTables
      * @param array $onlyDatabases
@@ -46,6 +47,7 @@ class BinLogPack
     public function init(
         $pack,
         $checkSum = true,
+        array $onlyEvents = [],
         array $ignoredEvents = [],
         array $onlyTables = [],
         array $onlyDatabases = []
@@ -61,18 +63,25 @@ class BinLogPack
 
         $event_size_without_header = true === $checkSum ? ($this->eventInfo['size'] - 23) : ($this->eventInfo['size'] - 19);
 
+        if ($this->eventInfo['type'] == ConstEventType::TABLE_MAP_EVENT)
+        {
+            RowEvent::tableMap($this, $this->DBHelper, $this->eventInfo['type']);
+        }
+
         $data = [];
+
+        if (!empty($onlyEvents) && !in_array($this->eventInfo['type'], $onlyEvents))
+        {
+            return $data;
+        }
 
         if (in_array($this->eventInfo['type'], $ignoredEvents))
         {
             return $data;
         }
 
-        if ($this->eventInfo['type'] == ConstEventType::TABLE_MAP_EVENT)
-        {
-            $data = RowEvent::tableMap($this, $this->DBHelper, $this->eventInfo['type']);
-        }
-        elseif (in_array($this->eventInfo['type'], [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
+
+        if (in_array($this->eventInfo['type'], [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
         {
             $data = RowEvent::updateRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
         }

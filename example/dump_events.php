@@ -32,7 +32,7 @@ while (1)
     $result = $binLogStream->analysisBinLog();
     if (!is_null($result))
     {
-        print_r($result);
+        //print_r($result);
         echo 'Memory usage' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }
 }
