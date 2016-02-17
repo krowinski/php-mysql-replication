@@ -6,8 +6,8 @@ namespace MySQLReplication\Definitions;
  * http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags
  * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
  */
-class ConstCapability {
-
+class ConstCapability
+{
     public static $LONG_PASSWORD;
     public static $FOUND_ROWS;
     public static $LONG_FLAG;
@@ -27,7 +27,8 @@ class ConstCapability {
     public static $MULTI_RESULTS;
     public static $CAPABILITIES;
 
-    public static function init() {
+    public static function init()
+    {
         self::$LONG_PASSWORD = 1;
         self::$FOUND_ROWS = 1 << 1;
         self::$LONG_FLAG = 1 << 2;
@@ -48,4 +49,3 @@ class ConstCapability {
         self::$CAPABILITIES = (self::$LONG_PASSWORD | self::$LONG_FLAG | self::$TRANSACTIONS | self::$PROTOCOL_41 | self::$SECURE_CONNECTION);
     }
 }
-ConstCapability::init();

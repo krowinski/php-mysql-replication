@@ -75,11 +75,8 @@ class BinLogStream
      */
     public function analysisBinLog()
     {
-        $pack = $this->connect->getPacket();
-        PackAuth::success($pack);
-
         $result = $this->binLogPack->init(
-            $pack,
+            $this->connect->getPacket(),
             $this->connect->getCheckSum(),
             $this->onlyEvents,
             $this->ignoredEvents,
