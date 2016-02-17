@@ -33,6 +33,10 @@ class BinLogStream
      * @var BinLogPack
      */
     private $binLogPack;
+    /**
+     * @var array
+     */
+    private $onlyEvents;
 
     /**
      * @param Config $config
@@ -40,6 +44,7 @@ class BinLogStream
      * @param string $logFile - Set replication start log file
      * @param string $logPos - Set replication start log pos (resume_stream should be true)
      * @param string $slave_id - server id of this slave
+     * @param array $onlyEvents
      * @param array $ignoredEvents - Array of ignored events
      * @param array $onlyTables - An array with the tables you want to watch
      * @param array $onlyDatabases - An array with the schemas you want to watch
@@ -50,6 +55,7 @@ class BinLogStream
         $logFile = '',
         $logPos = '',
         $slave_id = '',
+        array $onlyEvents = [],
         array $ignoredEvents = [],
         array $onlyTables = [],
         array $onlyDatabases = []
@@ -61,6 +67,7 @@ class BinLogStream
         $this->ignoredEvents = $ignoredEvents;
         $this->onlyTables = $onlyTables;
         $this->onlyDatabases = $onlyDatabases;
+        $this->onlyEvents = $onlyEvents;
     }
 
     /**
@@ -74,6 +81,7 @@ class BinLogStream
         $result = $this->binLogPack->init(
             $pack,
             $this->connect->getCheckSum(),
+            $this->onlyEvents,
             $this->ignoredEvents,
             $this->onlyTables,
             $this->onlyDatabases
