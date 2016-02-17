@@ -76,13 +76,32 @@ class Connect
         $this->gtID = $gtID;
         $this->binFilePos = $logPos;
         $this->binFileName = $logFile;
-        $this->flag = ConstCapability::$CAPABILITIES;
 
-        $this->connectToSocket();
+        ConstCapability::init();
+        $this->flag = ConstCapability::$CAPABILITIES;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getCheckSum()
+    {
+        return $this->checkSum;
+    }
+
+    public function __destruct()
+    {
+        if (true === $this->isConnected())
+        {
+            socket_shutdown($this->socket);
+            socket_close($this->socket);
+        }
+        $this->socket = null;
     }
 
     /**
      * @throws BinLogException
+     * @return self
      */
     private function connectToSocket()
     {
@@ -105,15 +124,21 @@ class Connect
 
     private function serverInfo()
     {
-        ServerInfo::run($this->getPacket());
+        ServerInfo::run($this->getPacket(false));
     }
 
     /**
-     * @return bool|string
+     * @param bool $checkForOkByte
+     * @return string
      * @throws BinLogException
      */
-    public function getPacket()
+    public function getPacket($checkForOkByte = true)
     {
+        if (false === $this->isConnected())
+        {
+            $this->connectToSocket();
+        }
+
         $header = $this->readFromSocket(4);
         if (false === $header)
         {
@@ -121,7 +146,20 @@ class Connect
         }
         $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
 
-        return $this->readFromSocket($dataLength);
+        $result = $this->readFromSocket($dataLength);
+        if (true === $checkForOkByte)
+        {
+            PackAuth::success($result);
+        }
+        return $result;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isConnected()
+    {
+        return is_resource($this->socket);
     }
 
     /**
@@ -132,41 +170,17 @@ class Connect
     private function readFromSocket($data_len)
     {
         // server gone away
-        if ($data_len == 5)
+        if (5 === $data_len)
         {
             throw new BinLogException('read 5 bytes from mysql server has gone away');
         }
 
-        try
+        if (false === socket_recv($this->socket, $buffer, $data_len, MSG_WAITALL))
         {
-            $bytes_read = 0;
-            $body = '';
-            while ($bytes_read < $data_len)
-            {
-                $resp = socket_read($this->socket, $data_len - $bytes_read);
-                if ($resp === false)
-                {
-                    throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
-                }
+            throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
+        }
 
-                // server kill connection or server gone away
-                if (strlen($resp) === 0)
-                {
-                    throw new BinLogException('read less ' . ($data_len - strlen($body)));
-                }
-                $body .= $resp;
-                $bytes_read += strlen($resp);
-            }
-            if (strlen($body) < $data_len)
-            {
-                throw new BinLogException('read less ' . ($data_len - strlen($body)));
-            }
-            return $body;
-        }
-        catch (\Exception $e)
-        {
-            throw new BinLogException(var_export($e, true));
-        }
+        return $buffer;
     }
 
     /**
@@ -177,8 +191,7 @@ class Connect
         $data = PackAuth::initPack($this->flag, $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
 
         $this->writeToSocket($data);
-        $result = $this->getPacket();
-        PackAuth::success($result);
+        $this->getPacket();
     }
 
     /**
@@ -192,13 +205,12 @@ class Connect
         {
             throw new BinLogException('Unable to write to socket: ' . socket_strerror(socket_last_error()), socket_last_error());
         }
-        return true;
     }
 
     /**
      * @throws BinLogException
      */
-    public function getBinlogStream()
+    private function getBinlogStream()
     {
         $this->checkSum = $this->DBHelper->isCheckSum();
         if (true === $this->checkSum)
@@ -240,33 +252,19 @@ class Connect
         }
 
         $this->writeToSocket($prelude);
-        $result = $this->getPacket();
-        PackAuth::success($result);
+        $this->getPacket();
     }
 
     /**
      * @param string $sql
      * @throws BinLogException
      */
-    public function execute($sql)
+    private function execute($sql)
     {
         $chunk_size = strlen($sql) + 1;
         $prelude = pack('LC', $chunk_size, 0x03);
+
         $this->writeToSocket($prelude . $sql);
-    }
-
-    /**
-     * @return bool
-     */
-    public function getCheckSum()
-    {
-        return $this->checkSum;
-    }
-
-    public function __destruct()
-    {
-        socket_shutdown($this->socket);
-        socket_close($this->socket);
-        $this->socket = null;
+        $this->getPacket();
     }
 }

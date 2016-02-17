@@ -102,5 +102,4 @@ class Benchmark
 
 }
 
-
 (new Benchmark())->run();
