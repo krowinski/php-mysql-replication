@@ -3,6 +3,8 @@ namespace MySQLReplication\Service;
 
 use MySQLReplication\BinLog\BinLogPack;
 use MySQLReplication\BinLog\Connect;
+use MySQLReplication\Config\Config;
+use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Pack\PackAuth;
 
 class BinLogStream
@@ -15,9 +17,26 @@ class BinLogStream
      * @var array
      */
     private $onlyTables;
+    /**
+     * @var array
+     */
+    private $ignoredEvents;
+    /**
+     * @var DBHelper
+     */
+    private $dbHelper;
+    /**
+     * @var Connect
+     */
+    private $connect;
+    /**
+     * @var BinLogPack
+     */
+    private $binLogPack;
 
     /**
-     * @param string $gtid -  Use master_auto_position gtid to set position
+     * @param Config $config
+     * @param string $gtID -  Use master_auto_position gtid to set position
      * @param string $logFile - Set replication start log file
      * @param string $logPos - Set replication start log pos (resume_stream should be true)
      * @param string $slave_id - server id of this slave
@@ -26,7 +45,8 @@ class BinLogStream
      * @param array $onlyDatabases - An array with the schemas you want to watch
      */
     public function __construct(
-        $gtid = '',
+        Config $config,
+        $gtID = '',
         $logFile = '',
         $logPos = '',
         $slave_id = '',
@@ -34,13 +54,9 @@ class BinLogStream
         array $onlyTables = [],
         array $onlyDatabases = []
     ) {
-        Connect::init(
-            $gtid,
-            $logFile,
-            $logPos,
-            $slave_id
-        );
-        $this->BinLogPack = new BinLogPack();
+        $this->dbHelper = new DBHelper($config);
+        $this->connect = new Connect($config, $this->dbHelper, $gtID, $logFile, $logPos, $slave_id);
+        $this->binLogPack = new BinLogPack($this->dbHelper);
 
         $this->ignoredEvents = $ignoredEvents;
         $this->onlyTables = $onlyTables;
@@ -52,18 +68,18 @@ class BinLogStream
      */
     public function analysisBinLog()
     {
-        $pack = Connect::_readPacket();
+        $pack = $this->connect->getPacket();
         PackAuth::success($pack);
 
-        $result = $this->BinLogPack->init(
+        $result = $this->binLogPack->init(
             $pack,
-            Connect::getCheckSum(),
+            $this->connect->getCheckSum(),
             $this->ignoredEvents,
             $this->onlyTables,
             $this->onlyDatabases
         );
 
-        if ($result)
+        if (!empty($result))
         {
             return $result;
         }

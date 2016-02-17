@@ -2,6 +2,7 @@
 
 namespace MySQLReplication\BinLog;
 
+use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstMy;
 use MySQLReplication\Exception\BinLogException;
@@ -15,31 +16,24 @@ class BinLogPack
     /**
      * @var []
      */
-    public static $EVENT_INFO;
-    /**
-     * @var  int
-     */
-    public static $EVENT_TYPE;
+    private $eventInfo;
     /**
      * @var int
      */
-    private static $_PACK_KEY = 0;
+    private $readBytes = 0;
     /**
      * @var string
      */
-    private static $_PACK;
+    private $buffer = '';
     /**
-     * @var string
+     * @var DBHelper
      */
-    private static $_FILE_NAME;
-    /**
-     * @var int
-     */
-    private static $_POS;
-    /**
-     * @var string gtid
-     */
-    private static $_GTID;
+    private $DBHelper;
+
+    public function __construct(DBHelper $DBHelper)
+    {
+        $this->DBHelper = $DBHelper;
+    }
 
     /**
      * @param $pack
@@ -54,72 +48,68 @@ class BinLogPack
         $checkSum = true,
         array $ignoredEvents = [],
         array $onlyTables = [],
-        array $onlyDatabases = [])
-    {
-        self::$_PACK = $pack;
-        self::$_PACK_KEY = 0;
-        self::$EVENT_INFO = [];
+        array $onlyDatabases = []
+    ) {
+        $this->buffer = $pack;
+        $this->readBytes = 0;
+        $this->eventInfo = [];
 
-        // ok value on first
+        // "ok" value on first byte
         $this->advance(1);
 
-        self::$EVENT_INFO = unpack('Vtime/Ctype/Vid/Vsize/Vpos/vflag', $this->read(19));
+        $this->eventInfo = unpack('Vtime/Ctype/Vid/Vsize/Vpos/vflag', $this->read(19));
 
-        self::$EVENT_TYPE = self::$EVENT_INFO['type'];
-        $event_size = self::$EVENT_INFO['size'];
-
-        $event_size_without_header = $checkSum === true ? ($event_size - 23) : ($event_size - 19);
+        $event_size_without_header = true === $checkSum ? ($this->eventInfo['size'] - 23) : ($this->eventInfo['size'] - 19);
 
         $data = [];
 
-        if (in_array(self::$EVENT_TYPE, $ignoredEvents))
+        if (in_array($this->eventInfo['type'], $ignoredEvents))
         {
             return $data;
         }
 
-        if (self::$EVENT_TYPE == ConstEventType::TABLE_MAP_EVENT)
+        if ($this->eventInfo['type'] == ConstEventType::TABLE_MAP_EVENT)
         {
-            $data = RowEvent::tableMap($this, self::$EVENT_TYPE);
+            $data = RowEvent::tableMap($this, $this->DBHelper, $this->eventInfo['type']);
         }
-        elseif (in_array(self::$EVENT_TYPE, [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
+        elseif (in_array($this->eventInfo['type'], [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::updateRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
-            self::$_POS = self::$EVENT_INFO['pos'];
+            $data = RowEvent::updateRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
         }
-        elseif (in_array(self::$EVENT_TYPE, [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]))
+        elseif (in_array($this->eventInfo['type'], [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::addRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
-            self::$_POS = self::$EVENT_INFO['pos'];
+            $data = RowEvent::addRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
         }
-        elseif (in_array(self::$EVENT_TYPE, [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2]))
+        elseif (in_array($this->eventInfo['type'], [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2]))
         {
-            $data = RowEvent::delRow($this, self::$EVENT_TYPE, $event_size_without_header, $onlyTables, $onlyDatabases);
-            self::$_POS = self::$EVENT_INFO['pos'];
+            $data = RowEvent::delRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
         }
-        elseif (self::$EVENT_TYPE == ConstEventType::XID_EVENT)
+        elseif ($this->eventInfo['type'] == ConstEventType::XID_EVENT)
         {
-            $data['xid'] = unpack('P', $this->read(8))[1];
+            $data['xid'] = $this->readUInt64();
         }
-        elseif (self::$EVENT_TYPE == ConstEventType::ROTATE_EVENT)
+        elseif ($this->eventInfo['type'] == ConstEventType::ROTATE_EVENT)
         {
-            self::$_POS = $this->readUInt64();
-            self::$_FILE_NAME = $this->read($event_size_without_header - 8);
+            $pos = $this->readUInt64();
+            $binFileName = $this->read($event_size_without_header - 8);
 
-            $data['rotate'] = ['position' => self::$_POS, 'next_binlog' => self::$_FILE_NAME ];
+            $data['rotate'] = ['position' => $pos, 'next_binlog' => $binFileName];
         }
-        elseif (self::$EVENT_TYPE == ConstEventType::GTID_LOG_EVENT)
+        elseif ($this->eventInfo['type'] == ConstEventType::GTID_LOG_EVENT)
         {
             //gtid event
-            $commit_flag = unpack('C', $this->read(1))[1] == 1;
+            $commit_flag = $this->readUInt8() == 1;
             $sid = unpack('H*', $this->read(16))[1];
-            $gno = unpack('P', $this->read(8))[1];
+            $gno = $this->readUInt64();
 
-            // GTID_NEXT
-            self::$_GTID = vsprintf('%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s', str_split($sid)) . ':' . $gno;
-
-            $data['gtid_log_event'] = ['commit_flag' => $commit_flag, 'sid' => $sid, 'gno' => $gno, 'gtid' => self::$_GTID];
+            $data['gtid_log_event'] = [
+                'commit_flag' => $commit_flag,
+                'sid' => $sid,
+                'gno' => $gno,
+                'gtID' => vsprintf('%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s', str_split($sid)) . ':' . $gno
+            ];
         }
-        else if (self::$EVENT_TYPE == ConstEventType::QUERY_EVENT)
+        else if ($this->eventInfo['type'] == ConstEventType::QUERY_EVENT)
         {
             $slave_proxy_id = $this->readUInt32();
             $execution_time = $this->readUInt32();
@@ -131,18 +121,19 @@ class BinLogPack
             $schema = $this->read($schema_length);
             $this->advance(1);
 
-            $query = $this->read($event_size - 36 - $status_vars_length - $schema_length - 1);
+            $query = $this->read($this->eventInfo['size'] - 36 - $status_vars_length - $schema_length - 1);
 
             $data['query_event'] = [
                 'slave_proxy_id' => $slave_proxy_id,
                 'execution_time' => $execution_time,
                 'schema' => $schema,
                 'error_code' => $error_code,
+                'status_vars' => bin2hex($status_vars),
                 'query' => $query,
             ];
         }
 
-        $data['event'] = self::$EVENT_INFO;
+        $data['event'] = $this->eventInfo;
 
         return $data;
     }
@@ -163,10 +154,52 @@ class BinLogPack
     public function read($length)
     {
         $length = (int)$length;
-        $return = substr(self::$_PACK,0,$length);
-        self::$_PACK_KEY += $length;
-        self::$_PACK = substr(self::$_PACK, $length);
+        $return = substr($this->buffer, 0, $length);
+        $this->readBytes += $length;
+        $this->buffer = substr($this->buffer, $length);
         return $return;
+    }
+
+    /**
+     * @return int
+     */
+    public function readUInt64()
+    {
+        return $this->unpackUInt64($this->read(8));
+    }
+
+    /**
+     * @param $data
+     * @return string
+     */
+    public function unpackUInt64($data)
+    {
+        $data = unpack('V*', $data);
+        return bcadd($data[1], bcmul($data[2], bcpow(2, 32)));
+    }
+
+    /**
+     * @return int
+     */
+    public function readUInt8()
+    {
+        return unpack('C', $this->read(1))[1];
+    }
+
+    /**
+     * @return int
+     */
+    public function readUInt32()
+    {
+        return unpack('I', $this->read(4))[1];
+    }
+
+    /**
+     * @return int
+     */
+    public function readUInt16()
+    {
+        return unpack('v', $this->read(2))[1];
     }
 
     /**
@@ -178,17 +211,8 @@ class BinLogPack
      */
     public function unread($data)
     {
-        self::$_PACK_KEY -= strlen($data);
-        self::$_PACK = $data . self::$_PACK;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function readUInt64()
-    {
-        $data = unpack('V*', $this->read(8));
-        return bcadd($data[1], bcmul($data[2], bcpow(2, 32)));
+        $this->readBytes -= strlen($data);
+        $this->buffer = $data . $this->buffer;
     }
 
     /**
@@ -227,6 +251,15 @@ class BinLogPack
     }
 
     /**
+     * @return mixed
+     */
+    public function readUInt24()
+    {
+        $data = unpack('C3', $this->read(3));
+        return $data[1] + ($data[2] << 8) + ($data[3] << 16);
+    }
+
+    /**
      * @return int
      */
     public function readInt24()
@@ -254,19 +287,19 @@ class BinLogPack
      * @return string
      * @throws BinLogException
      */
-    public function read_length_coded_pascal_string($size)
+    public function readLengthCodedPascalString($size)
     {
-        $length = $this->read_uint_by_size($size);
-        return $this->read($length);
+        return $this->read($this->readUIntBySize($size));
     }
 
     /**
      * Read a little endian integer values based on byte number
+     *
      * @param $size
      * @return mixed
      * @throws BinLogException
      */
-    public function read_uint_by_size($size)
+    public function readUIntBySize($size)
     {
         if ($size == 1)
         {
@@ -307,39 +340,6 @@ class BinLogPack
     /**
      * @return mixed
      */
-    public function readUInt8()
-    {
-        return unpack('C', $this->read(1))[1];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function readUInt16()
-    {
-        return unpack('v', $this->read(2))[1];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function readUInt24()
-    {
-        $data = unpack('C3', $this->read(3));
-        return $data[1] + ($data[2] << 8) + ($data[3] << 16);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function readUInt32()
-    {
-        return unpack('I', $this->read(4))[1];
-    }
-
-    /**
-     * @return mixed
-     */
     public function readUInt40()
     {
         $data = unpack('CI', $this->read(5));
@@ -366,11 +366,12 @@ class BinLogPack
 
     /**
      * Read a big endian integer values based on byte number
-     * @param $size
+     *
+     * @param int $size
      * @return int
      * @throws BinLogException
      */
-    public function read_int_be_by_size($size)
+    public function readIntBeBySize($size)
     {
         if ($size == 1)
         {
@@ -382,15 +383,15 @@ class BinLogPack
         }
         elseif ($size == 3)
         {
-            return $this->read_int24_be();
+            return $this->readInt24Be();
         }
         elseif ($size == 4)
         {
-            return unpack('i', implode('',array_reverse(str_split($this->read(4)))))[1];
+            return unpack('i', strrev($this->read(4)))[1];
         }
         elseif ($size == 5)
         {
-            return $this->read_int40_be();
+            return $this->readInt40Be();
         }
         elseif ($size == 8)
         {
@@ -403,7 +404,7 @@ class BinLogPack
     /**
      * @return int
      */
-    public function read_int24_be()
+    public function readInt24Be()
     {
         $data = unpack('C3', $this->read(3));
         $res = ($data[1] << 16) | ($data[2] << 8) | $data[3];
@@ -417,10 +418,11 @@ class BinLogPack
     /**
      * @return mixed
      */
-    public function read_int40_be()
+    public function readInt40Be()
     {
-        $data = unpack('NC', $this->read(5));
-        return $data[2] + ($data[1] << 8);
+        $data1 = unpack('N', $this->read(4))[1];
+        $data2 = unpack('C', $this->read(1))[1];
+        return $data2 + ($data1 << 8);
     }
 
     /**
@@ -429,7 +431,7 @@ class BinLogPack
      */
     public function isComplete($size)
     {
-        if (self::$_PACK_KEY + 1 - 20 < $size)
+        if ($this->readBytes + 1 - 20 < $size)
         {
             return false;
         }

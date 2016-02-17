@@ -8,6 +8,7 @@ use MySQLReplication\BinLog\BinLogPack;
 use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstFieldType;
+use MySQLReplication\Exception\BinLogException;
 
 /**
  * Class RowEvent
@@ -29,40 +30,46 @@ class RowEvent extends BinLogEvent
      * A end user of the lib should have no usage of this
      *
      * @param BinLogPack $pack
+     * @param DBHelper $DBHelper
      * @param $event_type
      * @return array
      */
-    public static function tableMap(BinLogPack $pack, $event_type)
+    public static function tableMap(BinLogPack $pack, DBHelper $DBHelper, $event_type)
     {
-        parent::_init($pack, $event_type);
+        parent::init($pack, $event_type);
 
         self::$TABLE_ID = self::readTableId();
 
-        self::$FLAGS = unpack('S', self::$PACK->read(2))[1];
+        self::$FLAGS = unpack('S', self::$BinLogPack->read(2))[1];
 
         $data = [];
         $data['schema_length'] = unpack('C', $pack->read(1))[1];
         $data['schema_name'] = self::$SCHEMA_NAME = $pack->read($data['schema_length']);
 
-        self::$PACK->advance(1);
+        self::$BinLogPack->advance(1);
 
-        $data['table_length'] = unpack('C', self::$PACK->read(1))[1];
+        $data['table_length'] = unpack('C', self::$BinLogPack->read(1))[1];
         $data['table_name'] = self::$TABLE_NAME = $pack->read($data['table_length']);
 
-        self::$PACK->advance(1);
+        self::$BinLogPack->advance(1);
 
-        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
+        self::$COLUMNS_NUM = self::$BinLogPack->readCodedBinary();
 
-        $column_type_def = self::$PACK->read(self::$COLUMNS_NUM);
+        $column_type_def = self::$BinLogPack->read(self::$COLUMNS_NUM);
+
+        // automatyczne czyszczenie starych danych
+        if (count(self::$TABLE_MAP) >= 200) {
+            self::$TABLE_MAP = array_slice(self::$TABLE_MAP, 100, -1, true);
+        }
 
         if (isset(self::$TABLE_MAP[self::$TABLE_ID]))
         {
             return $data;
         }
 
-        self::$PACK->readCodedBinary();
+        self::$BinLogPack->readCodedBinary();
 
-        $columns = DBHelper::getFields($data['schema_name'], $data['table_name']);
+        $columns = $DBHelper->getFields($data['schema_name'], $data['table_name']);
 
         self::$TABLE_MAP[self::$TABLE_ID]['fields'] = [];
         self::$TABLE_MAP[self::$TABLE_ID]['database'] = $data['schema_name'];
@@ -76,8 +83,26 @@ class RowEvent extends BinLogEvent
 
         for ($i = 0; $i < strlen($column_type_def); $i++)
         {
-            $type = ord($column_type_def[$i]);
-            self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = BinLogColumns::parse($type, $columns[$i], self::$PACK);
+            // this a dirty hack to prevent row events containing columns which have been dropped prior
+            // to pymysqlreplication start, but replayed from binlog from blowing up the service.
+            if (!isset($columns[$i]))
+            {
+                $columns[$i] = [
+                    'COLUMN_NAME' => 'DROPPED_COLUMN_' . $i,
+                    'COLLATION_NAME' => null,
+                    'CHARACTER_SET_NAME' => null,
+                    'COLUMN_COMMENT' => null,
+                    'COLUMN_TYPE' => 'BLOB',
+                    'COLUMN_KEY' => '',
+                ];
+                $type = ConstFieldType::IGNORE;
+            }
+            else
+            {
+                $type = ord($column_type_def[$i]);
+            }
+
+            self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = BinLogColumns::parse($type, $columns[$i], self::$BinLogPack);
         }
 
         return $data;
@@ -97,9 +122,9 @@ class RowEvent extends BinLogEvent
 
         $result = [];
 
-        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+        $len = self::getColumnsAmount(self::$COLUMNS_NUM);
 
-        $result['bitmap'] = self::$PACK->read($len);
+        $result['bitmap'] = self::$BinLogPack->read($len);
 
         //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
         $value['add'] = self::_getAddRows($result);
@@ -116,11 +141,11 @@ class RowEvent extends BinLogEvent
      */
     private static function rowInit(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
     {
-        parent::_init($pack, $event_type, $size);
+        parent::init($pack, $event_type, $size);
 
         self::$TABLE_ID = self::readTableId();
 
-        self::$FLAGS = unpack('v', self::$PACK->read(2))[1];
+        self::$FLAGS = self::$BinLogPack->readUIntBySize(2);
 
         if (in_array(self::$EVENT_TYPE, [
             ConstEventType::DELETE_ROWS_EVENT_V2,
@@ -128,12 +153,12 @@ class RowEvent extends BinLogEvent
             ConstEventType::UPDATE_ROWS_EVENT_V2
         ]))
         {
-            self::$EXTRA_DATA_LENGTH = unpack('v', self::$PACK->read(2))[1];
+            self::$EXTRA_DATA_LENGTH = self::$BinLogPack->readUIntBySize(2);
 
-            self::$EXTRA_DATA = self::$PACK->read(self::$EXTRA_DATA_LENGTH / 8);
+            self::$EXTRA_DATA = self::$BinLogPack->read(self::$EXTRA_DATA_LENGTH / 8);
         }
 
-        self::$COLUMNS_NUM = self::$PACK->readCodedBinary();
+        self::$COLUMNS_NUM = self::$BinLogPack->readCodedBinary();
 
 
         self::$fields = [];
@@ -153,9 +178,18 @@ class RowEvent extends BinLogEvent
         }
         if ([] == self::$fields)
         {
-            //remove cache  can be empty (drop table)
+            //remove cache can be empty (drop table)
             unset(self::$TABLE_MAP[self::$TABLE_ID]);
         }
+    }
+
+    /**
+     * @param int $columns
+     * @return int
+     */
+    private static function getColumnsAmount($columns)
+    {
+        return (int)(($columns + 7) / 8);
     }
 
     /**
@@ -165,7 +199,7 @@ class RowEvent extends BinLogEvent
     private static function _getAddRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -182,18 +216,17 @@ class RowEvent extends BinLogEvent
     {
         $values = [];
 
-        $l = (int)((self::bitCount($cols_bitmap) + 7) / 8);
+        $l = self::getColumnsAmount(self::bitCount($cols_bitmap));
 
-        # null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
-        # See http://dev.mysql.com/doc/internals/en/rows-event.html
-        $null_bitmap = self::$PACK->read($l);
-
+        // null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
+        // see http://dev.mysql.com/doc/internals/en/rows-event.html
+        $null_bitmap = self::$BinLogPack->read($l);
         $nullBitmapIndex = 0;
-        foreach (self::$fields as $i => $value)
+
+        foreach (self::$fields as $i => $column)
         {
-            $column = $value;
-            $name = $value['name'];
-            $unsigned = $value['unsigned'];
+            $name = $column['name'];
+            $unsigned = $column['unsigned'];
 
             if (self::BitGet($cols_bitmap, $i) == 0)
             {
@@ -205,57 +238,62 @@ class RowEvent extends BinLogEvent
             {
                 $values[$name] = null;
             }
+            elseif ($column['type'] == ConstFieldType::IGNORE)
+            {
+                $values[$name] = null;
+            }
             elseif ($column['type'] == ConstFieldType::TINY)
             {
                 if ($unsigned)
                 {
-                    $values[$name] = unpack('C', self::$PACK->read(1))[1];
+                    $values[$name] = unpack('C', self::$BinLogPack->read(1))[1];
                 }
                 else
                 {
-                    $values[$name] = unpack('c', self::$PACK->read(1))[1];
+                    $values[$name] = unpack('c', self::$BinLogPack->read(1))[1];
                 }
             }
             elseif ($column['type'] == ConstFieldType::SHORT)
             {
                 if ($unsigned)
                 {
-                    $values[$name] = unpack('v', self::$PACK->read(2))[1];
+                    $values[$name] = unpack('v', self::$BinLogPack->read(2))[1];
                 }
                 else
                 {
-                    $values[$name] = unpack('s', self::$PACK->read(2))[1];
+                    $values[$name] = unpack('s', self::$BinLogPack->read(2))[1];
                 }
             }
             elseif ($column['type'] == ConstFieldType::LONG)
             {
                 if ($unsigned)
                 {
-                    $values[$name] = unpack('I', self::$PACK->read(4))[1];
+                    $values[$name] = unpack('I', self::$BinLogPack->read(4))[1];
                 }
                 else
                 {
-                    $values[$name] = unpack('i', self::$PACK->read(4))[1];
+                    $values[$name] = unpack('i', self::$BinLogPack->read(4))[1];
                 }
             }
             elseif ($column['type'] == ConstFieldType::INT24)
             {
                 if ($unsigned)
                 {
-                    $values[$name] = self::$PACK->readUInt24();
+                    $values[$name] = self::$BinLogPack->readUInt24();
                 }
                 else
                 {
-                    $values[$name] = self::$PACK->readInt24();
+                    $values[$name] = self::$BinLogPack->readInt24();
                 }
             }
             elseif ($column['type'] == ConstFieldType::FLOAT)
             {
-                $values[$name] = round(unpack('f', self::$PACK->read(4))[1], 4);
+                // http://dev.mysql.com/doc/refman/5.7/en/floating-point-types.html FLOAT(7,4)
+                $values[$name] = round(unpack('f', self::$BinLogPack->read(4))[1], 4);
             }
             elseif ($column['type'] == ConstFieldType::DOUBLE)
             {
-                $values[$name] = unpack('d', self::$PACK->read(8))[1];
+                $values[$name] = unpack('d', self::$BinLogPack->read(8))[1];
             }
             elseif ($column['type'] == ConstFieldType::VARCHAR || $column['type'] == ConstFieldType::STRING)
             {
@@ -284,15 +322,13 @@ class RowEvent extends BinLogEvent
             {
                 $values[$name] = self::_read_datetime2($column);
             }
-            /*
             elseif ($column['type'] == ConstFieldType::TIME2)
             {
                 $values[$name] = self::_read_time2($column);
             }
-            */
             elseif ($column['type'] == ConstFieldType::TIMESTAMP2)
             {
-                $time = date('Y-m-d H:i:s', self::$PACK->read_int_be_by_size(4));
+                $time = date('Y-m-d H:i:s', self::$BinLogPack->readIntBeBySize(4));
                 $fsp = self::_add_fsp_to_time($column);
                 if ('' !== $fsp)
                 {
@@ -300,77 +336,58 @@ class RowEvent extends BinLogEvent
                 }
                 $values[$name] = $time;
             }
-            /*
-        elseif ($column['type'] == ConstFieldType::TIME:
-            $values[$name] = self.__read_time()
-             */
             elseif ($column['type'] == ConstFieldType::DATE)
             {
                 $values[$name] = self::_read_date();
             }
-
-            /*
-        elseif ($column['type'] == ConstFieldType::TIMESTAMP:
-            $values[$name] = datetime.datetime.fromtimestamp(
-                    self::$PACK->read_uint32())
-
-        # For new date format:
-
-        elseif ($column['type'] == ConstFieldType::TIME2:
-            $values[$name] = self.__read_time2(column)
-        elseif ($column['type'] == ConstFieldType::TIMESTAMP2:
-            $values[$name] = self.__add_fsp_to_time(
-                    datetime.datetime.fromtimestamp(
-                        self::$PACK->read_int_be_by_size(4)), column)
-        */
             elseif ($column['type'] == ConstFieldType::LONGLONG)
             {
                 if ($unsigned)
                 {
-                    $values[$name] = self::$PACK->readUInt64();
+                    $values[$name] = self::$BinLogPack->readUInt64();
                 }
                 else
                 {
-                    $values[$name] = self::$PACK->readInt64();
+                    $values[$name] = self::$BinLogPack->readInt64();
                 }
             }
-            /*
-            elseif ($column['type'] == ConstFieldType::YEAR:
-                $values[$name] = self::$PACK->read_uint8() + 1900
-
-              */
+            elseif ($column['type'] == ConstFieldType::YEAR)
+            {
+                $values[$name] = self::$BinLogPack->readUInt8() + 1900;
+            }
             elseif ($column['type'] == ConstFieldType::ENUM)
             {
-                $values[$name] = $column['enum_values'][self::$PACK->read_uint_by_size($column['size']) - 1];
+                $values[$name] = $column['enum_values'][self::$BinLogPack->readUIntBySize($column['size']) - 1];
             }
-            /*
-            elseif ($column['type'] == ConstFieldType::SET:
-                # We read set columns as a bitmap telling us which options
-                # are enabled
-                bit_mask = self::$PACK->read_uint_by_size(column.size)
-                $values[$name] = set(
-                    val for idx, val in enumerate(column.set_values)
-                if bit_mask & 2 ** idx
-                ) or None
-
-            elseif ($column['type'] == ConstFieldType::BIT:
-                $values[$name] = self.__read_bit(column)
-            elseif ($column['type'] == ConstFieldType::GEOMETRY:
-                $values[$name] = self::$PACK->read_length_coded_pascal_string(
-                        column.length_size)
-            else:
-                raise NotImplementedError('Unknown MySQL column type: %d' %
-                    (column.type))
-            */
+            elseif ($column['type'] == ConstFieldType::SET)
+            {
+                // we read set columns as a bitmap telling us which options are enabled
+                $bit_mask = self::$BinLogPack->readUIntBySize($column['size']);
+                $sets = [];
+                foreach ($column['set_values'] as $k => $item)
+                {
+                    if ($bit_mask & 2 ** $k)
+                    {
+                        $sets[] = $item;
+                    }
+                }
+                $values[$name] = $sets;
+            }
+            elseif ($column['type'] == ConstFieldType::BIT)
+            {
+                $values[$name] = self::_read_bit($column);
+            }
+            elseif ($column['type'] == ConstFieldType::GEOMETRY)
+            {
+                $values[$name] = self::$BinLogPack->readLengthCodedPascalString($column['length_size']);
+            }
             else
             {
-
-
+                throw new BinLogException('Unknown row type: ' . $column['type']);
             }
 
             $nullBitmapIndex += 1;
         }
-
 
         $values['table_name'] = self::$TABLE_NAME;
         $values['database'] = self::$SCHEMA_NAME;
@@ -383,9 +400,9 @@ class RowEvent extends BinLogEvent
      * @param $position
      * @return int
      */
-    public static function BitGet($bitmap, $position)
+    private static function BitGet($bitmap, $position)
     {
-        $bit = $bitmap[intval($position / 8)];
+        $bit = $bitmap[(int)($position / 8)];
         if (is_string($bit))
         {
             $bit = ord($bit);
@@ -399,7 +416,7 @@ class RowEvent extends BinLogEvent
      * @param $position
      * @return int
      */
-    public static function _is_null($null_bitmap, $position)
+    private static function _is_null($null_bitmap, $position)
     {
         $bit = $null_bitmap[intval($position / 8)];
         if (is_string($bit))
@@ -411,16 +428,15 @@ class RowEvent extends BinLogEvent
     }
 
     /**
-     * @param $size
-     * @param $column
+     * @param int $size
+     * @param array $column
      * @return string
      */
-    private static function _read_string($size, $column)
+    private static function _read_string($size, array $column)
     {
-        $string = self::$PACK->read_length_coded_pascal_string($size);
+        $string = self::$BinLogPack->readLengthCodedPascalString($size);
         if ($column['character_set_name'])
         {
-            $string = iconv($column['character_set_name'], ini_get('default_charset'), $string);
         }
 
         return $string;
@@ -441,7 +457,7 @@ class RowEvent extends BinLogEvent
         $comp_integral = $integral - ($uncomp_integral * $digits_per_integer);
         $comp_fractional = $column['decimals'] - ($uncomp_fractional * $digits_per_integer);
 
-        $value = self::$PACK->readUInt8();
+        $value = self::$BinLogPack->readUInt8();
         if (0 != ($value & 0x80))
         {
             $mask = 0;
@@ -452,18 +468,18 @@ class RowEvent extends BinLogEvent
             $mask = -1;
             $res = '-';
         }
-        self::$PACK->unread(pack('C', ($value ^ 0x80)));
+        self::$BinLogPack->unread(pack('C', ($value ^ 0x80)));
 
         $size = $compressed_bytes[$comp_integral];
         if ($size > 0)
         {
-            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
+            $value = self::$BinLogPack->readIntBeBySize($size) ^ $mask;
             $res .= $value;
         }
 
         for ($i = 0; $i < $uncomp_integral; $i++)
         {
-            $value = self::$PACK->read_int_be_by_size(4) ^ $mask;
+            $value = self::$BinLogPack->readIntBeBySize(4) ^ $mask;
             $res .= sprintf('%09d', $value);
         }
 
@@ -471,14 +487,14 @@ class RowEvent extends BinLogEvent
 
         for ($i = 0; $i < $uncomp_fractional; $i++)
         {
-            $value = self::$PACK->read_int_be_by_size(4) ^ $mask;
+            $value = self::$BinLogPack->readIntBeBySize(4) ^ $mask;
             $res .= sprintf('%09d', $value);
         }
 
         $size = $compressed_bytes[$comp_fractional];
         if ($size > 0)
         {
-            $value = self::$PACK->read_int_be_by_size($size) ^ $mask;
+            $value = self::$BinLogPack->readIntBeBySize($size) ^ $mask;
             $res .= sprintf('%0' . $comp_fractional . 'd', $value);
         }
 
@@ -486,20 +502,17 @@ class RowEvent extends BinLogEvent
     }
 
     /**
-     * TODO
      * @return float|null
      */
     private static function _read_datetime()
     {
-        $value = self::$PACK->readUInt64();
+        $value = self::$BinLogPack->readUInt64();
         if ($value == 0)  # nasty mysql 0000-00-00 dates
         {
-            return '';
+            return null;
         }
 
         $date = $value / 1000000;
-        $time = (int)($value % 1000000);
-
         $year = (int)($date / 10000);
         $month = (int)(($date % 10000) / 100);
         $day = (int)($date % 100);
@@ -527,12 +540,11 @@ class RowEvent extends BinLogEvent
      * @return string
      * @throws \Exception
      */
-    private static function  _read_datetime2($column)
+    private static function _read_datetime2(array $column)
     {
-        $data = self::$PACK->read_int_be_by_size(5);
+        $data = self::$BinLogPack->readIntBeBySize(5);
 
         $year_month = self::_read_binary_slice($data, 1, 17, 40);
-
 
         $year = (int)($year_month / 13);
         $month = $year_month % 13;
@@ -540,25 +552,13 @@ class RowEvent extends BinLogEvent
         $hour = self::_read_binary_slice($data, 23, 5, 40);
         $minute = self::_read_binary_slice($data, 28, 6, 40);
         $second = self::_read_binary_slice($data, 34, 6, 40);
-        if ($hour < 10)
+
+        $date = new \DateTime($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
+        if (array_sum($date->getLastErrors()) > 0)
         {
-            $hour = '0' . $hour;
+            return null;
         }
-        if ($minute < 10)
-        {
-            $minute = '0' . $minute;
-        }
-        if ($second < 10)
-        {
-            $second = '0' . $second;
-        }
-        $time = $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second;
-        $microsecond = self::_add_fsp_to_time($column);
-        if ($microsecond)
-        {
-            $time .= '.' . $microsecond;
-        }
-        return $time;
+        return $date->format('Y-m-d H:i:s') . self::_add_fsp_to_time($column);
     }
 
     /**
@@ -608,7 +608,7 @@ class RowEvent extends BinLogEvent
         }
         if ($read > 0)
         {
-            $microsecond = self::$PACK->read_int_be_by_size($read);
+            $microsecond = self::$BinLogPack->readIntBeBySize($read);
             if ($column['fsp'] % 2)
             {
                 $time = (int)($microsecond / 10);
@@ -622,14 +622,41 @@ class RowEvent extends BinLogEvent
     }
 
     /**
+     * TIME encoding for nonfractional part:
+     * 1 bit sign    (1= non-negative, 0= negative)
+     * 1 bit unused  (reserved for future extensions)
+     * 10 bits hour   (0-838)
+     * 6 bits minute (0-59)
+     * 6 bits second (0-59)
+     * ---------------------
+     * 24 bits = 3 bytes
+     *
+     * @param array $column
+     * @return string
+     */
+    private static function _read_time2(array $column)
+    {
+        $data = self::$BinLogPack->readIntBeBySize(3);
+
+        $hour = self::_read_binary_slice($data, 2, 10, 24);
+        $minute = self::_read_binary_slice($data, 12, 6, 24);
+        $second = self::_read_binary_slice($data, 18, 6, 24);
+
+        $date = new \DateTime();
+        $date->setTime($hour, $minute, $second);
+
+        return $date->format('H:i:s') . self::_add_fsp_to_time($column);
+    }
+
+    /**
      * @return string
      */
     private static function _read_date()
     {
-        $time = self::$PACK->readUInt24();
+        $time = self::$BinLogPack->readUInt24();
         if (0 == $time)
         {
-            return '';
+            return null;
         }
 
         $year = ($time & ((1 << 15) - 1) << 9) >> 9;
@@ -637,12 +664,62 @@ class RowEvent extends BinLogEvent
         $day = ($time & ((1 << 5) - 1));
         if ($year == 0 || $month == 0 || $day == 0)
         {
-            return '';
+            return null;
         }
 
         $date = new \DateTime();
         $date->setDate($year, $month, $day);
         return $date->format('Y-m-d');
+    }
+
+    /**
+     * Read MySQL BIT type
+     * @param array $column
+     * @return string
+     */
+    private static function _read_bit(array $column)
+    {
+        $res = '';
+        for ($byte = 0; $byte < $column['bytes']; $byte++)
+        {
+            $current_byte = '';
+            $data = self::$BinLogPack->readUInt8();
+            if (0 === $byte)
+            {
+                if (1 === $column['bytes'])
+                {
+                    $end = $column['bits'];
+                }
+                else
+                {
+                    $end = $column['bits'] % 8;
+                    if (0 === $end)
+                    {
+                        $end = 8;
+                    }
+                }
+            }
+            else
+            {
+                $end = 8;
+            }
+
+            for ($bit = 0; $bit < $end; $bit++)
+            {
+                if ($data & (1 << $bit))
+                {
+                    $current_byte .= '1';
+                }
+                else
+                {
+                    $current_byte .= '0';
+                }
+
+            }
+            $res .= strrev($current_byte);
+        }
+
+        return $res;
     }
 
     /**
@@ -653,15 +730,15 @@ class RowEvent extends BinLogEvent
      * @param $onlyDatabases
      * @return mixed
      */
-    public static function delRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
+    public static function delRow(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
     {
         self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
 
         $result = [];
 
-        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+        $len = self::getColumnsAmount(self::$COLUMNS_NUM);
 
-        $result['bitmap'] = self::$PACK->read($len);
+        $result['bitmap'] = self::$BinLogPack->read($len);
 
         //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
         $value['del'] = self::_getDelRows($result);
@@ -676,7 +753,7 @@ class RowEvent extends BinLogEvent
     private static function _getDelRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -692,18 +769,18 @@ class RowEvent extends BinLogEvent
      * @param $onlyDatabases
      * @return mixed
      */
-    public static function updateRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
+    public static function updateRow(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
     {
         self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
 
         $result = [];
 
-        $len = (int)((self::$COLUMNS_NUM + 7) / 8);
+        $len = self::getColumnsAmount(self::$COLUMNS_NUM);
 
-        $result['bitmap1'] = self::$PACK->read($len);
-        $result['bitmap2'] = self::$PACK->read($len);
+        $result['bitmap1'] = self::$BinLogPack->read($len);
+        $result['bitmap2'] = self::$BinLogPack->read($len);
 
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
+        // nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
         $value['update'] = self::_getUpdateRows($result);
 
         return $value;
@@ -716,7 +793,7 @@ class RowEvent extends BinLogEvent
     private static function _getUpdateRows(array $result)
     {
         $rows = [];
-        while (!self::$PACK->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
         {
             $value['beform'] = self::_read_column_data($result['bitmap1']);
             $value['after'] = self::_read_column_data($result['bitmap2']);

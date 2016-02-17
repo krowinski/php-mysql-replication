@@ -2,26 +2,47 @@
 
 namespace Tests;
 
+use MySQLReplication\Config\Config;
+use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\Service\BinLogStream;
 
 /**
  * Class Base
  */
 class TypesTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var string
+     */
     private $database = 'mysqlreplication_test';
+    /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    private $conn;
+    /**
+     * @var Config
+     */
+    private $config;
+
+    protected function setUp()
+    {
+        parent::setUp();
+
+        $this->config = new Config('root', '192.168.1.100', 3306, 'root');
+        $this->conn = (new DBHelper($this->config))->getConnection();
+    }
 
     private function createAndInsertValue($create_query, $insert_query)
     {
-        $conn = \MySQLReplication\DataBase\DBHelper::getConnection();
-        $binLogStream = new \MySQLReplication\Service\BinLogStream();
+        $binLogStream = new BinLogStream($this->config);
 
-        $conn->exec("SET GLOBAL time_zone = 'UTC'");
-        $conn->exec("DROP DATABASE IF EXISTS " . $this->database);
-        $conn->exec("CREATE DATABASE " . $this->database);
-        $conn->exec("USE " . $this->database);
-        $conn->exec($create_query);
-        $conn->exec($insert_query);
+        $this->conn->exec("SET GLOBAL time_zone = 'UTC'");
+        $this->conn->exec("DROP DATABASE IF EXISTS " . $this->database);
+        $this->conn->exec("CREATE DATABASE " . $this->database);
+        $this->conn->exec("USE " . $this->database);
+        $this->conn->exec($create_query);
+        $this->conn->exec($insert_query);
 
         $this->assertEquals(ConstEventType::ROTATE_EVENT, $binLogStream->analysisBinLog()['event']['type']);
         $this->assertEquals(ConstEventType::FORMAT_DESCRIPTION_EVENT, $binLogStream->analysisBinLog()['event']['type']);
@@ -381,11 +402,340 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(null, $event['add'][0]['test']);
-        $this->assertEquals(null, $event['add'][0]['test2']);
+        $this->assertNull($event['add'][0]['test']);
+        $this->assertNull($event['add'][0]['test2']);
     }
 
-    
+    /**
+     * @test
+     */
+    public function shouldBeZeroMonth()
+    {
+        $create_query = "CREATE TABLE test (id INTEGER, test DATE, test2 DATE);";
+        $insert_query = "INSERT INTO test (id, test2) VALUES(1, '2015-00-21')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertNull($event['add'][0]['test']);
+        $this->assertNull($event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeZeroDay()
+    {
+        $create_query = "CREATE TABLE test (id INTEGER, test DATE, test2 DATE);";
+        $insert_query = "INSERT INTO test (id, test2) VALUES(1, '2015-05-00')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertNull($event['add'][0]['test']);
+        $this->assertNull($event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeTime()
+    {
+        $create_query = "CREATE TABLE test (test TIME);";
+        $insert_query = "INSERT INTO test VALUES('12:33:18')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('12:33:18', $event['add'][0]['test']);
+    }
 
 
+    /**
+     * @test
+     */
+    public function shouldBeZeroTime()
+    {
+        $create_query = "CREATE TABLE test (id INTEGER, test TIME NOT NULL DEFAULT 0);";
+        $insert_query = "INSERT INTO test (id) VALUES(1)";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('00:00:00', $event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeDateTime()
+    {
+        $create_query = "CREATE TABLE test (test DATETIME);";
+        $insert_query = "INSERT INTO test VALUES('1984-12-03 12:33:07')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('1984-12-03 12:33:07', $event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeZeroDateTime()
+    {
+        $create_query = "CREATE TABLE test (id INTEGER, test DATETIME NOT NULL DEFAULT 0);";
+        $insert_query = "INSERT INTO test (id) VALUES(1)";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertNull($event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeBrokenDateTime()
+    {
+        $create_query = "CREATE TABLE test (test DATETIME NOT NULL);";
+        $insert_query = "INSERT INTO test VALUES('2013-00-00 00:00:00')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertNull($event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeYear()
+    {
+        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR(2))";
+        $insert_query = "INSERT INTO test VALUES(1984, 1984)";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals(1984, $event['add'][0]['test']);
+        $this->assertEquals(1984, $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeVarChar()
+    {
+        $create_query = "CREATE TABLE test (test VARCHAR(242)) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeBit()
+    {
+        $create_query =  "CREATE TABLE test (test BIT(6),
+                test2 BIT(16),
+                test3 BIT(12),
+                test4 BIT(9),
+                test5 BIT(64)
+                );
+         ";
+        $insert_query = "INSERT INTO test VALUES(
+                    b'100010',
+                    b'1000101010111000',
+                    b'100010101101',
+                    b'101100111',
+                    b'1101011010110100100111100011010100010100101110111011101011011010')
+        ";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('100010', $event['add'][0]['test']);
+        $this->assertEquals('1000101010111000', $event['add'][0]['test2']);
+        $this->assertEquals('100010101101', $event['add'][0]['test3']);
+        $this->assertEquals('101100111', $event['add'][0]['test4']);
+        $this->assertEquals('1101011010110100100111100011010100010100101110111011101011011010', $event['add'][0]['test5']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeEnum()
+    {
+        $create_query = "CREATE TABLE test (test ENUM('a', 'ba', 'c'), test2 ENUM('a', 'ba', 'c')) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('ba', 'a')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('ba', $event['add'][0]['test']);
+        $this->assertEquals('a', $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeSet()
+    {
+        $create_query = "CREATE TABLE test (test SET('a', 'ba', 'c'), test2 SET('a', 'ba', 'c')) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('ba,a,c', 'a,c')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals(['a', 'ba', 'c'], $event['add'][0]['test']);
+        $this->assertEquals(['a', 'c'], $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeTinyBlob()
+    {
+        $create_query = "CREATE TABLE test (test TINYBLOB, test2 TINYTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('World', $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeMediumBlob()
+    {
+        $create_query = "CREATE TABLE test (test MEDIUMBLOB, test2 MEDIUMTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('World', $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeLongBlob()
+    {
+        $create_query = "CREATE TABLE test (test LONGBLOB, test2 LONGTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('World', $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeBlob()
+    {
+        $create_query = "CREATE TABLE test (test BLOB, test2 TEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('World', $event['add'][0]['test2']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeString()
+    {
+        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('Hello')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('Hello', $event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeGeometry()
+    {
+        $create_query = "CREATE TABLE test (test GEOMETRY);";
+        $insert_query = "INSERT INTO test VALUES(GeomFromText('POINT(1 1)'))";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals('000000000101000000000000000000f03f000000000000f03f', bin2hex($event['add'][0]['test']));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeNull()
+    {
+        $create_query = "CREATE TABLE test (
+            test TINYINT NULL DEFAULT NULL,
+            test2 TINYINT NULL DEFAULT NULL,
+            test3 TINYINT NULL DEFAULT NULL,
+            test4 TINYINT NULL DEFAULT NULL,
+            test5 TINYINT NULL DEFAULT NULL,
+            test6 TINYINT NULL DEFAULT NULL,
+            test7 TINYINT NULL DEFAULT NULL,
+            test8 TINYINT NULL DEFAULT NULL,
+            test9 TINYINT NULL DEFAULT NULL,
+            test10 TINYINT NULL DEFAULT NULL,
+            test11 TINYINT NULL DEFAULT NULL,
+            test12 TINYINT NULL DEFAULT NULL,
+            test13 TINYINT NULL DEFAULT NULL,
+            test14 TINYINT NULL DEFAULT NULL,
+            test15 TINYINT NULL DEFAULT NULL,
+            test16 TINYINT NULL DEFAULT NULL,
+            test17 TINYINT NULL DEFAULT NULL,
+            test18 TINYINT NULL DEFAULT NULL,
+            test19 TINYINT NULL DEFAULT NULL,
+            test20 TINYINT NULL DEFAULT NULL
+            )";
+        $insert_query = "INSERT INTO test (test, test2, test3, test7, test20) VALUES(NULL, -128, NULL, 42, 84)";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertNull($event['add'][0]['test']);
+        $this->assertEquals(-128, $event['add'][0]['test2']);
+        $this->assertNull($event['add'][0]['test3']);
+        $this->assertEquals(42, $event['add'][0]['test7']);
+        $this->assertEquals(84, $event['add'][0]['test20']);
+
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeEncodedLatin1()
+    {
+        $this->conn->exec("SET CHARSET latin1");
+
+        $string = "\00e9";
+
+        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('" . $string . "');";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals($string, $event['add'][0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeEncodedUTF8()
+    {
+        $this->conn->exec("SET CHARSET utf8");
+
+        $string = "\20ac";
+
+        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET utf8 COLLATE utf8_bin;";
+        $insert_query = "INSERT INTO test VALUES('" . $string . "');";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->assertEquals($string, $event['add'][0]['test']);
+    }
 }
