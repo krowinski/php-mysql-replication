@@ -2,13 +2,26 @@
 
 namespace MySQLReplication\Pack;
 
-class ServerInfo {
-
-
+/**
+ * Class ServerInfo
+ * @package MySQLReplication\Pack
+ */
+class ServerInfo
+{
+    /**
+     * @var array
+     */
     public static $INFO = [];
-    public static $PACK;
+    /**
+     * @var string
+     */
+    public static $PACK = '';
 
-    public static function run($pack) {
+    /**
+     * @param $pack
+     */
+    public static function run($pack)
+    {
 
         $i = 0;
         $length = strlen($pack);
@@ -18,23 +31,28 @@ class ServerInfo {
         //version
         self::$INFO['server_version'] = '';
         $start = $i;
-        for($i = $start; $i < $length; $i++) {
-            if($pack[$i] === chr(0)) {
+        for ($i = $start; $i < $length; $i++)
+        {
+            if ($pack[$i] === chr(0))
+            {
                 $i++;
                 break;
-            } else{
+            }
+            else
+            {
                 self::$INFO['server_version'] .= $pack[$i];
             }
         }
 
         //connection_id 4 bytes
-        self::$INFO['connection_id'] = $pack[$i]. $pack[++$i] . $pack[++$i] . $pack[++$i];
+        self::$INFO['connection_id'] = $pack[$i] . $pack[++$i] . $pack[++$i] . $pack[++$i];
         $i++;
 
         //auth_plugin_data_part_1
         //[len=8] first 8 bytes of the auth-plugin data
         self::$INFO['salt'] = '';
-        for($j = $i;$j<$i+8;$j++) {
+        for ($j = $i; $j < $i + 8; $j++)
+        {
             self::$INFO['salt'] .= $pack[$j];
         }
         $i = $i + 8;
@@ -45,7 +63,6 @@ class ServerInfo {
 
         //capability_flag_1 (2) -- lower 2 bytes of the Protocol::CapabilityFlags (optional)
         $i = $i + 2;
-
 
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
@@ -66,13 +83,12 @@ class ServerInfo {
 
         $salt_len = max(12, $salt_len - 9);
 
-        //填充值
         $i = $i + 10;
 
         //next salt
         if ($length >= $i + $salt_len)
         {
-            for($j = $i ;$j < $i + $salt_len;$j++)
+            for ($j = $i; $j < $i + $salt_len; $j++)
             {
                 self::$INFO['salt'] .= $pack[$j];
             }
@@ -81,32 +97,41 @@ class ServerInfo {
 
         self::$INFO['auth_plugin_name'] = '';
         $i = $i + $salt_len + 1;
-        for($j = $i;$j<$length-1;$j++) {
-            self::$INFO['auth_plugin_name'] .=$pack[$j];
+        for ($j = $i; $j < $length - 1; $j++)
+        {
+            self::$INFO['auth_plugin_name'] .= $pack[$j];
         }
     }
 
     /**
-     * @brief 获取salt auth
      * @return mixed
      */
-    public static function getSalt() {
+    public static function getSalt()
+    {
         return self::$INFO['salt'];
     }
 
     /**
-     * @brief 获取编码
      * @return mixed
      */
-    public static function getCharSet() {
+    public static function getCharSet()
+    {
         return self::$INFO['character_set'];
     }
 
-    public static function getVersion() {
+    /**
+     * @return mixed
+     */
+    public static function getVersion()
+    {
         return self::$INFO['server_version'];
     }
 
-    public static function getInfo() {
+    /**
+     * @return array
+     */
+    public static function getInfo()
+    {
         return self::$INFO;
     }
 }

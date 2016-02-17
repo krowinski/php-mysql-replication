@@ -18,129 +18,110 @@ class Connect
     /**
      * @var int
      */
-    public static $FILE_POS;
-    /**
-     * @var int
-     */
-    private static $_FLAG = 0;
+    private $flag = 0;
     /**
      * @var resource
      */
-    private static $_SOCKET;
-    /**
-     * @var string
-     */
-    private static $_USER;
-    /**
-     * @var string
-     */
-    private static $_PASS;
+    private $socket;
     /**
      * @var int
      */
-    private static $_PORT;
+    private $binFilePos;
     /**
      * @var string
      */
-    private static $_HOST;
+    private $binFileName;
     /**
      * @var string
      */
-    private static $_SALT;
+    private $gtID;
     /**
      * @var int
      */
-    private static $_POS;
-    /**
-     * @var string
-     */
-    private static $_FILE;
-    /**
-     * @var string
-     */
-    private static $_GTID;
-    /**
-     * @var int
-     */
-    private static $_SLAVE_SERVER_ID = 666;
+    private $slaveId = 666;
     /**
      * @var bool
      */
-    private static $_CHECKSUM = false;
+    private $checkSum = false;
+    /**
+     * @var DBHelper
+     */
+    private $DBHelper;
+    /**
+     * @var Config
+     */
+    private $config;
 
     /**
-     * @param string $gtid
+     * @param Config $config
+     * @param DBHelper $DBHelper
+     * @param string $gtID
      * @param string $logFile
      * @param string $logPos
      * @param string $slave_id
      * @throws BinLogException
      */
-    public static function init(
-        $gtid = '',
+    public function __construct(
+        Config $config,
+        DBHelper $DBHelper,
+        $gtID = '',
         $logFile = '',
         $logPos = '',
         $slave_id = ''
     ) {
-        self::$_SLAVE_SERVER_ID = empty($slave_id) ? self::$_SLAVE_SERVER_ID : $slave_id;
-        self::$_GTID = $gtid;
-        self::$_HOST = Config::$DB_CONFIG['host'];
-        self::$_USER = Config::$DB_CONFIG['user'];
-        self::$_PASS = Config::$DB_CONFIG['password'];
-        self::$_PORT = Config::$DB_CONFIG['port'];
-        self::$_POS = $logPos;
-        self::$_FILE = $logFile;
+        $this->DBHelper = $DBHelper;
+        $this->config = $config;
 
-        if (false === (self::$_SOCKET = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
-        {
-            throw new BinLogException(sprintf('Unable to create a socket: %s', socket_strerror(socket_last_error())));
-        }
-        socket_set_block(self::$_SOCKET);
-        socket_set_option(self::$_SOCKET, SOL_SOCKET, SO_KEEPALIVE, 1);
+        $this->slaveId = empty($slave_id) ? $this->slaveId : $slave_id;
+        $this->gtID = $gtID;
+        $this->binFilePos = $logPos;
+        $this->binFileName = $logFile;
+        $this->flag = ConstCapability::$CAPABILITIES;
 
-        self::$_FLAG = ConstCapability::$CAPABILITIES;
-
-        self::_connect();
+        $this->connectToSocket();
     }
 
     /**
      * @throws BinLogException
      */
-    private static function _connect()
+    private function connectToSocket()
     {
-        if (false === socket_connect(self::$_SOCKET, self::$_HOST, self::$_PORT))
+        if (false === ($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
+        {
+            throw new BinLogException('Unable to create a socket:' . socket_strerror(socket_last_error()), socket_last_error());
+        }
+        socket_set_block($this->socket);
+        socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
+
+        if (false === socket_connect($this->socket, $this->config->getHost(), $this->config->getPort()))
         {
             throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
         }
 
-        self::serverInfo();
-        self::auth();
-        self::getBinlogStream();
+        $this->serverInfo();
+        $this->auth();
+        $this->getBinlogStream();
     }
 
-    /**
-     *
-     */
-    private static function serverInfo()
+    private function serverInfo()
     {
-        $pack = self::_readPacket();
-        ServerInfo::run($pack);
-        self::$_SALT = ServerInfo::getSalt();
+        ServerInfo::run($this->getPacket());
     }
 
     /**
      * @return bool|string
      * @throws BinLogException
      */
-    public static function _readPacket()
+    public function getPacket()
     {
-        $header = self::_readBytes(4);
+        $header = $this->readFromSocket(4);
         if (false === $header)
         {
             return false;
         }
         $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
 
-        return self::_readBytes($dataLength);
+        return $this->readFromSocket($dataLength);
     }
 
     /**
@@ -148,7 +129,7 @@ class Connect
      * @return string
      * @throws BinLogException
      */
-    private static function _readBytes($data_len)
+    private function readFromSocket($data_len)
     {
         // server gone away
         if ($data_len == 5)
@@ -162,7 +143,7 @@ class Connect
             $body = '';
             while ($bytes_read < $data_len)
             {
-                $resp = socket_read(self::$_SOCKET, $data_len - $bytes_read);
+                $resp = socket_read($this->socket, $data_len - $bytes_read);
                 if ($resp === false)
                 {
                     throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
@@ -181,7 +162,8 @@ class Connect
                 throw new BinLogException('read less ' . ($data_len - strlen($body)));
             }
             return $body;
-        } catch (\Exception $e)
+        }
+        catch (\Exception $e)
         {
             throw new BinLogException(var_export($e, true));
         }
@@ -190,12 +172,12 @@ class Connect
     /**
      * @throws BinLogException
      */
-    private static function auth()
+    private function auth()
     {
-        $data = PackAuth::initPack(self::$_FLAG, self::$_USER, self::$_PASS, self::$_SALT);
+        $data = PackAuth::initPack($this->flag, $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
 
-        self::_write($data);
-        $result = self::_readPacket();
+        $this->writeToSocket($data);
+        $result = $this->getPacket();
         PackAuth::success($result);
     }
 
@@ -204,11 +186,11 @@ class Connect
      * @return bool
      * @throws BinLogException
      */
-    private static function _write($data)
+    private function writeToSocket($data)
     {
-        if (false === socket_write(self::$_SOCKET, $data, strlen($data)))
+        if (false === socket_write($this->socket, $data, strlen($data)))
         {
-            throw new BinLogException(sprintf('Unable to write to socket: %s', socket_strerror(socket_last_error())), socket_last_error());
+            throw new BinLogException('Unable to write to socket: ' . socket_strerror(socket_last_error()), socket_last_error());
         }
         return true;
     }
@@ -216,87 +198,75 @@ class Connect
     /**
      * @throws BinLogException
      */
-    public static function getBinlogStream()
+    public function getBinlogStream()
     {
-        // checksum
-        self::$_CHECKSUM = DBHelper::isCheckSum();
-        if (self::$_CHECKSUM)
+        $this->checkSum = $this->DBHelper->isCheckSum();
+        if (true === $this->checkSum)
         {
-            self::execute('SET @master_binlog_checksum= @@global.binlog_checksum');
+            $this->execute('SET @master_binlog_checksum=@@global.binlog_checksum');
         }
 
-        if ('' === self::$_GTID)
+        if ('' === $this->gtID)
         {
-            if ('' === self::$_POS || '' === self::$_FILE)
+            if ('' === $this->binFilePos || '' === $this->binFileName)
             {
-                $master = DBHelper::getMasterStatus();
-                self::$_POS = $master['Position'];
-                self::$_FILE = $master['File'];
+                $master = $this->DBHelper->getMasterStatus();
+                $this->binFilePos = $master['Position'];
+                $this->binFileName = $master['File'];
             }
 
-            $prelude = pack('i', strlen(self::$_FILE) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
-            $prelude .= pack('I', self::$_POS);
+            $prelude = pack('i', strlen($this->binFileName) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
+            $prelude .= pack('I', $this->binFilePos);
             $prelude .= pack('v', 0);
-            $prelude .= pack('I', self::$_SLAVE_SERVER_ID);
-            $prelude .= self::$_FILE;
+            $prelude .= pack('I', $this->slaveId);
+            $prelude .= $this->binFileName;
         }
         else
         {
-            $Gtid = new GtidSet(self::$_GTID);
-            $encoded_data_size = $Gtid->encoded_length();
+            $gtID = new GtidSet($this->gtID);
+            $encoded_data_size = $gtID->encoded_length();
 
-            $header_size =
-                2 +  # binlog_flags
-                4 +  # server_id
-                4 +  # binlog_name_info_size
-                4 +  # empty binlog name
-                8 +  # binlog_pos_info_size
-                4;
-
-            $prelude = pack('l', $header_size + $encoded_data_size) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
+            $prelude = pack('l', 26 + $encoded_data_size) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
             $prelude .= pack('S', 0);
-            $prelude .= pack('I', self::$_SLAVE_SERVER_ID);
+            $prelude .= pack('I', $this->slaveId);
             $prelude .= pack('I', 3);
             $prelude .= chr(0);
             $prelude .= chr(0);
             $prelude .= chr(0);
             $prelude .= pack('Q', 4);
 
-            $prelude .= pack('I', $Gtid->encoded_length());
-            $prelude .= $Gtid->encoded();
+            $prelude .= pack('I', $gtID->encoded_length());
+            $prelude .= $gtID->encoded();
         }
 
-        self::_write($prelude);
-        $result = self::_readPacket();
+        $this->writeToSocket($prelude);
+        $result = $this->getPacket();
         PackAuth::success($result);
     }
 
     /**
-     * @param $sql
+     * @param string $sql
      * @throws BinLogException
      */
-    public static function execute($sql)
+    public function execute($sql)
     {
         $chunk_size = strlen($sql) + 1;
         $prelude = pack('LC', $chunk_size, 0x03);
-        self::_write($prelude . $sql);
+        $this->writeToSocket($prelude . $sql);
     }
 
     /**
      * @return bool
      */
-    public static function getCheckSum()
+    public function getCheckSum()
     {
-        return self::$_CHECKSUM;
+        return $this->checkSum;
     }
 
-    /**
-     *
-     */
     public function __destruct()
     {
-        socket_shutdown(self::$_SOCKET);
-        socket_close(self::$_SOCKET);
-        self::$_SOCKET = null;
+        socket_shutdown($this->socket);
+        socket_close($this->socket);
+        $this->socket = null;
     }
 }

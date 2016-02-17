@@ -30,7 +30,7 @@ class BinLogEvent
     /**
      * @var BinLogPack
      */
-    public static $PACK;
+    public static $BinLogPack;
     /**
      * @var int
      */
@@ -82,26 +82,26 @@ class BinLogEvent
      * @param string $event_type
      * @param int $size
      */
-    public static function _init(BinLogPack $pack, $event_type, $size = 0)
+    protected static function init(BinLogPack $pack, $event_type, $size = 0)
     {
-        self::$PACK = $pack;
+        self::$BinLogPack = $pack;
         self::$EVENT_TYPE = $event_type;
         self::$PACK_SIZE = $size;
     }
 
     /**
-     * @return int
+     * @return string
      */
     public static function readTableId()
     {
-        return unpack('P', self::$PACK->read(6) . chr(0) . chr(0))[1];
+        return self::$BinLogPack->unpackUInt64(self::$BinLogPack->read(6) . chr(0) . chr(0));
     }
 
     /**
      * @param string $bitmap
      * @return int
      */
-    public static function bitCount($bitmap)
+    protected static function bitCount($bitmap)
     {
         $n = 0;
         for ($i = 0; $i < strlen($bitmap); $i++)
