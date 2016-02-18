@@ -5,7 +5,13 @@ use MySQLReplication\BinLog\BinLogPack;
 use MySQLReplication\BinLog\Connect;
 use MySQLReplication\Config\Config;
 use MySQLReplication\DataBase\DBHelper;
-use MySQLReplication\Pack\PackAuth;
+use MySQLReplication\DTO\DeleteRowsDTO;
+use MySQLReplication\DTO\EventDTO;
+use MySQLReplication\DTO\GTIDLogDTO;
+use MySQLReplication\DTO\QueryDTO;
+use MySQLReplication\DTO\TableMapDTO;
+use MySQLReplication\DTO\UpdateRowsDTO;
+use MySQLReplication\DTO\WriteRowsDTO;
 
 class BinLogStream
 {
@@ -71,7 +77,7 @@ class BinLogStream
     }
 
     /**
-     * @return array
+     * @return DeleteRowsDTO|EventDTO|GTIDLogDTO|QueryDTO|UpdateRowsDTO|WriteRowsDTO|TableMapDTO|null
      */
     public function analysisBinLog()
     {

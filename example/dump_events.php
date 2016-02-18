@@ -21,18 +21,18 @@ use MySQLReplication\Config\Config;
 // $gtid = '', $slave_id = '', $logFile = '', $logPos = '', array $ignoredEvents = [], array $onlyTables = [], $onlyDatabases = []
 $binLogStream = new BinLogStream(
     new Config('root', '192.168.1.100', 3306, 'root'),
-    '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-24857',
+    '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-99428',
     '',
     '',
     '',
-    [] //[ ConstEventType::XID_EVENT, ConstEventType::ROTATE_EVENT, ConstEventType::GTID_LOG_EVENT, ConstEventType::QUERY_EVENT ]
+    [ ]
 );
 while (1)
 {
     $result = $binLogStream->analysisBinLog();
     if (!is_null($result))
     {
-        print_r($result);
-        echo 'Memory usage' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+        var_dump($result);
+        echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }
 }

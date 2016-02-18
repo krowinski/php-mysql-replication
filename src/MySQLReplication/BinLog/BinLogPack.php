@@ -5,6 +5,15 @@ namespace MySQLReplication\BinLog;
 use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstMy;
+use MySQLReplication\DTO\DeleteRowsDTO;
+use MySQLReplication\DTO\EventDTO;
+use MySQLReplication\DTO\GTIDLogDTO;
+use MySQLReplication\DTO\QueryDTO;
+use MySQLReplication\DTO\RotateDTO;
+use MySQLReplication\DTO\TableMapDTO;
+use MySQLReplication\DTO\UpdateRowsDTO;
+use MySQLReplication\DTO\WriteRowsDTO;
+use MySQLReplication\DTO\XidDTO;
 use MySQLReplication\Exception\BinLogException;
 use MySQLReplication\Pack\RowEvent;
 
@@ -42,7 +51,7 @@ class BinLogPack
      * @param array $ignoredEvents
      * @param array $onlyTables
      * @param array $onlyDatabases
-     * @return array
+     * @return WriteRowsDTO|UpdateRowsDTO|DeleteRowsDTO|XidDTO|EventDTO|QueryDTO|GTIDLogDTO|RotateDTO|TableMapDTO
      */
     public function init(
         $pack,
@@ -60,49 +69,69 @@ class BinLogPack
         $this->advance(1);
 
         $this->eventInfo = unpack('Vtime/Ctype/Vid/Vsize/Vpos/vflag', $this->read(19));
+        $this->eventInfo['date'] = (new \DateTime())->setTimestamp($this->eventInfo['time'])->format('c');
 
         $event_size_without_header = true === $checkSum ? ($this->eventInfo['size'] - 23) : ($this->eventInfo['size'] - 19);
 
         if ($this->eventInfo['type'] == ConstEventType::TABLE_MAP_EVENT)
         {
-            RowEvent::tableMap($this, $this->DBHelper, $this->eventInfo['type']);
+            return RowEvent::tableMap($this, $this->DBHelper, $this->eventInfo, $event_size_without_header);
         }
-
-        $data = [];
 
         if (!empty($onlyEvents) && !in_array($this->eventInfo['type'], $onlyEvents))
         {
-            return $data;
+            return null;
         }
 
         if (in_array($this->eventInfo['type'], $ignoredEvents))
         {
-            return $data;
+            return null;
         }
 
-
-        if (in_array($this->eventInfo['type'], [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]))
+        if (in_array($this->eventInfo['type'], [
+            ConstEventType::UPDATE_ROWS_EVENT_V1,
+            ConstEventType::UPDATE_ROWS_EVENT_V2
+        ]))
         {
-            $data = RowEvent::updateRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
+            return RowEvent::updateRow($this, $this->eventInfo, $event_size_without_header, $onlyTables, $onlyDatabases);
         }
-        elseif (in_array($this->eventInfo['type'], [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]))
+        elseif (in_array($this->eventInfo['type'], [
+            ConstEventType::WRITE_ROWS_EVENT_V1,
+            ConstEventType::WRITE_ROWS_EVENT_V2
+        ]))
         {
-            $data = RowEvent::addRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
+            return RowEvent::addRow($this, $this->eventInfo, $event_size_without_header, $onlyTables, $onlyDatabases);
         }
-        elseif (in_array($this->eventInfo['type'], [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2]))
+        elseif (in_array($this->eventInfo['type'], [
+            ConstEventType::DELETE_ROWS_EVENT_V1,
+            ConstEventType::DELETE_ROWS_EVENT_V2
+        ]))
         {
-            $data = RowEvent::delRow($this, $this->eventInfo['type'], $event_size_without_header, $onlyTables, $onlyDatabases);
+            return RowEvent::delRow($this, $this->eventInfo, $event_size_without_header, $onlyTables, $onlyDatabases);
         }
         elseif ($this->eventInfo['type'] == ConstEventType::XID_EVENT)
         {
-            $data['xid'] = $this->readUInt64();
+            return new XidDTO(
+                $this->eventInfo['date'],
+                $this->eventInfo['pos'],
+                $this->eventInfo['size'],
+                $event_size_without_header,
+                $this->readUInt64()
+            );
         }
         elseif ($this->eventInfo['type'] == ConstEventType::ROTATE_EVENT)
         {
             $pos = $this->readUInt64();
             $binFileName = $this->read($event_size_without_header - 8);
 
-            $data['rotate'] = ['position' => $pos, 'next_binlog' => $binFileName];
+            return new RotateDTO(
+                $this->eventInfo['date'],
+                $this->eventInfo['pos'],
+                $this->eventInfo['size'],
+                $event_size_without_header,
+                $pos,
+                $binFileName
+            );
         }
         elseif ($this->eventInfo['type'] == ConstEventType::GTID_LOG_EVENT)
         {
@@ -111,40 +140,39 @@ class BinLogPack
             $sid = unpack('H*', $this->read(16))[1];
             $gno = $this->readUInt64();
 
-            $data['gtid_log_event'] = [
-                'commit_flag' => $commit_flag,
-                'sid' => $sid,
-                'gno' => $gno,
-                'gtID' => vsprintf('%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s', str_split($sid)) . ':' . $gno
-            ];
+            return new GTIDLogDTO(
+                $this->eventInfo['date'],
+                $this->eventInfo['pos'],
+                $this->eventInfo['size'],
+                $event_size_without_header,
+                $commit_flag,
+                vsprintf('%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s', str_split($sid)) . ':' . $gno
+            );
         }
         else if ($this->eventInfo['type'] == ConstEventType::QUERY_EVENT)
         {
-            $slave_proxy_id = $this->readUInt32();
+            $this->advance(4);
             $execution_time = $this->readUInt32();
             $schema_length = $this->readUInt8();
-            $error_code = $this->readUInt16();
+            $this->advance(2);
             $status_vars_length = $this->readUInt16();
-
-            $status_vars = $this->read($status_vars_length);
+            $this->advance($status_vars_length);
             $schema = $this->read($schema_length);
             $this->advance(1);
-
             $query = $this->read($this->eventInfo['size'] - 36 - $status_vars_length - $schema_length - 1);
 
-            $data['query_event'] = [
-                'slave_proxy_id' => $slave_proxy_id,
-                'execution_time' => $execution_time,
-                'schema' => $schema,
-                'error_code' => $error_code,
-                'status_vars' => bin2hex($status_vars),
-                'query' => $query,
-            ];
+            return new QueryDTO(
+                $this->eventInfo['date'],
+                $this->eventInfo['pos'],
+                $this->eventInfo['size'],
+                $event_size_without_header,
+                $schema,
+                $execution_time,
+                $query
+            );
         }
 
-        $data['event'] = $this->eventInfo;
-
-        return $data;
+        return null;
     }
 
     /**

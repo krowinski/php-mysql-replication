@@ -8,6 +8,10 @@ use MySQLReplication\BinLog\BinLogPack;
 use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstFieldType;
+use MySQLReplication\DTO\DeleteRowsDTO;
+use MySQLReplication\DTO\TableMapDTO;
+use MySQLReplication\DTO\UpdateRowsDTO;
+use MySQLReplication\DTO\WriteRowsDTO;
 use MySQLReplication\Exception\BinLogException;
 
 /**
@@ -31,12 +35,13 @@ class RowEvent extends BinLogEvent
      *
      * @param BinLogPack $pack
      * @param DBHelper $DBHelper
-     * @param $event_type
+     * @param $eventInfo
+     * @param $size
      * @return array
      */
-    public static function tableMap(BinLogPack $pack, DBHelper $DBHelper, $event_type)
+    public static function tableMap(BinLogPack $pack, DBHelper $DBHelper, $eventInfo, $size)
     {
-        parent::init($pack, $event_type);
+        parent::init($pack, $eventInfo['type']);
 
         self::$TABLE_ID = self::readTableId();
 
@@ -62,9 +67,20 @@ class RowEvent extends BinLogEvent
             self::$TABLE_MAP = array_slice(self::$TABLE_MAP, 100, -1, true);
         }
 
+        $tableMapDTO = new TableMapDTO(
+            $eventInfo['date'],
+            $eventInfo['pos'],
+            $eventInfo['size'],
+            $size,
+            self::$TABLE_ID,
+            $data['schema_name'],
+            $data['table_name'],
+            self::$COLUMNS_NUM
+        );
+
         if (isset(self::$TABLE_MAP[self::$TABLE_ID]))
         {
-            return $data;
+            return $tableMapDTO;
         }
 
         self::$BinLogPack->readCodedBinary();
@@ -78,7 +94,7 @@ class RowEvent extends BinLogEvent
         // if you drop tables and parse of logs you will get empty scheme
         if (empty($columns))
         {
-            return [];
+            return null;
         }
 
         for ($i = 0; $i < strlen($column_type_def); $i++)
@@ -105,31 +121,39 @@ class RowEvent extends BinLogEvent
             self::$TABLE_MAP[self::$TABLE_ID]['fields'][$i] = BinLogColumns::parse($type, $columns[$i], self::$BinLogPack);
         }
 
-        return $data;
+        return $tableMapDTO;
     }
 
     /**
      * @param BinLogPack $pack
-     * @param $event_type
+     * @param array $eventInfo
      * @param $size
      * @param $onlyTables
      * @param $onlyDatabases
      * @return mixed
      */
-    public static function addRow(BinLogPack $pack, $event_type, $size, $onlyTables, $onlyDatabases)
+    public static function addRow(BinLogPack $pack, array $eventInfo, $size, $onlyTables, $onlyDatabases)
     {
-        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
+        self::rowInit($pack, $eventInfo['type'], $size, $onlyTables, $onlyDatabases);
 
-        $result = [];
+        if (false === self::$process)
+        {
+            return null;
+        }
 
-        $len = self::getColumnsAmount(self::$COLUMNS_NUM);
+        $values = self::_getAddRows(['bitmap' => self::$BinLogPack->read(self::getColumnsAmount(self::$COLUMNS_NUM))]);
 
-        $result['bitmap'] = self::$BinLogPack->read($len);
-
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $value['add'] = self::_getAddRows($result);
-
-        return $value;
+        return new WriteRowsDTO(
+            $eventInfo['date'],
+            $eventInfo['pos'],
+            $eventInfo['size'],
+            $size,
+            self::$SCHEMA_NAME,
+            self::$TABLE_NAME,
+            self::$COLUMNS_NUM,
+            count($values),
+            $values
+        );
     }
 
     /**
@@ -141,6 +165,8 @@ class RowEvent extends BinLogEvent
      */
     private static function rowInit(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
     {
+        self::$process = true;
+
         parent::init($pack, $event_type, $size);
 
         self::$TABLE_ID = self::readTableId();
@@ -180,6 +206,8 @@ class RowEvent extends BinLogEvent
         {
             //remove cache can be empty (drop table)
             unset(self::$TABLE_MAP[self::$TABLE_ID]);
+
+            self::$process = false;
         }
     }
 
@@ -199,7 +227,7 @@ class RowEvent extends BinLogEvent
     private static function _getAddRows(array $result)
     {
         $rows = [];
-        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE))
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -228,7 +256,7 @@ class RowEvent extends BinLogEvent
             $name = $column['name'];
             $unsigned = $column['unsigned'];
 
-            if (self::BitGet($cols_bitmap, $i) == 0)
+            if (self::bitGet($cols_bitmap, $i) == 0)
             {
                 $values[$name] = null;
                 continue;
@@ -389,9 +417,6 @@ class RowEvent extends BinLogEvent
             $nullBitmapIndex += 1;
         }
 
-        $values['table_name'] = self::$TABLE_NAME;
-        $values['database'] = self::$SCHEMA_NAME;
-
         return $values;
     }
 
@@ -400,7 +425,7 @@ class RowEvent extends BinLogEvent
      * @param $position
      * @return int
      */
-    private static function BitGet($bitmap, $position)
+    private static function bitGet($bitmap, $position)
     {
         $bit = $bitmap[(int)($position / 8)];
         if (is_string($bit))
@@ -437,6 +462,7 @@ class RowEvent extends BinLogEvent
         $string = self::$BinLogPack->readLengthCodedPascalString($size);
         if ($column['character_set_name'])
         {
+            // convert strings?
         }
 
         return $string;
@@ -724,26 +750,34 @@ class RowEvent extends BinLogEvent
 
     /**
      * @param BinLogPack $pack
-     * @param $event_type
+     * @param $eventInfo
      * @param $size
-     * @param $onlyTables
-     * @param $onlyDatabases
+     * @param array $onlyTables
+     * @param array $onlyDatabases
      * @return mixed
      */
-    public static function delRow(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
+    public static function delRow(BinLogPack $pack, $eventInfo, $size, array $onlyTables, array $onlyDatabases)
     {
-        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
+        self::rowInit($pack, $eventInfo['type'], $size, $onlyTables, $onlyDatabases);
 
-        $result = [];
+        if (false === self::$process)
+        {
+            return null;
+        }
 
-        $len = self::getColumnsAmount(self::$COLUMNS_NUM);
+        $values = self::_getDelRows(['bitmap' => self::$BinLogPack->read(self::getColumnsAmount(self::$COLUMNS_NUM))]);
 
-        $result['bitmap'] = self::$BinLogPack->read($len);
-
-        //nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $value['del'] = self::_getDelRows($result);
-
-        return $value;
+        return new DeleteRowsDTO(
+            $eventInfo['date'],
+            $eventInfo['pos'],
+            $eventInfo['size'],
+            $size,
+            self::$SCHEMA_NAME,
+            self::$TABLE_NAME,
+            self::$COLUMNS_NUM,
+            count($values),
+            $values
+        );
     }
 
     /**
@@ -753,7 +787,7 @@ class RowEvent extends BinLogEvent
     private static function _getDelRows(array $result)
     {
         $rows = [];
-        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE))
         {
             $rows[] = self::_read_column_data($result['bitmap']);
         }
@@ -763,27 +797,37 @@ class RowEvent extends BinLogEvent
 
     /**
      * @param BinLogPack $pack
-     * @param $event_type
+     * @param array $eventInfo
      * @param $size
-     * @param $onlyTables
-     * @param $onlyDatabases
+     * @param array $onlyTables
+     * @param array $onlyDatabases
      * @return mixed
      */
-    public static function updateRow(BinLogPack $pack, $event_type, $size, array $onlyTables, array $onlyDatabases)
+    public static function updateRow(BinLogPack $pack, array $eventInfo, $size, array $onlyTables, array $onlyDatabases)
     {
-        self::rowInit($pack, $event_type, $size, $onlyTables, $onlyDatabases);
+        self::rowInit($pack, $eventInfo['type'], $size, $onlyTables, $onlyDatabases);
 
-        $result = [];
+        if (false === self::$process)
+        {
+            return null;
+        }
 
         $len = self::getColumnsAmount(self::$COLUMNS_NUM);
 
-        $result['bitmap1'] = self::$BinLogPack->read($len);
-        $result['bitmap2'] = self::$BinLogPack->read($len);
+        $values = self::_getUpdateRows(['bitmap1' => self::$BinLogPack->read($len), 'bitmap2' => self::$BinLogPack->read($len)]);
 
-        // nul-bitmap, length (bits set in 'columns-present-bitmap1'+7)/8
-        $value['update'] = self::_getUpdateRows($result);
+        return new UpdateRowsDTO(
+            $eventInfo['date'],
+            $eventInfo['pos'],
+            $eventInfo['size'],
+            $size,
+            self::$SCHEMA_NAME,
+            self::$TABLE_NAME,
+            self::$COLUMNS_NUM,
+            count($values),
+            $values
 
-        return $value;
+        );
     }
 
     /**
@@ -793,11 +837,12 @@ class RowEvent extends BinLogEvent
     private static function _getUpdateRows(array $result)
     {
         $rows = [];
-        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE) && [] !== self::$fields)
+        while (!self::$BinLogPack->isComplete(self::$PACK_SIZE))
         {
-            $value['beform'] = self::_read_column_data($result['bitmap1']);
-            $value['after'] = self::_read_column_data($result['bitmap2']);
-            $rows[] = $value['after'];
+            $rows[] = [
+                'before' => self::_read_column_data($result['bitmap1']),
+                'after' => self::_read_column_data($result['bitmap2'])
+            ];
         }
 
         return $rows;
