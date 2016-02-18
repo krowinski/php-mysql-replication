@@ -7,6 +7,8 @@ ini_set('display_errors', 1);
 use MySQLReplication\Config\Config;
 use MySQLReplication\DataBase\DBHelper;
 use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\DTO\UpdateRowsDTO;
+use MySQLReplication\DTO\WriteRowsDTO;
 use MySQLReplication\Service\BinLogStream;
 
 
@@ -56,14 +58,14 @@ class Benchmark
     public function consume()
     {
         $start = microtime(true);
-        $i = 0.0;
+        $i = 0;
 
         while (1)
         {
             $result = $this->binLogStream->analysisBinLog();
-            if (!is_null($result))
+            if ($result instanceof UpdateRowsDTO)
             {
-                $i += 1.0;
+                $i += 1;
                 if (0 === ($i % 1000))
                 {
                     echo ((int)($i / (microtime(true) - $start)) . ' event by seconds (' . $i . ' total)') . PHP_EOL;

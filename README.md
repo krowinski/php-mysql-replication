@@ -1,37 +1,71 @@
-# php-mysql-replication
+php-mysql-replication
+=========
 
-based on a great work of：https://github.com/noplay/python-mysql-replication
+Pure PHP Implementation of MySQL replication protocol. This allow you to receive event like insert, update, delete with their data and raw SQL queries.
 
-## 运行环境
- 目前只支持数据库utf8编码  
- php版本>=5.4  
- mysql版本>=5.5  
- 需要安装php  sockets扩展  
- 运行用户需要有创建文件的权限  
+Based on a great work of creators：https://github.com/noplay/python-mysql-replication and https://github.com/fengxiangyun/mysql-replication
 
-## Config.php 配置文件
+Installation
+=========
 
+```sh
+composer require php-mysql-replication
+```
 
-运行run.php 目前只支持row模式  
-项目中  可以用supervisor监控 run.php 进程  
-Connect::analysisBinLog bool true存储当前的file  pos  
-本例中 通过读取binlog存储到kafka中  kafka版本 0.8.2.0  
-kafka-client 用到了github开源的一个项目  https://github.com/nmred/kafka-php  
-BinLogPack.php打印了事件类型  
+MySQL server settings
+=========================
 
+In your MySQL server configuration file you need to enable replication:
 
-## 配置mysql，打开mysql的binlog，配置binlog格式为row
- log-bin=mysql-bin  
- server-id=1  
- binlog_format=row   
+    [mysqld]
+    server-id		 = 1
+    log_bin			 = /var/log/mysql/mysql-bin.log
+    expire_logs_days = 10
+    max_binlog_size  = 100M
+    binlog-format    = row #Very important if you want to receive write, update and delete row events
 
-## 持久化
- file-pos 保存了当前读取到binlog的filename和pos，保证程序异常退出后能继续读取binlog  
- 新项目运行时 要删除file-pos，从当前show master status,读取到的filename pos开始读取  
- 可以设置file-pos，程序则从当前设置的位置读取binlog  
+Examples
+=========
+
+All examples are available in the [examples directory](https://github.com/krowinski/php-mysql-replication/tree/master/example)
+
+This example will dump all replication events to the console:
+
+```php
+<?php
+error_reporting(E_ALL);
+date_default_timezone_set('UTC');
+ini_set('memory_limit', '8M');
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use MySQLReplication\Service\BinLogStream;
+use MySQLReplication\Config\Config;
+
+$binLogStream = new BinLogStream(
+    new Config('root', '192.168.1.100', 3306, 'root')
+);
+while (1)
+{
+    $result = $binLogStream->analysisBinLog();
+    if (!is_null($result))
+    {
+        var_dump($result);
+        echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+    }
+}
+```
+
+For this SQL sessions:
+
+```sql
+CREATE DATABASE test;
+use test;
+CREATE TABLE test4 (id int NOT NULL AUTO_INCREMENT, data VARCHAR(255), data2 VARCHAR(255), PRIMARY KEY(id));
+INSERT INTO test4 (data,data2) VALUES ("Hello", "World");
+UPDATE test4 SET data = "World", data2="Hello" WHERE id = 1;
+DELETE FROM test4 WHERE id = 1;
+```
+
  
-## 联系我
- 任何问题可以mail  
- zhaozhiqiang1734@163.com  
-
 
