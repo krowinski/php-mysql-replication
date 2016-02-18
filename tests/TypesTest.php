@@ -44,18 +44,18 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $this->conn->exec($create_query);
         $this->conn->exec($insert_query);
 
-        $this->assertEquals(ConstEventType::ROTATE_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::FORMAT_DESCRIPTION_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::GTID_LOG_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::QUERY_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::GTID_LOG_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::QUERY_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::GTID_LOG_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::QUERY_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::GTID_LOG_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::QUERY_EVENT, $binLogStream->analysisBinLog()['event']['type']);
-        $this->assertEquals(ConstEventType::TABLE_MAP_EVENT, $binLogStream->analysisBinLog()['event']['type']);
+       ;
 
+        $this->assertEquals(null, $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\GTIDLogDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\QueryDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\GTIDLogDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\QueryDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\GTIDLogDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\QueryDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\GTIDLogDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\QueryDTO', $binLogStream->analysisBinLog());
+        $this->assertInstanceOf('MySQLReplication\DTO\TableMapDTO', $binLogStream->analysisBinLog());
         return $binLogStream->analysisBinLog();
     }
 
@@ -69,7 +69,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(4.2, $event['add'][0]['test']);
+        $this->assertEquals(4.2, $event->getValues()[0]['test']);
     }
 
     /**
@@ -82,7 +82,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('9000000123.123456', $event['add'][0]['test']);
+        $this->assertEquals('9000000123.123456', $event->getValues()[0]['test']);
     }
 
     /**
@@ -95,7 +95,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('9000000123.0000012345', $event['add'][0]['test']);
+        $this->assertEquals('9000000123.0000012345', $event->getValues()[0]['test']);
     }
 
     /**
@@ -108,7 +108,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('-42000.123456', $event['add'][0]['test']);
+        $this->assertEquals('-42000.123456', $event->getValues()[0]['test']);
     }
 
     /**
@@ -121,8 +121,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('4.2', $event['add'][0]['test']);
-        $this->assertEquals('42000.123456', $event['add'][0]['test2']);
+        $this->assertEquals('4.2', $event->getValues()[0]['test']);
+        $this->assertEquals('42000.123456', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -135,7 +135,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('10', $event['add'][0]['test']);
+        $this->assertEquals('10', $event->getValues()[0]['test']);
     }
 
     /**
@@ -148,7 +148,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('12345678912345678912345', $event['add'][0]['test']);
+        $this->assertEquals('12345678912345678912345', $event->getValues()[0]['test']);
     }
 
     /**
@@ -161,7 +161,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('100000', $event['add'][0]['test']);
+        $this->assertEquals('100000', $event->getValues()[0]['test']);
     }
 
     /**
@@ -174,7 +174,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('-100000.0', $event['add'][0]['test']);
+        $this->assertEquals('-100000.0', $event->getValues()[0]['test']);
     }
 
     /**
@@ -187,7 +187,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('-1234567891234567891234', $event['add'][0]['test']);
+        $this->assertEquals('-1234567891234567891234', $event->getValues()[0]['test']);
     }
 
     /**
@@ -200,8 +200,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(255, $event['add'][0]['id']);
-        $this->assertEquals(-128, $event['add'][0]['test']);
+        $this->assertEquals(255, $event->getValues()[0]['id']);
+        $this->assertEquals(-128, $event->getValues()[0]['test']);
     }
 
     /**
@@ -214,8 +214,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(1, $event['add'][0]['id']);
-        $this->assertEquals(1, $event['add'][0]['test']);
+        $this->assertEquals(1, $event->getValues()[0]['id']);
+        $this->assertEquals(1, $event->getValues()[0]['test']);
     }
 
     /**
@@ -228,8 +228,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(1, $event['add'][0]['id']);
-        $this->assertEquals(0, $event['add'][0]['test']);
+        $this->assertEquals(1, $event->getValues()[0]['id']);
+        $this->assertEquals(0, $event->getValues()[0]['test']);
     }
 
     /**
@@ -242,8 +242,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(1, $event['add'][0]['id']);
-        $this->assertEquals(null, $event['add'][0]['test']);
+        $this->assertEquals(1, $event->getValues()[0]['id']);
+        $this->assertEquals(null, $event->getValues()[0]['test']);
     }
 
     /**
@@ -256,8 +256,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(65535, $event['add'][0]['id']);
-        $this->assertEquals(-32768, $event['add'][0]['test']);
+        $this->assertEquals(65535, $event->getValues()[0]['id']);
+        $this->assertEquals(-32768, $event->getValues()[0]['test']);
     }
 
     /**
@@ -270,8 +270,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(4294967295, $event['add'][0]['id']);
-        $this->assertEquals(-2147483648, $event['add'][0]['test']);
+        $this->assertEquals(4294967295, $event->getValues()[0]['id']);
+        $this->assertEquals(-2147483648, $event->getValues()[0]['test']);
     }
 
     /**
@@ -284,8 +284,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(42.42, $event['add'][0]['id']);
-        $this->assertEquals(-84.84, $event['add'][0]['test']);
+        $this->assertEquals(42.42, $event->getValues()[0]['id']);
+        $this->assertEquals(-84.84, $event->getValues()[0]['test']);
     }
 
     /**
@@ -298,8 +298,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(42.42, $event['add'][0]['id']);
-        $this->assertEquals(-84.84, $event['add'][0]['test']);
+        $this->assertEquals(42.42, $event->getValues()[0]['id']);
+        $this->assertEquals(-84.84, $event->getValues()[0]['test']);
     }
 
     /**
@@ -312,7 +312,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('1984-12-03 12:33:07', $event['add'][0]['test']);
+        $this->assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test']);
     }
 
     /**
@@ -338,13 +338,13 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('1984-12-03 12:33:07', $event['add'][0]['test0']);
-        $this->assertEquals('1984-12-03 12:33:07.1', $event['add'][0]['test1']);
-        $this->assertEquals('1984-12-03 12:33:07.12', $event['add'][0]['test2']);
-        $this->assertEquals('1984-12-03 12:33:07.123', $event['add'][0]['test3']);
-        $this->assertEquals('1984-12-03 12:33:07.1234', $event['add'][0]['test4']);
-        $this->assertEquals('1984-12-03 12:33:07.12345', $event['add'][0]['test5']);
-        $this->assertEquals('1984-12-03 12:33:07.123456', $event['add'][0]['test6']);
+        $this->assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test0']);
+        $this->assertEquals('1984-12-03 12:33:07.1', $event->getValues()[0]['test1']);
+        $this->assertEquals('1984-12-03 12:33:07.12', $event->getValues()[0]['test2']);
+        $this->assertEquals('1984-12-03 12:33:07.123', $event->getValues()[0]['test3']);
+        $this->assertEquals('1984-12-03 12:33:07.1234', $event->getValues()[0]['test4']);
+        $this->assertEquals('1984-12-03 12:33:07.12345', $event->getValues()[0]['test5']);
+        $this->assertEquals('1984-12-03 12:33:07.123456', $event->getValues()[0]['test6']);
     }
 
     /**
@@ -357,8 +357,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('18446744073709551615', $event['add'][0]['id']);
-        $this->assertEquals('-9223372036854775808', $event['add'][0]['test']);
+        $this->assertEquals('18446744073709551615', $event->getValues()[0]['id']);
+        $this->assertEquals('-9223372036854775808', $event->getValues()[0]['test']);
     }
 
     /**
@@ -371,12 +371,12 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(16777215, $event['add'][0]['id']);
-        $this->assertEquals(8388607, $event['add'][0]['test']);
-        $this->assertEquals(-8388608, $event['add'][0]['test2']);
-        $this->assertEquals(8, $event['add'][0]['test3']);
-        $this->assertEquals(-8, $event['add'][0]['test4']);
-        $this->assertEquals(0, $event['add'][0]['test5']);
+        $this->assertEquals(16777215, $event->getValues()[0]['id']);
+        $this->assertEquals(8388607, $event->getValues()[0]['test']);
+        $this->assertEquals(-8388608, $event->getValues()[0]['test2']);
+        $this->assertEquals(8, $event->getValues()[0]['test3']);
+        $this->assertEquals(-8, $event->getValues()[0]['test4']);
+        $this->assertEquals(0, $event->getValues()[0]['test5']);
     }
 
     /**
@@ -389,7 +389,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('1984-12-03', $event['add'][0]['test']);
+        $this->assertEquals('1984-12-03', $event->getValues()[0]['test']);
     }
 
     /**
@@ -402,8 +402,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
-        $this->assertNull($event['add'][0]['test2']);
+        $this->assertNull($event->getValues()[0]['test']);
+        $this->assertNull($event->getValues()[0]['test2']);
     }
 
     /**
@@ -416,8 +416,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
-        $this->assertNull($event['add'][0]['test2']);
+        $this->assertNull($event->getValues()[0]['test']);
+        $this->assertNull($event->getValues()[0]['test2']);
     }
 
     /**
@@ -430,8 +430,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
-        $this->assertNull($event['add'][0]['test2']);
+        $this->assertNull($event->getValues()[0]['test']);
+        $this->assertNull($event->getValues()[0]['test2']);
     }
 
     /**
@@ -444,7 +444,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('12:33:18', $event['add'][0]['test']);
+        $this->assertEquals('12:33:18', $event->getValues()[0]['test']);
     }
 
 
@@ -458,7 +458,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('00:00:00', $event['add'][0]['test']);
+        $this->assertEquals('00:00:00', $event->getValues()[0]['test']);
     }
 
     /**
@@ -471,7 +471,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('1984-12-03 12:33:07', $event['add'][0]['test']);
+        $this->assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test']);
     }
 
     /**
@@ -484,7 +484,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
+        $this->assertNull($event->getValues()[0]['test']);
     }
 
     /**
@@ -497,7 +497,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
+        $this->assertNull($event->getValues()[0]['test']);
     }
 
     /**
@@ -510,8 +510,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(1984, $event['add'][0]['test']);
-        $this->assertEquals(1984, $event['add'][0]['test2']);
+        $this->assertEquals(1984, $event->getValues()[0]['test']);
+        $this->assertEquals(1984, $event->getValues()[0]['test2']);
     }
 
     /**
@@ -524,7 +524,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
     }
 
     /**
@@ -549,11 +549,11 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('100010', $event['add'][0]['test']);
-        $this->assertEquals('1000101010111000', $event['add'][0]['test2']);
-        $this->assertEquals('100010101101', $event['add'][0]['test3']);
-        $this->assertEquals('101100111', $event['add'][0]['test4']);
-        $this->assertEquals('1101011010110100100111100011010100010100101110111011101011011010', $event['add'][0]['test5']);
+        $this->assertEquals('100010', $event->getValues()[0]['test']);
+        $this->assertEquals('1000101010111000', $event->getValues()[0]['test2']);
+        $this->assertEquals('100010101101', $event->getValues()[0]['test3']);
+        $this->assertEquals('101100111', $event->getValues()[0]['test4']);
+        $this->assertEquals('1101011010110100100111100011010100010100101110111011101011011010', $event->getValues()[0]['test5']);
     }
 
     /**
@@ -566,8 +566,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('ba', $event['add'][0]['test']);
-        $this->assertEquals('a', $event['add'][0]['test2']);
+        $this->assertEquals('ba', $event->getValues()[0]['test']);
+        $this->assertEquals('a', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -580,8 +580,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals(['a', 'ba', 'c'], $event['add'][0]['test']);
-        $this->assertEquals(['a', 'c'], $event['add'][0]['test2']);
+        $this->assertEquals(['a', 'ba', 'c'], $event->getValues()[0]['test']);
+        $this->assertEquals(['a', 'c'], $event->getValues()[0]['test2']);
     }
 
     /**
@@ -594,8 +594,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
-        $this->assertEquals('World', $event['add'][0]['test2']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
+        $this->assertEquals('World', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -608,8 +608,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
-        $this->assertEquals('World', $event['add'][0]['test2']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
+        $this->assertEquals('World', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -622,8 +622,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
-        $this->assertEquals('World', $event['add'][0]['test2']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
+        $this->assertEquals('World', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -636,8 +636,8 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
-        $this->assertEquals('World', $event['add'][0]['test2']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
+        $this->assertEquals('World', $event->getValues()[0]['test2']);
     }
 
     /**
@@ -650,7 +650,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('Hello', $event['add'][0]['test']);
+        $this->assertEquals('Hello', $event->getValues()[0]['test']);
     }
 
     /**
@@ -663,7 +663,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals('000000000101000000000000000000f03f000000000000f03f', bin2hex($event['add'][0]['test']));
+        $this->assertEquals('000000000101000000000000000000f03f000000000000f03f', bin2hex($event->getValues()[0]['test']));
     }
 
     /**
@@ -697,11 +697,11 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertNull($event['add'][0]['test']);
-        $this->assertEquals(-128, $event['add'][0]['test2']);
-        $this->assertNull($event['add'][0]['test3']);
-        $this->assertEquals(42, $event['add'][0]['test7']);
-        $this->assertEquals(84, $event['add'][0]['test20']);
+        $this->assertNull($event->getValues()[0]['test']);
+        $this->assertEquals(-128, $event->getValues()[0]['test2']);
+        $this->assertNull($event->getValues()[0]['test3']);
+        $this->assertEquals(42, $event->getValues()[0]['test7']);
+        $this->assertEquals(84, $event->getValues()[0]['test20']);
 
     }
 
@@ -719,7 +719,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals($string, $event['add'][0]['test']);
+        $this->assertEquals($string, $event->getValues()[0]['test']);
     }
 
     /**
@@ -736,6 +736,6 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->assertEquals($string, $event['add'][0]['test']);
+        $this->assertEquals($string, $event->getValues()[0]['test']);
     }
 }

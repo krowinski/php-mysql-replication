@@ -3,7 +3,7 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\Config\Config;
 use MySQLReplication\DataBase\DBHelper;
-use MySQLReplication\Definitions\ConstCapability;
+use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
 use MySQLReplication\Exception\BinLogException;
 use MySQLReplication\Pack\GtidSet;
@@ -15,10 +15,6 @@ use MySQLReplication\Pack\ServerInfo;
  */
 class Connect
 {
-    /**
-     * @var int
-     */
-    private $flag = 0;
     /**
      * @var resource
      */
@@ -77,8 +73,7 @@ class Connect
         $this->binFilePos = $logPos;
         $this->binFileName = $logFile;
 
-        ConstCapability::init();
-        $this->flag = ConstCapability::$CAPABILITIES;
+        $this->connectToSocket();
     }
 
     /**
@@ -134,11 +129,6 @@ class Connect
      */
     public function getPacket($checkForOkByte = true)
     {
-        if (false === $this->isConnected())
-        {
-            $this->connectToSocket();
-        }
-
         $header = $this->readFromSocket(4);
         if (false === $header)
         {
@@ -170,17 +160,41 @@ class Connect
     private function readFromSocket($data_len)
     {
         // server gone away
-        if (5 === $data_len)
+        if ($data_len == 5)
         {
             throw new BinLogException('read 5 bytes from mysql server has gone away');
         }
 
-        if (false === socket_recv($this->socket, $buffer, $data_len, MSG_WAITALL))
+        try
         {
-            throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
-        }
+            $bytes_read = 0;
+            $body = '';
+            while ($bytes_read < $data_len)
+            {
+                $resp = socket_read($this->socket, $data_len - $bytes_read);
+                if ($resp === false)
+                {
+                    throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
+                }
 
-        return $buffer;
+                // server kill connection or server gone away
+                if (strlen($resp) === 0)
+                {
+                    throw new BinLogException('read less ' . ($data_len - strlen($body)));
+                }
+                $body .= $resp;
+                $bytes_read += strlen($resp);
+            }
+            if (strlen($body) < $data_len)
+            {
+                throw new BinLogException('read less ' . ($data_len - strlen($body)));
+            }
+            return $body;
+        }
+        catch (\Exception $e)
+        {
+            throw new BinLogException(var_export($e, true));
+        }
     }
 
     /**
@@ -188,7 +202,7 @@ class Connect
      */
     private function auth()
     {
-        $data = PackAuth::initPack($this->flag, $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
+        $data = PackAuth::initPack(ConstCapabilityFlags::CAPABILITIES, $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
 
         $this->writeToSocket($data);
         $this->getPacket();

@@ -1,6 +1,6 @@
 # php-mysql-replication
 
-参考python版本：https://github.com/noplay/python-mysql-replication
+based on a great work of：https://github.com/noplay/python-mysql-replication
 
 ## 运行环境
  目前只支持数据库utf8编码  
