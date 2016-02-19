@@ -9,22 +9,30 @@ namespace MySQLReplication\Definitions;
  */
 class ConstCapabilityFlags
 {
-    const LONG_PASSWORD = 1;
-    const FOUND_ROWS = 1 << 1;
-    const LONG_FLAG = 1 << 2;
-    const CONNECT_WITH_DB = 1 << 3;
-    const NO_SCHEMA = 1 << 4;
-    const COMPRESS = 1 << 5;
-    const ODBC = 1 << 6;
-    const LOCAL_FILES = 1 << 7;
-    const IGNORE_SPACE = 1 << 8;
-    const PROTOCOL_41 = 1 << 9;
-    const INTERACTIVE = 1 << 10;
-    const SSL = 1 << 11;
-    const IGNORE_SIG_PIPE = 1 << 12;
-    const TRANSACTIONS = 1 << 13;
-    const SECURE_CONNECTION = 1 << 15;
-    const MULTI_STATEMENTS = 1 << 16;
-    const MULTI_RESULTS = 1 << 17;
-    const CAPABILITIES = (self::LONG_PASSWORD | self::LONG_FLAG | self::TRANSACTIONS | self::PROTOCOL_41 | self::SECURE_CONNECTION);
+    public static function getCapabilities()
+    {
+        /*
+            Left only as information
+            $foundRows = 1 << 1;
+            $connectWithDb = 1 << 3;
+            $compress = 1 << 5;
+            $odbc = 1 << 6;
+            $localFiles = 1 << 7;
+            $ignoreSpace = 1 << 8;
+            $multiStatements = 1 << 16;
+            $multiResults = 1 << 17;
+            $interactive = 1 << 10;
+            $ssl = 1 << 11;
+            $ignoreSigPipe = 1 << 12;
+        */
+
+        $noSchema = 1 << 4;
+        $longPassword = 1;
+        $longFlag = 1 << 2;
+        $transactions = 1 << 13;
+        $secureConnection = 1 << 15;
+        $protocol41 = 1 << 9;
+
+        return ($longPassword | $longFlag | $transactions | $protocol41 | $secureConnection | $noSchema);
+    }
 }

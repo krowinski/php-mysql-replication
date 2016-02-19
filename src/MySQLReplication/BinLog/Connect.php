@@ -202,7 +202,7 @@ class Connect
      */
     private function auth()
     {
-        $data = PackAuth::initPack(ConstCapabilityFlags::CAPABILITIES, $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
+        $data = PackAuth::initPack(ConstCapabilityFlags::getCapabilities(), $this->config->getUser(), $this->config->getPassword(), ServerInfo::getSalt());
 
         $this->writeToSocket($data);
         $this->getPacket();

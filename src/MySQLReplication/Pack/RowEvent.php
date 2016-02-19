@@ -394,7 +394,7 @@ class RowEvent extends BinLogEvent
                 $sets = [];
                 foreach ($column['set_values'] as $k => $item)
                 {
-                    if ($bit_mask & 2 ** $k)
+                    if ($bit_mask & pow(2, $k))
                     {
                         $sets[] = $item;
                     }
