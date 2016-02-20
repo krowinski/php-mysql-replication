@@ -6,24 +6,24 @@ namespace MySQLReplication\DTO;
  * Class EventDTO
  * @package MySQLReplication\DTO
  */
-class EventDTO
+class EventDTO implements \JsonSerializable
 {
     /**
      * @var int
      */
-    private $date;
+    protected $date;
     /**
      * @var int
      */
-    private $binLogPos;
+    protected $binLogPos;
     /**
      * @var int
      */
-    private $eventSize;
+    protected $eventSize;
     /**
      * @var int
      */
-    private $readBytes;
+    protected $readBytes;
 
     /**
      * EventDTO constructor.
@@ -74,5 +74,30 @@ class EventDTO
     public function getReadBytes()
     {
         return $this->readBytes;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return PHP_EOL .
+        '=== ' . get_class($this) . ' === ' . PHP_EOL .
+        'Date: ' . $this->date . PHP_EOL .
+        'Log position: ' . $this->binLogPos . PHP_EOL .
+        'Event size: ' . $this->eventSize . PHP_EOL .
+        'Read bytes: ' . $this->readBytes . PHP_EOL;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return get_object_vars($this);
     }
 }

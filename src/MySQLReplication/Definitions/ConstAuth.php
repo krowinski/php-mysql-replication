@@ -2,6 +2,10 @@
 
 namespace MySQLReplication\Definitions;
 
+/**
+ * Class ConstAuth
+ * @package MySQLReplication\Definitions
+ */
 class ConstAuth
 {
     // 2^24 - 1 16m

@@ -16,7 +16,12 @@ while (1)
     $result = $binLogStream->analysisBinLog();
     if (!is_null($result))
     {
-        var_dump($result);
-        echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+        // all events got __toString() implementation
+        echo $result;
+
+        // all events got JsonSerializable implementation
+        //echo json_encode($result, JSON_PRETTY_PRINT);
+
+        //echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }
 }

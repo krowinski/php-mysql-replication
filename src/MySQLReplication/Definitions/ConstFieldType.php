@@ -4,9 +4,10 @@ namespace MySQLReplication\Definitions;
 
 /**
  * Class ConstFieldType
+ * @package MySQLReplication\Definitions
  */
-class ConstFieldType {
-
+class ConstFieldType
+{
     const DECIMAL = 0;
     const TINY = 1;
     const SHORT = 2;

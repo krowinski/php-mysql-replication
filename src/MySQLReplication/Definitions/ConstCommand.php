@@ -2,6 +2,10 @@
 
 namespace MySQLReplication\Definitions;
 
+/**
+ * Class ConstCommand
+ * @package MySQLReplication\Definitions
+ */
 class ConstCommand
 {
     const COM_BINLOG_DUMP    = 0x12;
