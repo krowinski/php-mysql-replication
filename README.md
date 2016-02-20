@@ -64,8 +64,8 @@ while (1)
 For this SQL sessions:
 
 ```sql
-CREATE DATABASE php-mysql-replication;
-use php-mysql-replication;
+CREATE DATABASE php_mysql_replication;
+use php_mysql_replication;
 CREATE TABLE test4 (id int NOT NULL AUTO_INCREMENT, data VARCHAR(255), data2 VARCHAR(255), PRIMARY KEY(id));
 INSERT INTO test4 (data,data2) VALUES ("Hello", "World");
 UPDATE test4 SET data = "World", data2="Hello" WHERE id = 1;
