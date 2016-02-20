@@ -2,11 +2,14 @@
 
 namespace MySQLReplication\DTO;
 
-
-class RowsDTO extends EventDTO
+/**
+ * Class RowsDTO
+ * @package MySQLReplication\DTO
+ */
+class RowsDTO extends EventDTO implements \JsonSerializable
 {
     /**
-     * @var []
+     * @var array
      */
     private $values;
     /**
@@ -59,7 +62,7 @@ class RowsDTO extends EventDTO
     }
 
     /**
-     * @return mixed
+     * @return array
      */
     public function getValues()
     {
@@ -96,5 +99,34 @@ class RowsDTO extends EventDTO
     public function getChangedRows()
     {
         return $this->changedRows;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return PHP_EOL .
+        '=== ' . get_class($this) . ' === ' . PHP_EOL .
+        'Date: ' . $this->date . PHP_EOL .
+        'Log position: ' . $this->binLogPos . PHP_EOL .
+        'Event size: ' . $this->eventSize . PHP_EOL .
+        'Read bytes: ' . $this->readBytes . PHP_EOL .
+        'Table: ' . $this->table . PHP_EOL .
+        'Affected columns: ' . $this->affected . PHP_EOL .
+        'Changed rows: ' . $this->changedRows . PHP_EOL .
+        'Values: ' . print_r($this->values, true) . PHP_EOL;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return get_object_vars($this);
     }
 }

@@ -2,6 +2,10 @@
 
 namespace MySQLReplication\Definitions;
 
+/**
+ * Class ConstMy
+ * @package MySQLReplication\Definitions
+ */
 class ConstMy
 {
     const NULL_COLUMN = 251;

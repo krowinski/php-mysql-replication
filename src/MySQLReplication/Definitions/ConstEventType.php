@@ -4,6 +4,7 @@ namespace MySQLReplication\Definitions;
 
 /**
  * Class ConstEventType
+ * @package MySQLReplication\Definitions
  */
 class ConstEventType
 {

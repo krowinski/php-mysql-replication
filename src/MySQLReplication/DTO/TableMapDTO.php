@@ -2,27 +2,26 @@
 
 namespace MySQLReplication\DTO;
 
-
 /**
  * Class TableMapDTO
  * @package MySQLReplication\DTO
  */
-class TableMapDTO extends EventDTO
+class TableMapDTO extends EventDTO implements \JsonSerializable
 {
     /**
-     * @var
+     * @var int
      */
     private $tableId;
     /**
-     * @var
+     * @var string
      */
     private $database;
     /**
-     * @var
+     * @var string
      */
     private $table;
     /**
-     * @var
+     * @var int
      */
     private $columns;
 
@@ -56,7 +55,7 @@ class TableMapDTO extends EventDTO
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getTableId()
     {
@@ -64,7 +63,7 @@ class TableMapDTO extends EventDTO
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDatabase()
     {
@@ -72,7 +71,7 @@ class TableMapDTO extends EventDTO
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getTable()
     {
@@ -80,10 +79,39 @@ class TableMapDTO extends EventDTO
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getColumns()
     {
         return $this->columns;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return PHP_EOL .
+        '=== ' . get_class($this) . ' === ' . PHP_EOL .
+        'Date: ' . $this->date . PHP_EOL .
+        'Log position: ' . $this->binLogPos . PHP_EOL .
+        'Event size: ' . $this->eventSize . PHP_EOL .
+        'Read bytes: ' . $this->readBytes . PHP_EOL .
+        'Table: ' . $this->table . PHP_EOL .
+        'Database: ' . $this->database . PHP_EOL .
+        'Table Id: ' . $this->tableId . PHP_EOL .
+        'Columns: ' . print_r($this->columns, true) . PHP_EOL;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return get_object_vars($this);
     }
 }
