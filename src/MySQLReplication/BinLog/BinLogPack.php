@@ -23,7 +23,7 @@ use MySQLReplication\Pack\RowEvent;
 class BinLogPack
 {
     /**
-     * @var []
+     * @var array
      */
     private $eventInfo;
     /**
@@ -176,7 +176,7 @@ class BinLogPack
     }
 
     /**
-     * @param $length
+     * @param int $length
      */
     public function advance($length)
     {
@@ -206,7 +206,7 @@ class BinLogPack
     }
 
     /**
-     * @param $data
+     * @param string $data
      * @return string
      */
     public function unpackUInt64($data)
@@ -288,7 +288,7 @@ class BinLogPack
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function readUInt24()
     {
@@ -312,15 +312,16 @@ class BinLogPack
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function readInt64()
     {
-        return unpack('q', $this->read(8))[1];
+        $data = unpack('V*', $this->read(8));
+        return bcadd($data[1], ($data[2] << 32));
     }
 
     /**
-     * @param $size
+     * @param int $size
      * @return string
      * @throws BinLogException
      */
@@ -453,7 +454,7 @@ class BinLogPack
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function readInt40Be()
     {
@@ -463,7 +464,7 @@ class BinLogPack
     }
 
     /**
-     * @param $size
+     * @param int $size
      * @return bool
      */
     public function isComplete($size)
