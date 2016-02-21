@@ -21,7 +21,7 @@ class TableMapDTO extends EventDTO implements \JsonSerializable
      */
     private $table;
     /**
-     * @var int
+     * @var
      */
     private $columns;
 

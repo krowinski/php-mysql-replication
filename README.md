@@ -31,6 +31,10 @@ All examples are available in the [examples directory](https://github.com/krowin
 
 This example will dump all replication events to the console:
 
+Remember to change config for your user, host and password.
+
+User should have replication privileges [ REPLICATION CLIENT, SELECT]
+
 ```php
 <?php
 error_reporting(E_ALL);
