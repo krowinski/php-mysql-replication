@@ -19,6 +19,10 @@ class RotateDTO extends EventDTO implements \JsonSerializable
      * @var string
      */
     private $next_binlog;
+    /**
+     * @var string
+     */
+    private $type = ConstEventsNames::ROTATE;
 
     /**
      * RotateDTO constructor.
@@ -58,7 +62,7 @@ class RotateDTO extends EventDTO implements \JsonSerializable
      */
     public function getType()
     {
-        return ConstEventsNames::ROTATE;
+        return $this->type;
     }
 
     /**

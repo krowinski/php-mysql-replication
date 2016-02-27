@@ -11,10 +11,15 @@ use MySQLReplication\Definitions\ConstEventsNames;
 class DeleteRowsDTO extends RowsDTO
 {
     /**
+     * @var string
+     */
+    protected $type = ConstEventsNames::DELETE;
+
+    /**
      * @return string
      */
     public function getType()
     {
-        return ConstEventsNames::DELETE;
+        return $this->type;
     }
 }

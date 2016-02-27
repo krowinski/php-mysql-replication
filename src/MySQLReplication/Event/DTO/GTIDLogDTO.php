@@ -19,6 +19,10 @@ class GTIDLogDTO extends EventDTO implements \JsonSerializable
      * @var string
      */
     private $gtid;
+    /**
+     * @var string
+     */
+    private $type = ConstEventsNames::GTID;
 
     /**
      * GTIDLogEventDTO constructor.
@@ -58,7 +62,7 @@ class GTIDLogDTO extends EventDTO implements \JsonSerializable
      */
     public function getType()
     {
-        return ConstEventsNames::GTID;
+        return $this->type;
     }
 
     /**

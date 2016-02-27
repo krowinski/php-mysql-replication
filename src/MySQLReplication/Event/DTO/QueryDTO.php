@@ -20,9 +20,13 @@ class QueryDTO extends EventDTO implements \JsonSerializable
      */
     private $query;
     /**
-     * @var
+     * @var string
      */
     private $database;
+    /**
+     * @var string
+     */
+    private $type = ConstEventsNames::QUERY;
 
     /**
      * QueryEventDTO constructor.
@@ -73,7 +77,7 @@ class QueryDTO extends EventDTO implements \JsonSerializable
      */
     public function getType()
     {
-        return ConstEventsNames::QUERY;
+        return $this->type;
     }
 
     /**

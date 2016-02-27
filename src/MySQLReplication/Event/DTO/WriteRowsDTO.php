@@ -11,10 +11,14 @@ use MySQLReplication\Definitions\ConstEventsNames;
 class WriteRowsDTO extends RowsDTO
 {
     /**
+     * @var string
+     */
+    protected $type = ConstEventsNames::WRITE;
+    /**
      * @return string
      */
     public function getType()
     {
-        return ConstEventsNames::WRITE;
+        return $this->type;
     }
 }
