@@ -4,17 +4,14 @@ date_default_timezone_set('UTC');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-use MySQLReplication\Config\Config;
-use MySQLReplication\DataBase\DBHelper;
+use Doctrine\DBAL\DriverManager;
+use MySQLReplication\BinLogStream;
+use MySQLReplication\Config\ConfigService;
 use MySQLReplication\Definitions\ConstEventType;
-use MySQLReplication\DTO\UpdateRowsDTO;
-use MySQLReplication\DTO\WriteRowsDTO;
-use MySQLReplication\Service\BinLogStream;
-
-
+use MySQLReplication\Event\DTO\UpdateRowsDTO;
 
 /**
- * Class Base
+ * Class Benchmark
  */
 class Benchmark
 {
@@ -22,47 +19,81 @@ class Benchmark
      * @var string
      */
     private $database = 'mysqlreplication_test';
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $conn;
-    /**
-     * @var Config
-     */
-    private $config;
 
+    /**
+     * Benchmark constructor.
+     */
     public function __construct()
     {
-        $this->config = new Config('root', '192.168.1.100', 3306, 'root');
-        $this->conn = (new DBHelper($this->config))->getConnection();
+        $conn = $this->getConnection();
+        $conn->exec("DROP DATABASE IF EXISTS " . $this->database);
+        $conn->exec("CREATE DATABASE " . $this->database);
+        $conn->exec("USE " . $this->database);
+        $conn->exec("CREATE TABLE test (i INT) ENGINE = MEMORY");
+        $conn->exec("INSERT INTO test VALUES(1)");
+        $conn->exec("CREATE TABLE test2 (i INT) ENGINE = MEMORY");
+        $conn->exec("INSERT INTO test2 VALUES(1)");
+        $conn->exec("RESET MASTER");
 
-        $this->conn->exec("DROP DATABASE IF EXISTS " . $this->database);
-        $this->conn->exec("CREATE DATABASE " . $this->database);
-        $this->conn->exec("USE " . $this->database);
-        $this->conn->exec("CREATE TABLE test (i INT) ENGINE = MEMORY");
-        $this->conn->exec("INSERT INTO test VALUES(1)");
-        $this->conn->exec("CREATE TABLE test2 (i INT) ENGINE = MEMORY");
-        $this->conn->exec("INSERT INTO test2 VALUES(1)");
-        $this->conn->exec("RESET MASTER");
-
-        $this->binLogStream =  new BinLogStream(
-            $this->config,
-            '',
-            '',
-            '',
-            '',
-            [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2]
+        $this->binLogStream = new BinLogStream(
+            (new ConfigService())->makeConfigFromArray([
+                'user' => 'root',
+                'host' => '192.168.1.100',
+                'password' => 'root',
+                'eventsOnly' => [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
+                'slaveId' => 9999
+            ])
         );
     }
 
-    public function consume()
+    /**
+     * @return \Doctrine\DBAL\Connection
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getConnection()
+    {
+        return DriverManager::getConnection([
+            'user' => 'root',
+            'password' => 'root',
+            'host' => '192.168.1.100',
+            'port' => 3306,
+            'driver' => 'pdo_mysql',
+            'dbname' => $this->database
+        ]);
+    }
+
+    /**
+     *
+     */
+    public function run()
+    {
+        $pid = pcntl_fork();
+        if ($pid == -1)
+        {
+            die('could not fork');
+        }
+        else if ($pid)
+        {
+            $this->consume();
+            pcntl_wait($status);
+        }
+        else
+        {
+            $this->produce();
+        }
+    }
+
+    /**
+     *
+     */
+    private function consume()
     {
         $start = microtime(true);
         $i = 0;
 
         while (1)
         {
-            $result = $this->binLogStream->analysisBinLog();
+            $result = $this->binLogStream->getBinLogEvent();
             if ($result instanceof UpdateRowsDTO)
             {
                 $i += 1;
@@ -74,34 +105,22 @@ class Benchmark
         }
     }
 
-    public function run()
+    /**
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function produce()
     {
-        $pid = pcntl_fork();
-        if ($pid == -1) {
-            die('could not fork');
-        } else if ($pid) {
-            $this->consume();
-            pcntl_wait($status);
-        } else {
-            $this->produce();
-        }
-
-    }
-
-    public function produce()
-    {
-        $this->conn = (new DBHelper($this->config))->getConnection();
-        $this->conn->exec("USE " . $this->database);
+        $conn = $this->getConnection();
 
         echo 'Start insert data' . PHP_EOL;
         while (1)
         {
-
-            $this->conn->exec("UPDATE test SET i = i + 1;");
-            $this->conn->exec("UPDATE test2 SET i = i + 1;");
+            $conn->exec("UPDATE test SET i = i + 1;");
+            $conn->exec("UPDATE test2 SET i = i + 1;");
         }
-    }
 
+        $conn->close();
+    }
 }
 
 (new Benchmark())->run();

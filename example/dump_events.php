@@ -5,15 +5,20 @@ ini_set('memory_limit', '8M');
 
 include __DIR__ . '/../vendor/autoload.php';
 
-use MySQLReplication\Service\BinLogStream;
-use MySQLReplication\Config\Config;
+use MySQLReplication\BinLogStream;
+use MySQLReplication\Config\ConfigService;
 
 $binLogStream = new BinLogStream(
-    new Config('root', '192.168.1.100', 3306, 'root')
+    (new ConfigService())->makeConfigFromArray([
+        'user' => 'root',
+        'host' => '192.168.1.100',
+        'password' => 'root',
+        //'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
+    ])
 );
 while (1)
 {
-    $result = $binLogStream->analysisBinLog();
+    $result = $binLogStream->getBinLogEvent();
     if (!is_null($result))
     {
         // all events got __toString() implementation
