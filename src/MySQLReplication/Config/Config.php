@@ -4,9 +4,6 @@ namespace MySQLReplication\Config;
 
 /**
  * Class Config
- */
-/**
- * Class Config
  * @package MySQLReplication\Config
  */
 class Config
@@ -35,23 +32,71 @@ class Config
      * @var string
      */
     private $charset;
+    /**
+     * @var string
+     */
+    private $gtid;
+    /**
+     * @var int
+     */
+    private $slaveId;
+    /**
+     * @var string
+     */
+    private $binLogFileName;
+    /**
+     * @var int
+     */
+    private $binLogPosition;
+    /**
+     * @var array
+     */
+    private $eventsOnly;
+    /**
+     * @var array
+     */
+    private $eventsIgnore;
+    /**
+     * @var array
+     */
+    private $tablesOnly;
+    /**
+     * @var array
+     */
+    private $databasesOnly;
 
     /**
      * Config constructor.
-     * @param $user
-     * @param $host
-     * @param $port
-     * @param $password
+     * @param string $user
+     * @param string $host
+     * @param int $port
+     * @param string $password
      * @param string $dbName
      * @param string $charset
+     * @param string $gtid
+     * @param int $slaveId
+     * @param string $binLogFileName
+     * @param $binLogPosition
+     * @param array $eventsOnly
+     * @param array $eventsIgnore
+     * @param array $tablesOnly
+     * @param array $databasesOnly
      */
     public function __construct(
         $user,
         $host,
         $port,
         $password,
-        $dbName = '',
-        $charset = ''
+        $dbName,
+        $charset,
+        $gtid,
+        $slaveId,
+        $binLogFileName,
+        $binLogPosition,
+        array $eventsOnly,
+        array $eventsIgnore,
+        array $tablesOnly,
+        array $databasesOnly
     ) {
         $this->user = $user;
         $this->host = $host;
@@ -59,18 +104,26 @@ class Config
         $this->password = $password;
         $this->dbName = $dbName;
         $this->charset = $charset;
+        $this->gtid = $gtid;
+        $this->slaveId = $slaveId;
+        $this->binLogFileName = $binLogFileName;
+        $this->binLogPosition = $binLogPosition;
+        $this->eventsOnly = $eventsOnly;
+        $this->eventsIgnore = $eventsIgnore;
+        $this->tablesOnly = $tablesOnly;
+        $this->databasesOnly = $databasesOnly;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getCharset()
+    public function getUser()
     {
-        return $this->charset;
+        return $this->user;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getHost()
     {
@@ -78,7 +131,7 @@ class Config
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getPort()
     {
@@ -86,7 +139,7 @@ class Config
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getPassword()
     {
@@ -94,7 +147,7 @@ class Config
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDbName()
     {
@@ -102,10 +155,75 @@ class Config
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getUser()
+    public function getCharset()
     {
-        return $this->user;
+        return $this->charset;
     }
+
+    /**
+     * @return string
+     */
+    public function getGtid()
+    {
+        return $this->gtid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSlaveId()
+    {
+        return $this->slaveId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBinLogFileName()
+    {
+        return $this->binLogFileName;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBinLogPosition()
+    {
+        return $this->binLogPosition;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEventsOnly()
+    {
+        return $this->eventsOnly;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEventsIgnore()
+    {
+        return $this->eventsIgnore;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTablesOnly()
+    {
+        return $this->tablesOnly;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDatabasesOnly()
+    {
+        return $this->databasesOnly;
+    }
+
 }
