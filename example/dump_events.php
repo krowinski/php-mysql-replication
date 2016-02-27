@@ -1,8 +1,7 @@
 <?php
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
 date_default_timezone_set('UTC');
-ini_set('memory_limit', '8M');
-
 include __DIR__ . '/../vendor/autoload.php';
 
 use MySQLReplication\BinLogStream;
@@ -27,6 +26,6 @@ while (1)
         // all events got JsonSerializable implementation
         //echo json_encode($result, JSON_PRETTY_PRINT);
 
-        //echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+        echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }
 }

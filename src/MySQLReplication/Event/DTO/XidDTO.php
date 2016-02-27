@@ -12,6 +12,10 @@ use MySQLReplication\Event\EventInfo;
 class XidDTO extends EventDTO implements \JsonSerializable
 {
     /**
+     * @var string
+     */
+    private $type = ConstEventsNames::XID;
+    /**
      * @var
      */
     private $xid;
@@ -43,7 +47,7 @@ class XidDTO extends EventDTO implements \JsonSerializable
      */
     public function getType()
     {
-        return ConstEventsNames::XID;
+        return $this->type;
     }
 
     /**

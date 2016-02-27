@@ -11,10 +11,15 @@ use MySQLReplication\Definitions\ConstEventsNames;
 class UpdateRowsDTO extends RowsDTO
 {
     /**
+     * @var string
+     */
+    protected $type = ConstEventsNames::UPDATE;
+
+    /**
      * @return string
      */
     public function getType()
     {
-        return ConstEventsNames::UPDATE;
+        return $this->type;
     }
 }

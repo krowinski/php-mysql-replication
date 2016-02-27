@@ -44,29 +44,9 @@ class RowEvent extends EventCommon
         4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
     ];
     /**
-     * @var array
+     * @var TableMap[]
      */
     private static $tableMapCache;
-    /**
-     * @var string
-     */
-    private $tableMapTableName;
-    /**
-     * @var string
-     */
-    private $tableMapDatabase;
-    /**
-     * @var int
-     */
-    private $tableMapColumnsAmount;
-    /**
-     * @var array
-     */
-    private $tableMapFields;
-    /**
-     * @var bool
-     */
-    private $process = true;
     /**
      * @var MySQLRepository
      */
@@ -75,6 +55,10 @@ class RowEvent extends EventCommon
      * @var Config
      */
     private $config;
+    /**
+     * @var TableMap
+     */
+    private $currentTableMap;
 
     /**
      * RowEvent constructor.
@@ -100,78 +84,88 @@ class RowEvent extends EventCommon
      */
     public function makeTableMapDTO()
     {
-        $tableId = $this->binaryDataReader->readTableId();
-        $this->binaryDataReader->advance(2);
-
-        $data = [];
-        $data['schema_length'] = $this->binaryDataReader->readUInt8();
-        $data['schema_name'] = $this->tableMapDatabase = $this->binaryDataReader->read($data['schema_length']);
-        $this->binaryDataReader->advance(1);
-
-        $data['table_length'] = $this->binaryDataReader->readUInt8();
-        $data['table_name'] = $this->tableMapTableName = $this->binaryDataReader->read($data['table_length']);
-        $this->binaryDataReader->advance(1);
-
-        $this->tableMapColumnsAmount = $this->binaryDataReader->readCodedBinary();
-
-        $column_type_def = $this->binaryDataReader->read($this->tableMapColumnsAmount);
-
-        // automatically clear array to save memory
-        if (count(self::$tableMapCache) >= 200)
+        // automatically clear table cache to save memory
+        if (count(self::$tableMapCache) >= 128)
         {
-            self::$tableMapCache = array_slice(self::$tableMapCache, 100, -1, true);
+            self::$tableMapCache = array_slice(self::$tableMapCache, 128, -1, true);
         }
 
-        $tableMapDTO = new TableMapDTO(
-            $this->eventInfo,
-            $tableId,
-            $data['schema_name'],
-            $data['table_name'],
-            $this->tableMapColumnsAmount
-        );
+        $data = [];
+        $data['table_id'] = $this->binaryDataReader->readTableId();
+        $this->binaryDataReader->advance(2);
+        $data['schema_length'] = $this->binaryDataReader->readUInt8();
+        $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
+        $this->binaryDataReader->advance(1);
+        $data['table_length'] = $this->binaryDataReader->readUInt8();
+        $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
+        $this->binaryDataReader->advance(1);
+        $data['columns_amount'] = $this->binaryDataReader->readCodedBinary();
+        $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
 
-        if (isset(self::$tableMapCache[$tableId]))
+        if ([] !== $this->config->getTablesOnly() && !in_array($data['table_name'], $this->config->getTablesOnly()))
         {
-            return $tableMapDTO;
+            return null;
+        }
+
+        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly()))
+        {
+            return null;
+        }
+
+        // already in cache don't parse
+        if (isset(self::$tableMapCache[$data['table_id']]))
+        {
+            return new TableMapDTO(
+                $this->eventInfo,
+                self::$tableMapCache[$data['table_id']]
+            );
         }
 
         $this->binaryDataReader->readCodedBinary();
 
-        self::$tableMapCache[$tableId]['fields'] = [];
-        self::$tableMapCache[$tableId]['database'] = $data['schema_name'];
-        self::$tableMapCache[$tableId]['table_name'] = $data['table_name'];
-
         $columns = $this->MySQLRepository->getFields($data['schema_name'], $data['table_name']);
+
+        $fields = [];
         // if you drop tables and parse of logs you will get empty scheme
-        if (empty($columns))
+        if (!empty($columns))
         {
-            return $tableMapDTO;
+            for ($i = 0; $i < strlen($data['column_types']); $i++)
+            {
+                // this a dirty hack to prevent row events containing columns which have been dropped
+                if (!isset($columns[$i]))
+                {
+                    $columns[$i] = [
+                        'COLUMN_NAME' => 'DROPPED_COLUMN_' . $i,
+                        'COLLATION_NAME' => null,
+                        'CHARACTER_SET_NAME' => null,
+                        'COLUMN_COMMENT' => null,
+                        'COLUMN_TYPE' => 'BLOB',
+                        'COLUMN_KEY' => '',
+                    ];
+                    $type = ConstFieldType::IGNORE;
+                }
+                else
+                {
+                    $type = ord($data['column_types'][$i]);
+                }
+
+                $fields[$i] = BinLogColumns::parse($type, $columns[$i], $this->binaryDataReader);
+            }
         }
 
-        for ($i = 0; $i < strlen($column_type_def); $i++)
-        {
-            // this a dirty hack to prevent row events containing columns which have been dropped
-            if (!isset($columns[$i]))
-            {
-                $columns[$i] = [
-                    'COLUMN_NAME' => 'DROPPED_COLUMN_' . $i,
-                    'COLLATION_NAME' => null,
-                    'CHARACTER_SET_NAME' => null,
-                    'COLUMN_COMMENT' => null,
-                    'COLUMN_TYPE' => 'BLOB',
-                    'COLUMN_KEY' => '',
-                ];
-                $type = ConstFieldType::IGNORE;
-            }
-            else
-            {
-                $type = ord($column_type_def[$i]);
-            }
+        // save to cache
+        self::$tableMapCache[$data['table_id']] = new TableMap(
+            $data['schema_name'],
+            $data['table_name'],
+            $data['table_id'],
+            $data['columns_amount'],
+            $fields
+        );
 
-            self::$tableMapCache[$tableId]['fields'][$i] = BinLogColumns::parse($type, $columns[$i], $this->binaryDataReader);
-        }
-
-        return $tableMapDTO;
+        return new TableMapDTO(
+            $this->eventInfo,
+            self::$tableMapCache[$data['table_id']]
+        );
     }
 
     /**
@@ -179,9 +173,7 @@ class RowEvent extends EventCommon
      */
     public function makeWriteRowsDTO()
     {
-        $this->rowInit();
-
-        if (false === $this->process)
+        if (false === $this->rowInit())
         {
             return null;
         }
@@ -190,21 +182,17 @@ class RowEvent extends EventCommon
 
         return new WriteRowsDTO(
             $this->eventInfo,
-            $this->tableMapDatabase,
-            $this->tableMapTableName,
-            $this->tableMapColumnsAmount,
+            $this->currentTableMap,
             count($values),
             $values
         );
     }
 
     /**
-     *
+     * @return bool
      */
     private function rowInit()
     {
-        $this->process = true;
-
         $tableId = $this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
 
@@ -217,30 +205,17 @@ class RowEvent extends EventCommon
             $this->binaryDataReader->read($this->binaryDataReader->readUInt16() / 8);
         }
 
-        $this->tableMapColumnsAmount = $this->binaryDataReader->readCodedBinary();
+        $this->binaryDataReader->readCodedBinary();
 
-
-        $this->tableMapFields = [];
-        if (isset(self::$tableMapCache[$tableId]))
+        if (isset(self::$tableMapCache[$tableId]) && [] !== self::$tableMapCache[$tableId]->getFields())
         {
-            $this->tableMapFields = self::$tableMapCache[$tableId]['fields'];
+            $this->currentTableMap = self::$tableMapCache[$tableId];
 
-            if ([] !== $this->config->getTablesOnly() && !in_array(self::$tableMapCache[$tableId]['table_name'], $this->config->getTablesOnly()))
-            {
-                $this->process = false;
-            }
+            return true;
+        }
+        unset(self::$tableMapCache[$tableId]);
 
-            if ([] !== $this->config->getDatabasesOnly() && !in_array(self::$tableMapCache[$tableId]['database'], $this->config->getDatabasesOnly()))
-            {
-                $this->process = false;
-            }
-        }
-        if ([] == $this->tableMapFields)
-        {
-            //remove cache can be empty (drop table)
-            unset(self::$tableMapCache[$tableId]);
-            $this->process = false;
-        }
+        return false;
     }
 
     /**
@@ -252,17 +227,16 @@ class RowEvent extends EventCommon
     {
         $values = [];
 
-        $l = $this->getColumnsBinarySize($this->bitCount($colsBitmap));
+        $length = $this->getColumnsBinarySize($this->bitCount($colsBitmap));
 
         // null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
         // see http://dev.mysql.com/doc/internals/en/rows-event.html
-        $null_bitmap = $this->binaryDataReader->read($l);
+        $null_bitmap = $this->binaryDataReader->read($length);
         $nullBitmapIndex = 0;
 
-        foreach ($this->tableMapFields as $i => $column)
+        foreach ($this->currentTableMap->getFields() as $i => $column)
         {
             $name = $column['name'];
-            $unsigned = $column['unsigned'];
 
             if ($this->bitGet($colsBitmap, $i) == 0)
             {
@@ -280,7 +254,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::TINY)
             {
-                if ($unsigned)
+                if (true === $column['unsigned'])
                 {
                     $values[$name] = $this->binaryDataReader->readUInt8();
                 }
@@ -291,7 +265,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::SHORT)
             {
-                if ($unsigned)
+                if (true === $column['unsigned'])
                 {
                     $values[$name] = $this->binaryDataReader->readUInt16();
                 }
@@ -302,7 +276,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::LONG)
             {
-                if ($unsigned)
+                if (true === $column['unsigned'])
                 {
                     $values[$name] = $this->binaryDataReader->readUInt32();
                 }
@@ -313,7 +287,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::LONGLONG)
             {
-                if ($unsigned)
+                if (true === $column['unsigned'])
                 {
                     $values[$name] = $this->binaryDataReader->readUInt64();
                 }
@@ -324,7 +298,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::INT24)
             {
-                if ($unsigned)
+                if (true === $column['unsigned'])
                 {
                     $values[$name] = $this->binaryDataReader->readUInt24();
                 }
@@ -413,12 +387,12 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * @param int $columns
+     * @param int $columnsAmount
      * @return int
      */
-    private function getColumnsBinarySize($columns)
+    private function getColumnsBinarySize($columnsAmount)
     {
-        return (int)(($columns + 7) / 8);
+        return (int)(($columnsAmount + 7) / 8);
     }
 
     /**
@@ -808,9 +782,7 @@ class RowEvent extends EventCommon
      */
     public function makeDeleteRowsDTO()
     {
-        $this->rowInit();
-
-        if (false === $this->process)
+        if (false === $this->rowInit())
         {
             return null;
         }
@@ -819,9 +791,7 @@ class RowEvent extends EventCommon
 
         return new DeleteRowsDTO(
             $this->eventInfo,
-            $this->tableMapDatabase,
-            $this->tableMapTableName,
-            $this->tableMapColumnsAmount,
+            $this->currentTableMap,
             count($values),
             $values
         );
@@ -832,14 +802,12 @@ class RowEvent extends EventCommon
      */
     public function makeUpdateRowsDTO()
     {
-        $this->rowInit();
-
-        if (false === $this->process)
+        if (false === $this->rowInit())
         {
             return null;
         }
 
-        $columnsBinarySize = $this->getColumnsBinarySize($this->tableMapColumnsAmount);
+        $columnsBinarySize = $this->getColumnsBinarySize($this->currentTableMap->getColumnsAmount());
         $beforeBinaryData = $this->binaryDataReader->read($columnsBinarySize);
         $afterBinaryData = $this->binaryDataReader->read($columnsBinarySize);
 
@@ -854,9 +822,7 @@ class RowEvent extends EventCommon
 
         return new UpdateRowsDTO(
             $this->eventInfo,
-            $this->tableMapDatabase,
-            $this->tableMapTableName,
-            $this->tableMapColumnsAmount,
+            $this->currentTableMap,
             count($values),
             $values
         );
@@ -868,7 +834,7 @@ class RowEvent extends EventCommon
      */
     private function getValues()
     {
-        $columnsBinarySize = $this->getColumnsBinarySize($this->tableMapColumnsAmount);
+        $columnsBinarySize = $this->getColumnsBinarySize($this->currentTableMap->getColumnsAmount());
         $binaryData = $this->binaryDataReader->read($columnsBinarySize);
 
         $values = [];

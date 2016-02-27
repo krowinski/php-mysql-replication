@@ -4,6 +4,7 @@ namespace MySQLReplication\Event\DTO;
 
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
+use MySQLReplication\Event\RowEvent\TableMap;
 
 /**
  * Class TableMapDTO
@@ -12,83 +13,26 @@ use MySQLReplication\Event\EventInfo;
 class TableMapDTO extends EventDTO implements \JsonSerializable
 {
     /**
-     * @var int
-     */
-    private $tableId;
-    /**
      * @var string
      */
-    private $database;
+    private $type = ConstEventsNames::TABLE_MAP;
     /**
-     * @var string
+     * @var TableMap
      */
-    private $table;
-    /**
-     * @var
-     */
-    private $columns;
+    private $tableMap;
 
     /**
      * TableMapDTO constructor.
      * @param EventInfo $eventInfo
-     * @param $tableId
-     * @param $database
-     * @param $table
-     * @param $columns
+     * @param TableMap $tableMap
      */
     public function __construct(
         EventInfo $eventInfo,
-        $tableId,
-        $database,
-        $table,
-        $columns
+        TableMap $tableMap
     ) {
         parent::__construct($eventInfo);
 
-        $this->tableId = $tableId;
-        $this->database = $database;
-        $this->table = $table;
-        $this->columns = $columns;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTableId()
-    {
-        return $this->tableId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDatabase()
-    {
-        return $this->database;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTable()
-    {
-        return $this->table;
-    }
-
-    /**
-     * @return int
-     */
-    public function getColumns()
-    {
-        return $this->columns;
-    }
-
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return ConstEventsNames::TABLE_MAP;
+        $this->tableMap = $tableMap;
     }
 
     /**
@@ -101,10 +45,18 @@ class TableMapDTO extends EventDTO implements \JsonSerializable
         'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
         'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
         'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Table: ' . $this->table . PHP_EOL .
-        'Database: ' . $this->database . PHP_EOL .
-        'Table Id: ' . $this->tableId . PHP_EOL .
-        'Columns: ' . print_r($this->columns, true) . PHP_EOL;
+        'Table: ' . $this->tableMap->getTable() . PHP_EOL .
+        'Database: ' . $this->tableMap->getDatabase() . PHP_EOL .
+        'Table Id: ' . $this->tableMap->getTableId() . PHP_EOL .
+        'Columns amount: ' . $this->tableMap->getColumnsAmount() . PHP_EOL;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**
@@ -117,5 +69,13 @@ class TableMapDTO extends EventDTO implements \JsonSerializable
     public function jsonSerialize()
     {
         return get_object_vars($this);
+    }
+
+    /**
+     * @return TableMap
+     */
+    public function getTableMap()
+    {
+        return $this->tableMap;
     }
 }
