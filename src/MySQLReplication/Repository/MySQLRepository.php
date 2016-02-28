@@ -70,11 +70,7 @@ class MySQLRepository
     {
         $sql = "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM'";
         $res = $this->getConnection()->fetchAssoc($sql);
-        if ($res['Value'])
-        {
-            return true;
-        }
-        return false;
+        return isset($res['Value']);
     }
 
     /**

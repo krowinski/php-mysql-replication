@@ -2,7 +2,6 @@
 
 namespace MySQLReplication\Event\RowEvent;
 
-use MySQLReplication\BinLog\BinLogColumns;
 use MySQLReplication\Event\EventCommon;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Config\Config;
@@ -12,7 +11,8 @@ use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
-use MySQLReplication\Exception\BinLogException;
+use MySQLReplication\Event\Exception\EventException;
+use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
@@ -84,32 +84,34 @@ class RowEvent extends EventCommon
      */
     public function makeTableMapDTO()
     {
-        // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) >= 128)
-        {
-            self::$tableMapCache = array_slice(self::$tableMapCache, 128, -1, true);
-        }
-
         $data = [];
         $data['table_id'] = $this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
         $data['schema_length'] = $this->binaryDataReader->readUInt8();
         $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
+
+        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly()))
+        {
+            return null;
+        }
+
         $this->binaryDataReader->advance(1);
         $data['table_length'] = $this->binaryDataReader->readUInt8();
         $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
-        $this->binaryDataReader->advance(1);
-        $data['columns_amount'] = $this->binaryDataReader->readCodedBinary();
-        $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
 
         if ([] !== $this->config->getTablesOnly() && !in_array($data['table_name'], $this->config->getTablesOnly()))
         {
             return null;
         }
 
-        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly()))
+        $this->binaryDataReader->advance(1);
+        $data['columns_amount'] = $this->binaryDataReader->readCodedBinary();
+        $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
+
+        // automatically clear table cache to save memory
+        if (count(self::$tableMapCache) >= 128)
         {
-            return null;
+            self::$tableMapCache = array_slice(self::$tableMapCache, 64, -1, true);
         }
 
         // already in cache don't parse
@@ -149,7 +151,7 @@ class RowEvent extends EventCommon
                     $type = ord($data['column_types'][$i]);
                 }
 
-                $fields[$i] = BinLogColumns::parse($type, $columns[$i], $this->binaryDataReader);
+                $fields[$i] = Columns::parse($type, $columns[$i], $this->binaryDataReader);
             }
         }
 
@@ -377,7 +379,7 @@ class RowEvent extends EventCommon
             }
             else
             {
-                throw new BinLogException('Unknown row type: ' . $column['type']);
+                throw new MySQLReplicationException('Unknown row type: ' . $column['type']);
             }
 
             $nullBitmapIndex += 1;
@@ -402,10 +404,11 @@ class RowEvent extends EventCommon
     protected function bitCount($bitmap)
     {
         $n = 0;
-        for ($i = 0; $i < strlen($bitmap); $i++)
+        $bitmapLength = strlen($bitmap);
+        for ($i = 0; $i < $bitmapLength; $i++)
         {
             $bit = $bitmap[$i];
-            if (is_string($bit))
+            if (true === is_string($bit))
             {
                 $bit = ord($bit);
             }
@@ -423,7 +426,7 @@ class RowEvent extends EventCommon
     private function bitGet($bitmap, $position)
     {
         $bit = $bitmap[(int)($position / 8)];
-        if (is_string($bit))
+        if (true === is_string($bit))
         {
             $bit = ord($bit);
         }
@@ -439,7 +442,7 @@ class RowEvent extends EventCommon
     private function checkNull($nullBitmap, $position)
     {
         $bit = $nullBitmap[intval($position / 8)];
-        if (is_string($bit))
+        if (true === is_string($bit))
         {
             $bit = ord($bit);
         }
@@ -671,7 +674,7 @@ class RowEvent extends EventCommon
     /**
      * @param array $column
      * @return bool|string
-     * @throws BinLogException
+     * @throws EventException
      */
     private function getTimestamp2(array $column)
     {
@@ -709,7 +712,7 @@ class RowEvent extends EventCommon
     /**
      * @param array $column
      * @return array
-     * @throws BinLogException
+     * @throws EventException
      */
     private function getSet(array $column)
     {
@@ -830,7 +833,7 @@ class RowEvent extends EventCommon
 
     /**
      * @return array
-     * @throws BinLogException
+     * @throws EventException
      */
     private function getValues()
     {

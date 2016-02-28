@@ -15,7 +15,7 @@ class Config
     /**
      * @var string
      */
-    private $host;
+    private $ip;
     /**
      * @var int
      */
@@ -68,7 +68,7 @@ class Config
     /**
      * Config constructor.
      * @param string $user
-     * @param string $host
+     * @param string $ip
      * @param int $port
      * @param string $password
      * @param string $dbName
@@ -84,7 +84,7 @@ class Config
      */
     public function __construct(
         $user,
-        $host,
+        $ip,
         $port,
         $password,
         $dbName,
@@ -99,7 +99,7 @@ class Config
         array $databasesOnly
     ) {
         $this->user = $user;
-        $this->host = $host;
+        $this->ip = $ip;
         $this->port = $port;
         $this->password = $password;
         $this->dbName = $dbName;
@@ -125,9 +125,9 @@ class Config
     /**
      * @return string
      */
-    public function getHost()
+    public function getIp()
     {
-        return $this->host;
+        return $this->ip;
     }
 
     /**

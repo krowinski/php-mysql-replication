@@ -2,8 +2,6 @@
 
 namespace MySQLReplication\BinaryDataReader;
 
-use MySQLReplication\Exception\BinLogException;
-
 /**
  * Class BinaryDataReader
  * @package MySQLReplication\BinaryDataReader
@@ -49,13 +47,15 @@ class BinaryDataReader
      */
     public function advance($length)
     {
-        $this->read($length);
+        $length = (int)$length;
+        $this->readBytes += $length;
+        $this->binaryData = substr($this->binaryData, $length);
     }
 
     /**
      * @param int $length
      * @return string
-     * @throws BinLogException
+     * @throws BinaryDataReaderException
      */
     public function read($length)
     {
@@ -89,12 +89,13 @@ class BinaryDataReader
     }
 
     /**
-     * @see read a 'Length Coded Binary' number from the data buffer.
+     * Read a 'Length Coded Binary' number from the data buffer.
      * Length coded numbers can be anywhere from 1 to 9 bytes depending
      * on the value of the first byte.
      * From PyMYSQL source code
-     *
+     * 
      * @return int|string
+     * @throws BinaryDataReaderException
      */
     public function readCodedBinary()
     {
@@ -121,7 +122,7 @@ class BinaryDataReader
             return $this->readUInt64();
         }
 
-        return $c;
+        throw new BinaryDataReaderException('Column num ' . $c . ' not handled');
     }
 
     /**
@@ -186,7 +187,7 @@ class BinaryDataReader
     /**
      * @param int $size
      * @return string
-     * @throws BinLogException
+     * @throws BinaryDataReaderException
      */
     public function readLengthCodedPascalString($size)
     {
@@ -198,7 +199,7 @@ class BinaryDataReader
      *
      * @param $size
      * @return mixed
-     * @throws BinLogException
+     * @throws BinaryDataReaderException
      */
     public function readUIntBySize($size)
     {
@@ -235,7 +236,7 @@ class BinaryDataReader
             return $this->readUInt64();
         }
 
-        throw new BinLogException('$size ' . $size . ' not handled');
+        throw new BinaryDataReaderException('$size ' . $size . ' not handled');
     }
 
     /**
@@ -259,8 +260,10 @@ class BinaryDataReader
      */
     public function readUInt40()
     {
-        $data = unpack('CI', $this->read(self::UNSIGNED_INT40_LENGTH));
-        return $data[1] + ($data[2] << 8);
+        $data1 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $data2 = unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+
+        return $data1 + ($data2 << 8);
     }
 
     /**
@@ -269,6 +272,7 @@ class BinaryDataReader
     public function readUInt48()
     {
         $data = unpack('v3', $this->read(self::UNSIGNED_INT48_LENGTH));
+
         return $data[1] + ($data[2] << 16) + ($data[3] << 32);
     }
 
@@ -277,8 +281,11 @@ class BinaryDataReader
      */
     public function readUInt56()
     {
-        $data = unpack('CSI', $this->read(self::UNSIGNED_INT56_LENGTH));
-        return $data[1] + ($data[2] << 8) + ($data[3] << 24);
+        $data1 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $data2 = unpack('S', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $data3 = unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+
+        return $data1 + ($data2 << 8) + ($data3 << 24);
     }
 
     /**
@@ -286,7 +293,7 @@ class BinaryDataReader
      *
      * @param int $size
      * @return int
-     * @throws BinLogException
+     * @throws BinaryDataReaderException
      */
     public function readIntBeBySize($size)
     {
@@ -311,7 +318,7 @@ class BinaryDataReader
             return $this->readInt40Be();
         }
 
-        throw new BinLogException('$size ' . $size . ' not handled');
+        throw new BinaryDataReaderException('$size ' . $size . ' not handled');
     }
 
     /**
@@ -341,6 +348,7 @@ class BinaryDataReader
         {
             $res -= 0x1000000;
         }
+
         return $res;
     }
 
@@ -359,6 +367,7 @@ class BinaryDataReader
     {
         $data1 = unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
         $data2 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+
         return $data2 + ($data1 << 8);
     }
 

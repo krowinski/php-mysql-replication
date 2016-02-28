@@ -20,7 +20,7 @@ class GtidService
     {
         foreach (array_filter(explode(',', $gtids)) as $gtid)
         {
-            $this->GtidCollection->add(new GtidEntity($gtid));
+            $this->GtidCollection->add(new Gtid($gtid));
         }
 
         return $this->GtidCollection;

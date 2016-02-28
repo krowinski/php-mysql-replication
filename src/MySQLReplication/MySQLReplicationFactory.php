@@ -19,7 +19,11 @@ use MySQLReplication\BinLog\BinLogAuth;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
 use MySQLReplication\Event\RowEvent\RowEventService;
 
-class BinLogStream
+/**
+ * Class MySQLReplicationFactory
+ * @package MySQLReplication
+ */
+class MySQLReplicationFactory
 {
     /**
      * @var MySQLRepository
@@ -32,7 +36,7 @@ class BinLogStream
     /**
      * @var Event
      */
-    private $binLogPack;
+    private $event;
     /**
      * @var BinLogAuth
      */
@@ -45,17 +49,21 @@ class BinLogStream
      * @var \Doctrine\DBAL\Connection
      */
     private $connection;
+    /**
+     * @var BinaryDataReaderService
+     */
+    private $binaryDataReaderService;
 
     /**
      * @param Config $config
-     * @throws \MySQLReplication\Exception\BinLogException
+     * @throws \MySQLReplication\Exception\MySQLReplicationException
      */
     public function __construct(Config $config)
     {
         $this->connection = DriverManager::getConnection([
             'user' => $config->getUser(),
             'password' => $config->getPassword(),
-            'host' => $config->getHost(),
+            'host' => $config->getIp(),
             'port' => $config->getPort(),
             'driver' => 'pdo_mysql',
         ]);
@@ -64,9 +72,9 @@ class BinLogStream
         $this->GtidCollection = (new GtidService())->makeCollectionFromString($config->getGtid());
         $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtidCollection);
         $this->binLogConnect->connectToStream();
-        $this->packageService = new BinaryDataReaderService();
+        $this->binaryDataReaderService = new BinaryDataReaderService();
         $this->rowEventService = new RowEventService($config, $this->MySQLRepository);
-        $this->binLogPack = new Event($config, $this->binLogConnect, $this->MySQLRepository, $this->packageService, $this->rowEventService);
+        $this->event = new Event($config, $this->binLogConnect, $this->MySQLRepository, $this->binaryDataReaderService, $this->rowEventService);
     }
 
     /**
@@ -79,10 +87,10 @@ class BinLogStream
 
     /**
      * @return DeleteRowsDTO|EventDTO|GTIDLogDTO|QueryDTO|\MySQLReplication\Event\DTO\RotateDTO|TableMapDTO|UpdateRowsDTO|WriteRowsDTO|\MySQLReplication\Event\DTO\XidDTO
-     * @throws \MySQLReplication\Exception\BinLogException
+     * @throws \MySQLReplication\Exception\MySQLReplicationException
      */
     public function getBinLogEvent()
     {
-        return $this->binLogPack->consume();
+        return $this->event->consume();
     }
 }

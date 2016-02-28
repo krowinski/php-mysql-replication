@@ -2,6 +2,6 @@
 
 namespace MySQLReplication\Exception;
 
-class BinLogException extends \Exception
+class MySQLReplicationException extends \Exception
 {
 }

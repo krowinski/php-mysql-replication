@@ -12,13 +12,13 @@ class GtidCollection extends ArrayCollection
     /**
      * @return int
      */
-    public function getEncodedPacketLength()
+    public function getEncodedLength()
     {
         $l = 8;
-        /** @var GtidEntity $gtid */
+        /** @var Gtid $gtid */
         foreach ($this->toArray() as $gtid)
         {
-            $l += $gtid->encoded_length();
+            $l += $gtid->getEncodedLength();
         }
 
         return $l;
@@ -27,13 +27,13 @@ class GtidCollection extends ArrayCollection
     /**
      * @return string
      */
-    public function getEncodedPacket()
+    public function getEncoded()
     {
         $s = pack('Q', $this->count());
-        /** @var GtidEntity $gtid */
+        /** @var Gtid $gtid */
         foreach ($this->toArray() as $gtid)
         {
-            $s .= $gtid->encode();
+            $s .= $gtid->getEncoded();
         }
 
         return $s;

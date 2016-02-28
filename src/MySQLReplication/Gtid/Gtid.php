@@ -4,19 +4,16 @@ namespace MySQLReplication\Gtid;
 
 /**
  * Class Gtid
+ * @package MySQLReplication\Gtid
  */
-class GtidEntity
+class Gtid
 {
-    /**
-     * @var string
-     */
-    private $gtid = '';
     /**
      * @var array
      */
     private $intervals = [];
     /**
-     * @var mixed|string
+     * @var string
      */
     private $sid = '';
 
@@ -27,9 +24,7 @@ class GtidEntity
      */
     public function __construct($gtid)
     {
-        $this->gtid = $gtid;
-
-        if (false === (bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $this->gtid, $matches))
+        if (false === (bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches))
         {
             throw new GtidException(GtidException::INCORRECT_GTID_MESSAGE, GtidException::INCORRECT_GTID_CODE);
         }
@@ -45,7 +40,7 @@ class GtidEntity
     /**
      * @return string
      */
-    public function encode()
+    public function getEncoded()
     {
         $buffer = pack('H*', $this->sid);
         $buffer .= pack('Q', count($this->intervals));
@@ -70,7 +65,7 @@ class GtidEntity
     /**
      * @return int
      */
-    public function encoded_length()
+    public function getEncodedLength()
     {
         return (40 * count($this->intervals));
     }

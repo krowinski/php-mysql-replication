@@ -1,16 +1,16 @@
 <?php
 
-namespace MySQLReplication\BinLog;
+namespace MySQLReplication\Event\RowEvent;
 
-use MySQLReplication\Definitions\ConstFieldType;
-use MySQLReplication\Exception\BinLogException;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
+use MySQLReplication\BinLog\Exception\BinLogException;
+use MySQLReplication\Definitions\ConstFieldType;
 
 /**
  * Class BinLogColumns
  * @package MySQLReplication\BinLog
  */
-class BinLogColumns
+class Columns
 {
     /**
      * @var array
