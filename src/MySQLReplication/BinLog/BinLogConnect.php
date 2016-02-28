@@ -1,11 +1,11 @@
 <?php
 namespace MySQLReplication\BinLog;
 
+use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
-use MySQLReplication\Exception\BinLogException;
 use MySQLReplication\Gtid\GtidCollection;
 
 /**
@@ -24,7 +24,7 @@ class BinLogConnect
     /**
      * @var MySQLRepository
      */
-    private $DBHelper;
+    private $mySQLRepository;
     /**
      * @var Config
      */
@@ -37,25 +37,33 @@ class BinLogConnect
      * @var GtidCollection
      */
     private $gtidCollection;
+    /**
+     * http://dev.mysql.com/doc/internals/en/auth-phase-fast-path.html 00 FE
+     * @var array
+     */
+    private $packageOkHeader = [0, 254];
 
     /**
      * @param Config $config
-     * @param MySQLRepository $DBHelper
+     * @param MySQLRepository $mySQLRepository
      * @param BinLogAuth $packAuth
      * @param GtidCollection $gtidCollection
      */
     public function __construct(
         Config $config,
-        MySQLRepository $DBHelper,
+        MySQLRepository $mySQLRepository,
         BinLogAuth $packAuth,
         GtidCollection $gtidCollection
     ) {
-        $this->DBHelper = $DBHelper;
+        $this->mySQLRepository = $mySQLRepository;
         $this->config = $config;
         $this->packAuth = $packAuth;
         $this->gtidCollection = $gtidCollection;
     }
 
+    /**
+     *
+     */
     public function __destruct()
     {
         if (true === $this->isConnected())
@@ -81,12 +89,17 @@ class BinLogConnect
         return $this->checkSum;
     }
 
+
     /**
      * @throws BinLogException
-     * @return self
      */
     public function connectToStream()
     {
+        if (false === filter_var($this->config->getIp(), FILTER_VALIDATE_IP))
+        {
+            throw new BinLogException('Given parameter "' . $this->config->getIp() . '" is not a valid IP');
+        }
+
         if (false === ($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
         {
             throw new BinLogException('Unable to create a socket:' . socket_strerror(socket_last_error()), socket_last_error());
@@ -94,7 +107,7 @@ class BinLogConnect
         socket_set_block($this->socket);
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
 
-        if (false === socket_connect($this->socket, $this->config->getHost(), $this->config->getPort()))
+        if (false === socket_connect($this->socket, $this->config->getIp(), $this->config->getPort()))
         {
             throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
         }
@@ -104,6 +117,9 @@ class BinLogConnect
         $this->getBinlogStream();
     }
 
+    /**
+     *
+     */
     private function serverInfo()
     {
         BinLogServerInfo::parsePackage($this->getPacket(false));
@@ -126,9 +142,35 @@ class BinLogConnect
         $result = $this->readFromSocket($dataLength);
         if (true === $checkForOkByte)
         {
-            $this->packAuth->isWriteSuccessful($result);
+            $this->isWriteSuccessful($result);
         }
         return $result;
+    }
+
+
+    /**
+     * @param string $packet
+     * @return array
+     * @throws BinLogException
+     */
+    public function isWriteSuccessful($packet)
+    {
+        $head = ord($packet[0]);
+        if (in_array($head, $this->packageOkHeader))
+        {
+            return ['status' => true, 'code' => 0, 'msg' => ''];
+        }
+        else
+        {
+            $error_code = unpack('v', $packet[1] . $packet[2])[1];
+            $error_msg = '';
+            for ($i = 9; $i < strlen($packet); $i++)
+            {
+                $error_msg .= $packet[$i];
+            }
+
+            throw new BinLogException($error_msg, $error_code);
+        }
     }
 
     /**
@@ -143,35 +185,12 @@ class BinLogConnect
             throw new BinLogException('read 5 bytes from mysql server has gone away');
         }
 
-        try
+        if ($length === socket_recv($this->socket, $buf, $length, MSG_WAITALL))
         {
-            $bytes_read = 0;
-            $body = '';
-            while ($bytes_read < $length)
-            {
-                $resp = socket_read($this->socket, $length - $bytes_read);
-                if ($resp === false)
-                {
-                    throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
-                }
-
-                // server kill connection or server gone away
-                if (strlen($resp) === 0)
-                {
-                    throw new BinLogException('read less ' . ($length - strlen($body)));
-                }
-                $body .= $resp;
-                $bytes_read += strlen($resp);
-            }
-            if (strlen($body) < $length)
-            {
-                throw new BinLogException('read less ' . ($length - strlen($body)));
-            }
-            return $body;
-        } catch (\Exception $e)
-        {
-            throw new BinLogException(var_export($e, true));
+            return $buf;
         }
+
+        throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
     }
 
     /**
@@ -179,7 +198,12 @@ class BinLogConnect
      */
     private function auth()
     {
-        $data = $this->packAuth->createAuthenticationPacket(ConstCapabilityFlags::getCapabilities(), $this->config->getUser(), $this->config->getPassword(), BinLogServerInfo::getSalt());
+        $data = $this->packAuth->createAuthenticationBinary(
+            ConstCapabilityFlags::getCapabilities(),
+            $this->config->getUser(),
+            $this->config->getPassword(),
+            BinLogServerInfo::getSalt()
+        );
 
         $this->writeToSocket($data);
         $this->getPacket();
@@ -202,7 +226,7 @@ class BinLogConnect
      */
     private function getBinlogStream()
     {
-        $this->checkSum = $this->DBHelper->isCheckSum();
+        $this->checkSum = $this->mySQLRepository->isCheckSum();
         if (true === $this->checkSum)
         {
             $this->execute('SET @master_binlog_checksum=@@global.binlog_checksum');
@@ -215,7 +239,7 @@ class BinLogConnect
 
             if ('' === $binFilePos || '' === $binFileName)
             {
-                $master = $this->DBHelper->getMasterStatus();
+                $master = $this->mySQLRepository->getMasterStatus();
                 $binFilePos = $master['Position'];
                 $binFileName = $master['File'];
             }
@@ -228,7 +252,7 @@ class BinLogConnect
         }
         else
         {
-            $prelude = pack('l', 26 + $this->gtidCollection->getEncodedPacketLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
+            $prelude = pack('l', 26 + $this->gtidCollection->getEncodedLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
             $prelude .= pack('S', 0);
             $prelude .= pack('I', $this->config->getSlaveId());
             $prelude .= pack('I', 3);
@@ -237,8 +261,8 @@ class BinLogConnect
             $prelude .= chr(0);
             $prelude .= pack('Q', 4);
 
-            $prelude .= pack('I', $this->gtidCollection->getEncodedPacketLength());
-            $prelude .= $this->gtidCollection->getEncodedPacket();
+            $prelude .= pack('I', $this->gtidCollection->getEncodedLength());
+            $prelude .= $this->gtidCollection->getEncoded();
         }
 
         $this->writeToSocket($prelude);

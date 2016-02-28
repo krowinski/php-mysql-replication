@@ -4,13 +4,13 @@ ini_set('display_errors', 1);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
 
-use MySQLReplication\BinLogStream;
+use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Config\ConfigService;
 
-$binLogStream = new BinLogStream(
+$binLogStream = new MySQLReplicationFactory(
     (new ConfigService())->makeConfigFromArray([
         'user' => 'root',
-        'host' => '192.168.1.100',
+        'ip' => '192.168.1.100',
         'password' => 'root',
         //'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
     ])

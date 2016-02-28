@@ -5,7 +5,7 @@ date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
 
 use Doctrine\DBAL\DriverManager;
-use MySQLReplication\BinLogStream;
+use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Config\ConfigService;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
@@ -35,10 +35,10 @@ class Benchmark
         $conn->exec("INSERT INTO test2 VALUES(1)");
         $conn->exec("RESET MASTER");
 
-        $this->binLogStream = new BinLogStream(
+        $this->binLogStream = new MySQLReplicationFactory(
             (new ConfigService())->makeConfigFromArray([
                 'user' => 'root',
-                'host' => '192.168.1.100',
+                'ip' => '192.168.1.100',
                 'password' => 'root',
                 'eventsOnly' => [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
                 'slaveId' => 9999
@@ -96,7 +96,7 @@ class Benchmark
             $result = $this->binLogStream->getBinLogEvent();
             if ($result instanceof UpdateRowsDTO)
             {
-                $i += 1;
+                ++$i;
                 if (0 === ($i % 1000))
                 {
                     echo ((int)($i / (microtime(true) - $start)) . ' event by seconds (' . $i . ' total)') . PHP_EOL;
@@ -120,6 +120,7 @@ class Benchmark
         }
 
         $conn->close();
+        die;
     }
 }
 

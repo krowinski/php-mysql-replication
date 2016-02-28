@@ -71,7 +71,7 @@ class Event
      */
     public function consume()
     {
-        $binaryDataReader = $this->packageService->makePackageFromBinaryData($this->binLogConnect->getPacket());
+        $binaryDataReader = $this->packageService->makePackageFromBinaryData($this->binLogConnect->getPacket(false));
 
         // "ok" value on first byte continue
         $binaryDataReader->advance(1);
@@ -87,7 +87,7 @@ class Event
             $this->binLogConnect->getCheckSum()
         );
 
-        if ($eventInfo->getType() == ConstEventType::TABLE_MAP_EVENT)
+        if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType())
         {
             $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
             return $rowEvent->makeTableMapDTO();
@@ -118,19 +118,19 @@ class Event
             $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
             return $rowEvent->makeDeleteRowsDTO();
         }
-        elseif ($eventInfo->getType() == ConstEventType::XID_EVENT)
+        elseif (ConstEventType::XID_EVENT === $eventInfo->getType())
         {
             return (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO();
         }
-        elseif ($eventInfo->getType() == ConstEventType::ROTATE_EVENT)
+        elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType())
         {
             return (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO();
         }
-        elseif ($eventInfo->getType() == ConstEventType::GTID_LOG_EVENT)
+        elseif (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType())
         {
             return (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
         }
-        else if ($eventInfo->getType() == ConstEventType::QUERY_EVENT)
+        else if (ConstEventType::QUERY_EVENT === $eventInfo->getType())
         {
             return (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO();
         }

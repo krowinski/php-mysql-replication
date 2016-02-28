@@ -36,6 +36,14 @@ class EventInfo implements \JsonSerializable
      * @var bool
      */
     private $checkSum;
+    /**
+     * @var int
+     */
+    private $sizeNoHeader;
+    /**
+     * @var string
+     */
+    private $dateTime;
 
     /**
      * EventInfo constructor.
@@ -70,7 +78,11 @@ class EventInfo implements \JsonSerializable
      */
     public function getDateTime()
     {
-        return (new \DateTime())->setTimestamp($this->timestamp)->format('c');
+        if (empty($this->dateTime))
+        {
+            $this->dateTime = date('c', $this->timestamp);
+        }
+        return $this->dateTime;
     }
 
     /**
@@ -78,7 +90,11 @@ class EventInfo implements \JsonSerializable
      */
     public function getSizeNoHeader()
     {
-        return (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
+        if (empty($this->sizeNoHeader))
+        {
+            $this->sizeNoHeader = (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
+        }
+        return $this->sizeNoHeader;
     }
 
     /**

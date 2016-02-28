@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Integration;
+namespace Integration;
 
-use MySQLReplication\BinLogStream;
+use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Config\ConfigService;
 
 /**
@@ -20,7 +20,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     private $conn;
     /**
-     * @var \MySQLReplication\BinLogStream
+     * @var \MySQLReplication\MySQLReplicationFactory
      */
     private $binLogStream;
 
@@ -30,10 +30,10 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $config = (new ConfigService())->makeConfigFromArray([
             'user' => 'root',
-            'host' => '192.168.1.100',
+            'ip' => '192.168.1.100',
             'password' => 'root'
         ]);
-        $this->binLogStream = new BinLogStream($config);
+        $this->binLogStream = new MySQLReplicationFactory($config);
         $this->conn = $this->binLogStream->getDbConnection();
 
         $this->conn->exec("SET GLOBAL time_zone = 'UTC'");
@@ -42,6 +42,13 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $this->conn->exec("USE " . $this->database);
     }
 
+    protected function tearDown()
+    {
+        parent::tearDown();
+
+        $this->binLogStream = null;
+        $this->conn = null;
+    }
 
     /**
      * @param $create_query

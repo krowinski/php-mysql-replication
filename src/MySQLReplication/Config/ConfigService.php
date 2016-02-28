@@ -21,7 +21,7 @@ class ConfigService
             {
                 $configBuilder->withUser($v);
             }
-            if ('host' === $k)
+            if ('ip' === $k)
             {
                 $configBuilder->withHost($v);
             }
