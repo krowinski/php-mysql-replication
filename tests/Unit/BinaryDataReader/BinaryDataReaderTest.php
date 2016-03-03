@@ -44,7 +44,7 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @expectedException \MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException
      */
     public function shouldThrowErrorOnUnknownCodedBinary()
     {
@@ -71,7 +71,7 @@ class BinaryDataReaderTest extends BaseTest
      * @param $size
      * @param $data
      * @param $expected
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws \MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException
      */
     public function shouldReadUIntBySize($size, $data, $expected)
     {
@@ -80,7 +80,7 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @expectedException \MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException
      */
     public function shouldThrowErrorOnReadUIntBySizeNotSupported()
     {
@@ -104,7 +104,7 @@ class BinaryDataReaderTest extends BaseTest
      * @param $size
      * @param $data
      * @param $expected
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws \MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException
      */
     public function shouldReadIntBeBySize($size, $data, $expected)
     {
@@ -113,7 +113,7 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @expectedException \MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException
      */
     public function shouldThrowErrorOnReadIntBeBySizeNotSupported()
     {

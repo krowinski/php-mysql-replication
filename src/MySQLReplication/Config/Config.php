@@ -2,6 +2,8 @@
 
 namespace MySQLReplication\Config;
 
+use MySQLReplication\Config\Exception\ConfigException;
+
 /**
  * Class Config
  * @package MySQLReplication\Config
@@ -112,6 +114,59 @@ class Config
         $this->eventsIgnore = $eventsIgnore;
         $this->tablesOnly = $tablesOnly;
         $this->databasesOnly = $databasesOnly;
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function validate()
+    {
+        if (!empty($this->user) && false === is_string($this->user))
+        {
+            throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
+        }
+        if (!empty($this->ip) && false === filter_var($this->ip, FILTER_VALIDATE_IP))
+        {
+            throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
+        }
+        if (!empty($this->port) && false === filter_var($this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
+        {
+            throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
+        }
+        if (!empty($this->password) && false === is_string($this->password) && false === is_numeric($this->password))
+        {
+            throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
+        }
+        if (!empty($this->dbName) && false === is_string($this->dbName))
+        {
+            throw new ConfigException(ConfigException::DB_NAME_ERROR_MESSAGE, ConfigException::DB_NAME_ERROR_CODE);
+        }
+        if (!empty($this->charset) && false === is_string($this->charset))
+        {
+            throw new ConfigException(ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE);
+        }
+        if (!empty($this->gtid) && false === is_string($this->gtid))
+        {
+            foreach (explode(',', $this->gtid) as $gtid)
+            {
+                if (false === (bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches))
+                {
+                    throw new ConfigException(ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE);
+                }
+            }
+        }
+        if (!empty($this->slaveId) && false === filter_var($this->slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
+        {
+            throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
+        }
+        if (!empty($this->binLogFileName) && false === is_string($this->binLogFileName))
+        {
+            throw new ConfigException(ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE);
+        }
+        if (!empty($this->binLogPosition) && false === filter_var($this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
+        {
+            throw new ConfigException(ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE);
+        }
     }
 
     /**
