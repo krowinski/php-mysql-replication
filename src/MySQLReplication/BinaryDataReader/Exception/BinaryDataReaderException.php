@@ -1,6 +1,6 @@
 <?php
 
-namespace MySQLReplication\BinaryDataReader;
+namespace MySQLReplication\BinaryDataReader\Exception;
 
 use MySQLReplication\Exception\MySQLReplicationException;
 

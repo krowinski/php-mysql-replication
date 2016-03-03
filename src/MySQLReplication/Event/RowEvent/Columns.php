@@ -3,7 +3,7 @@
 namespace MySQLReplication\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\BinLog\Exception\BinLogException;
+use MySQLReplication\BinLog\Exception\ConfigException;
 use MySQLReplication\Definitions\ConstFieldType;
 
 /**
@@ -128,7 +128,7 @@ class Columns
         }
         else
         {
-            throw new BinLogException('Type not handled! - ' . self::$field['type']);
+            throw new ConfigException('Type not handled! - ' . self::$field['type']);
         }
     }
 }

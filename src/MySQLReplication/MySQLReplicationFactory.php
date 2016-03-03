@@ -60,6 +60,8 @@ class MySQLReplicationFactory
      */
     public function __construct(Config $config)
     {
+        $config->validate();
+
         $this->connection = DriverManager::getConnection([
             'user' => $config->getUser(),
             'password' => $config->getPassword(),
@@ -92,5 +94,20 @@ class MySQLReplicationFactory
     public function getBinLogEvent()
     {
         return $this->event->consume();
+    }
+
+    /**
+     * @param callable $callback
+     */
+    public function parseBinLogUsingCallback(Callable $callback)
+    {
+        while (1)
+        {
+            $event = $this->event->consume();
+            if (!is_null($event))
+            {
+                call_user_func($callback, $event);
+            }
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 namespace MySQLReplication\BinaryDataReader;
 
+use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
+
 /**
  * Class BinaryDataReader
  * @package MySQLReplication\BinaryDataReader
