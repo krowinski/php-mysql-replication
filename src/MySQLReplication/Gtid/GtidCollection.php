@@ -3,6 +3,7 @@
 namespace MySQLReplication\Gtid;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
 /**
  * Class GtidSet
@@ -29,7 +30,7 @@ class GtidCollection extends ArrayCollection
      */
     public function getEncoded()
     {
-        $s = pack('Q', $this->count());
+        $s = BinaryDataReader::pack64bit($this->count());
         /** @var Gtid $gtid */
         foreach ($this->toArray() as $gtid)
         {

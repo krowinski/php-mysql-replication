@@ -417,4 +417,22 @@ class BinaryDataReader
         }
         return true;
     }
+
+    /**
+     * @param int $value
+     * @return string
+     */
+    public static function pack64bit($value)
+    {
+        return pack('C8',
+            ($value >>  0) & 0xFF,
+            ($value >>  8) & 0xFF,
+            ($value >> 16) & 0xFF,
+            ($value >> 24) & 0xFF,
+            ($value >> 32) & 0xFF,
+            ($value >> 40) & 0xFF,
+            ($value >> 48) & 0xFF,
+            ($value >> 56) & 0xFF
+        );
+    }
 }

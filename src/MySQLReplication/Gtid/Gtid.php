@@ -2,6 +2,8 @@
 
 namespace MySQLReplication\Gtid;
 
+use MySQLReplication\BinaryDataReader\BinaryDataReader;
+
 /**
  * Class Gtid
  * @package MySQLReplication\Gtid
@@ -43,19 +45,19 @@ class Gtid
     public function getEncoded()
     {
         $buffer = pack('H*', $this->sid);
-        $buffer .= pack('Q', count($this->intervals));
+        $buffer .= BinaryDataReader::pack64bit(count($this->intervals));
 
         foreach ($this->intervals as $interval)
         {
             if (count($interval) != 1)
             {
-                $buffer .= pack('Q', $interval[0]);
-                $buffer .= pack('Q', $interval[1]);
+                $buffer .= BinaryDataReader::pack64bit($interval[0]);
+                $buffer .= BinaryDataReader::pack64bit($interval[1]);
             }
             else
             {
-                $buffer .= pack('Q', $interval[0]);
-                $buffer .= pack('Q', $interval[0] + 1);
+                $buffer .= BinaryDataReader::pack64bit($interval[0]);
+                $buffer .= BinaryDataReader::pack64bit($interval[0] + 1);
             }
         }
 
