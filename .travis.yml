@@ -6,7 +6,11 @@ php:
   - 5.6
   - 7.0
   
-cache: apt
+cache: 
+  apt: true
+  bundler: true
+  directories:
+    - $HOME/.composer/cache
 
 dist: trusty
 sudo: required
