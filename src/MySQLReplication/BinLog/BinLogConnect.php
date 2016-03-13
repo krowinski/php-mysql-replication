@@ -1,7 +1,7 @@
 <?php
 namespace MySQLReplication\BinLog;
 
-use MySQLReplication\BinLog\Exception\ConfigException;
+use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Definitions\ConstCapabilityFlags;
@@ -97,14 +97,14 @@ class BinLogConnect
     {
         if (false === ($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
         {
-            throw new ConfigException('Unable to create a socket:' . socket_strerror(socket_last_error()), socket_last_error());
+            throw new BinLogException('Unable to create a socket:' . socket_strerror(socket_last_error()), socket_last_error());
         }
         socket_set_block($this->socket);
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
 
         if (false === socket_connect($this->socket, $this->config->getIp(), $this->config->getPort()))
         {
-            throw new ConfigException(socket_strerror(socket_last_error()), socket_last_error());
+            throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
         }
 
         $this->serverInfo();
@@ -142,9 +142,8 @@ class BinLogConnect
         return $result;
     }
 
-
     /**
-     * @param string $packet
+     * @param $packet
      * @return array
      * @throws BinLogException
      */
@@ -164,20 +163,20 @@ class BinLogConnect
                 $error_msg .= $packet[$i];
             }
 
-            throw new ConfigException($error_msg, $error_code);
+            throw new BinLogException($error_msg, $error_code);
         }
     }
 
     /**
      * @param $length
-     * @return string
+     * @return mixed
      * @throws BinLogException
      */
     private function readFromSocket($length)
     {
         if ($length == 5)
         {
-            throw new ConfigException('read 5 bytes from mysql server has gone away');
+            throw new BinLogException('read 5 bytes from mysql server has gone away');
         }
 
         if ($length === socket_recv($this->socket, $buf, $length, MSG_WAITALL))
@@ -185,7 +184,7 @@ class BinLogConnect
             return $buf;
         }
 
-        throw new ConfigException(socket_strerror(socket_last_error()), socket_last_error());
+        throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
     }
 
     /**
@@ -212,7 +211,7 @@ class BinLogConnect
     {
         if (false === socket_write($this->socket, $data, strlen($data)))
         {
-            throw new ConfigException('Unable to write to socket: ' . socket_strerror(socket_last_error()), socket_last_error());
+            throw new BinLogException('Unable to write to socket: ' . socket_strerror(socket_last_error()), socket_last_error());
         }
     }
 
