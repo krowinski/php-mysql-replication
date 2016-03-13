@@ -38,7 +38,7 @@ class Benchmark
         $this->binLogStream = new MySQLReplicationFactory(
             (new ConfigService())->makeConfigFromArray([
                 'user' => 'root',
-                'ip' => '192.168.1.100',
+                'ip' => '127.0.0.1',
                 'password' => 'root',
                 'eventsOnly' => [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
                 'slaveId' => 9999
@@ -55,7 +55,7 @@ class Benchmark
         return DriverManager::getConnection([
             'user' => 'root',
             'password' => 'root',
-            'host' => '192.168.1.100',
+            'host' => '127.0.0.1',
             'port' => 3306,
             'driver' => 'pdo_mysql',
             'dbname' => $this->database

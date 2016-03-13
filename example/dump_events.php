@@ -10,7 +10,7 @@ use MySQLReplication\Config\ConfigService;
 $binLogStream = new MySQLReplicationFactory(
     (new ConfigService())->makeConfigFromArray([
         'user' => 'root',
-        'ip' => '192.168.1.100',
+        'ip' => '127.0.0.1',
         'password' => 'root',
         //'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
     ])
