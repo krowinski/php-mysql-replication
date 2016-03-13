@@ -38,7 +38,7 @@ before_script:
   - "sudo tail -1000 /var/log/syslog"
 
   - "mysql --version"
-  - "mysql -e 'SELECT VERSION();'"
+  - "mysql -u root -e 'SELECT VERSION();'"
   - "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO ''@'localhost';\""
 
 env:
