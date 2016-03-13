@@ -30,7 +30,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $config = (new ConfigService())->makeConfigFromArray([
             'user' => 'root',
-            'ip' => '192.168.1.100',
+            'ip' => '127.0.0.1',
             'password' => 'root'
         ]);
         $this->binLogStream = new MySQLReplicationFactory($config);
