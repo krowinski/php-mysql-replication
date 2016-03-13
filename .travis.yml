@@ -6,17 +6,6 @@ php:
   - 5.6
   - 7.0
   
-env:
-  global:
-    - setup=basic
-
-sudo: true
-
-install:
-  - if [[ $setup = 'basic' ]]; then travis_retry composer install --no-interaction --prefer-source; fi
-  - if [[ $setup = 'stable' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-stable; fi
-  - if [[ $setup = 'lowest' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-lowest --prefer-stable; fi
-
 cache: apt
 
 before_script:
@@ -64,5 +53,14 @@ before_script:
   - "mysql --version"
   - "mysql -e 'SELECT VERSION();'"
   - "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO ''@'localhost';\""
+
+env:
+  global:
+    - setup=basic
+
+install:
+  - if [[ $setup = 'basic' ]]; then travis_retry composer install --no-interaction --prefer-source; fi
+  - if [[ $setup = 'stable' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-stable; fi
+  - if [[ $setup = 'lowest' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-lowest --prefer-stable; fi
 
 script: vendor/bin/phpunit
