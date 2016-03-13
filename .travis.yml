@@ -1,0 +1,53 @@
+language: php
+
+php:
+  - 5.4
+  - 5.5
+  - 5.6
+  - 7.0
+  
+cache: apt
+
+dist: trusty
+sudo: required
+addons:
+  apt:
+    packages:
+    - mysql-server-5.6
+    - mysql-client-core-5.6
+    - mysql-client-5.6
+
+before_script:
+  - "sudo /etc/init.d/mysql stop || true" 
+
+  # Config
+  - "echo '[mysqld]'            | sudo tee /etc/mysql/conf.d/replication.cnf"
+  - "echo 'log-bin=mysql-bin'   | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'server-id=1'         | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'binlog-format = row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+
+  # Enable GTID
+  - "echo '[mysqld]'                       | sudo tee /etc/mysql/conf.d/gtid.cnf"
+  - "echo 'gtid_mode=ON'                   | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
+  - "echo 'enforce_gtid_consistency'       | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
+  - "echo 'binlog_format=ROW'              | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
+  - "echo 'log_slave_updates'              | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
+
+  # Start mysql (avoid errors to have logs)
+  - "sudo /etc/init.d/mysql start || true"
+  - "sudo tail -1000 /var/log/syslog"
+
+  - "mysql --version"
+  - "mysql -e 'SELECT VERSION();'"
+  - "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO ''@'localhost';\""
+
+env:
+  global:
+    - setup=basic
+
+install:
+  - if [[ $setup = 'basic' ]]; then travis_retry composer install --no-interaction --prefer-source; fi
+  - if [[ $setup = 'stable' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-stable; fi
+  - if [[ $setup = 'lowest' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-lowest --prefer-stable; fi
+
+script: vendor/bin/phpunit
