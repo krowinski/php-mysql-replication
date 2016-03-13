@@ -52,72 +52,71 @@ DELETE FROM test4 WHERE id = 1;
 
 Output will be similar to this:
 
-    === MySQLReplication\DTO\GTIDLogDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46343
+    === Event gtid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021014
     Event size: 48
-    Read bytes: 25
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:12984
+    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160837
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\QueryDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46488
+    === Event query ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021159
     Event size: 145
-    Read bytes: 122
     Database: php_mysql_replication
     Execution time: 0
     Query: CREATE DATABASE php_mysql_replication
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\GTIDLogDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46536
+    === Event gtid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021207
     Event size: 48
-    Read bytes: 25
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:12985
+    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160838
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\QueryDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46751
+    === Event query ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021422
     Event size: 215
-    Read bytes: 192
     Database: php_mysql_replication
     Execution time: 0
     Query: CREATE TABLE test4 (id int NOT NULL AUTO_INCREMENT, data VARCHAR(255), data2 VARCHAR(255), PRIMARY KEY(id))
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\GTIDLogDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46799
+    === Event gtid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021470
     Event size: 48
-    Read bytes: 25
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:12986
+    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160839
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\QueryDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46888
+    === Event query ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021559
     Event size: 89
-    Read bytes: 66
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\TableMapDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 46959
+    === Event tableMap ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021630
     Event size: 71
-    Read bytes: 48
     Table: test4
     Database: php_mysql_replication
-    Table Id: 7794
-    Columns: 3
+    Table Id: 1135
+    Columns amount: 3
+    Memory usage 2.36 MB
     
-    === MySQLReplication\DTO\WriteRowsDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47011
+    === Event write ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021682
     Event size: 52
-    Read bytes: 29
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -132,46 +131,46 @@ Output will be similar to this:
     
     )
     
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\XidDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47042
+    === Event xid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021713
     Event size: 31
-    Read bytes: 8
-    Transaction ID: 10153
+    Transaction ID: 252191
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\GTIDLogDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47090
+    === Event gtid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021761
     Event size: 48
-    Read bytes: 25
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:12987
+    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160840
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\QueryDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47179
+    === Event query ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021850
     Event size: 89
-    Read bytes: 66
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\TableMapDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47250
+    === Event tableMap ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021921
     Event size: 71
-    Read bytes: 48
     Table: test4
     Database: php_mysql_replication
-    Table Id: 7794
-    Columns: 3
+    Table Id: 1135
+    Columns amount: 3
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\UpdateRowsDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47320
+    === Event update ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4021991
     Event size: 70
-    Read bytes: 47
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -197,46 +196,46 @@ Output will be similar to this:
     
     )
     
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\XidDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47351
+    === Event xid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022022
     Event size: 31
-    Read bytes: 8
-    Transaction ID: 10156
+    Transaction ID: 252196
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\GTIDLogDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47399
+    === Event gtid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022070
     Event size: 48
-    Read bytes: 25
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:12988
+    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160841
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\QueryDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47488
+    === Event query ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022159
     Event size: 89
-    Read bytes: 66
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\TableMapDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47559
+    === Event tableMap ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022230
     Event size: 71
-    Read bytes: 48
     Table: test4
     Database: php_mysql_replication
-    Table Id: 7794
-    Columns: 3
+    Table Id: 1135
+    Columns amount: 3
+    Memory usage 2.37 MB
     
-    === MySQLReplication\DTO\DeleteRowsDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47611
+    === Event delete ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022282
     Event size: 52
-    Read bytes: 29
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -251,12 +250,43 @@ Output will be similar to this:
     
     )
     
+    Memory usage 2.38 MB
     
-    === MySQLReplication\DTO\XidDTO ===
-    Date: 2016-02-20T18:33:17+00:00
-    Log position: 47642
+    === Event xid ===
+    Date: 2016-03-13T21:46:31+00:00
+    Log position: 4022313
     Event size: 31
-    Read bytes: 8
-    Transaction ID: 10160
+    Transaction ID: 252199
+    Memory usage 2.38 MB
 
- 
+
+Benchmarks
+=========
+Tested on VM
+
+Debian 8.3
+PHP 5.6.17
+MySQL 5.6.29-76.2-log Percona Server
+
+```
+inxi
+```
+    CPU~Dual core Intel Core i5-2500K (-MCP-) clocked at 3701 Mhz Kernel~3.16.0-4-amd64 x86_64 Up~2 days Mem~1170.9/3952.4MB HDD~41.9GB(15.2% used) Procs~119 Client~Shell inxi~2.1.28
+
+```sh
+php example/benchmark.php
+```
+    Start insert data
+    6531 event by seconds (1000 total)
+    6665 event by seconds (2000 total)
+    6674 event by seconds (3000 total)
+    6535 event by seconds (4000 total)
+    6555 event by seconds (5000 total)
+    6615 event by seconds (6000 total)
+    6619 event by seconds (7000 total)
+    6660 event by seconds (8000 total)
+    6666 event by seconds (9000 total)
+    6701 event by seconds (10000 total)
+    6696 event by seconds (11000 total)
+    6704 event by seconds (12000 total)
+
