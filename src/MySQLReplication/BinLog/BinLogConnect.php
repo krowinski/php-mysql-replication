@@ -1,6 +1,7 @@
 <?php
 namespace MySQLReplication\BinLog;
 
+use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Repository\MySQLRepository;
@@ -253,7 +254,7 @@ class BinLogConnect
             $prelude .= chr(0);
             $prelude .= chr(0);
             $prelude .= chr(0);
-            $prelude .= pack('Q', 4);
+            $prelude .= BinaryDataReader::pack64bit(4);
 
             $prelude .= pack('I', $this->gtidCollection->getEncodedLength());
             $prelude .= $this->gtidCollection->getEncoded();
