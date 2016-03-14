@@ -45,7 +45,7 @@ before_script:
   - "mysql -u root -e 'SELECT VERSION();'"
   - "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO ''@'localhost';\""
   
-  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
 env:
   global:
