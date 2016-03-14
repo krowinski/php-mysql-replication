@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/krowinski/php-mysql-replication.svg?branch=master)](https://travis-ci.org/krowinski/php-mysql-replication)
+
 php-mysql-replication
 =========
 
