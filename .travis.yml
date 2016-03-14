@@ -38,7 +38,7 @@ before_script:
   - "echo 'log_slave_updates'              | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
 
   # Start mysql (avoid errors to have logs)
-  - "sudo /etc/init.d/mysql start || true"
+  - "sudo /etc/init.d/mysql restart || true"
   - "sudo tail -1000 /var/log/syslog"
 
   - "mysql --version"
