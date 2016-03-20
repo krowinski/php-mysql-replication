@@ -17,7 +17,7 @@
   "require-dev": {
     "phpunit/phpunit": "*"
   },
-  "license": "WTFPL",
+  "license": "MIT",
   "authors": [
     {
       "name": "KR",
