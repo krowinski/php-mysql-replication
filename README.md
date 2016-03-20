@@ -11,7 +11,7 @@ Installation
 =========
 
 ```sh
-composer require php-mysql-replication
+composer require krowinski/php-mysql-replication
 ```
 
 MySQL server settings
