@@ -15,7 +15,7 @@ composer require php-mysql-replication
 ```
 
 MySQL server settings
-=========================
+=========
 
 In your MySQL server configuration file you need to enable replication:
 
@@ -25,6 +25,40 @@ In your MySQL server configuration file you need to enable replication:
     expire_logs_days = 10
     max_binlog_size  = 100M
     binlog-format    = row #Very important if you want to receive write, update and delete row events
+
+Configuration
+=========
+
+You can pass this params to ConfigService->makeConfigFromArray([])
+
+'user' - your mysql user (mandatory)
+
+'ip' - your mysql host ip (mandatory)
+
+'password' - your mysql password (mandatory)
+
+'port' - your mysql host port
+
+'dbName' - db name you want to listen 
+
+'charset' - db connection charset
+
+'gtid' - GTID marker(s) to start from (format 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592)
+
+'slaveId' - script slave id for identification
+
+'binLogFileName' - bin log file name to start from
+
+'binLogPosition' - bin log position to start from 
+
+'eventsOnly' - array  to listen on events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file)
+
+'eventsIgnore' - array yo ignore events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file) 
+
+'tablesOnly' - array to only listen on given tables
+
+'databasesOnly' - array to only listen on given databases 
+
 
 Examples
 =========
