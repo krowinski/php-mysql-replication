@@ -26,6 +26,10 @@ In your MySQL server configuration file you need to enable replication:
     max_binlog_size  = 100M
     binlog-format    = row #Very important if you want to receive write, update and delete row events
 
+
+Mysql replication events explained
+    https://dev.mysql.com/doc/internals/en/event-meanings.html
+
 Configuration
 =========
 
