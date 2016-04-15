@@ -1,11 +1,12 @@
 <?php
 namespace MySQLReplication;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use MySQLReplication\Event\Event;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
+use MySQLReplication\BinLog\BinLogAuth;
 use MySQLReplication\BinLog\BinLogConnect;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\DTO\GTIDLogDTO;
@@ -13,11 +14,12 @@ use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
+use MySQLReplication\Event\Event;
+use MySQLReplication\Event\RowEvent\RowEventService;
+use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidCollection;
 use MySQLReplication\Gtid\GtidService;
-use MySQLReplication\BinLog\BinLogAuth;
-use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
-use MySQLReplication\Event\RowEvent\RowEventService;
+use MySQLReplication\Repository\MySQLRepository;
 
 /**
  * Class MySQLReplicationFactory
@@ -46,7 +48,7 @@ class MySQLReplicationFactory
      */
     private $GtidCollection;
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     private $connection;
     /**
@@ -56,7 +58,7 @@ class MySQLReplicationFactory
 
     /**
      * @param Config $config
-     * @throws \MySQLReplication\Exception\MySQLReplicationException
+     * @throws MySQLReplicationException
      */
     public function __construct(Config $config)
     {
@@ -76,11 +78,11 @@ class MySQLReplicationFactory
         $this->binLogConnect->connectToStream();
         $this->binaryDataReaderService = new BinaryDataReaderService();
         $this->rowEventService = new RowEventService($config, $this->MySQLRepository);
-        $this->event = new Event($config, $this->binLogConnect, $this->MySQLRepository, $this->binaryDataReaderService, $this->rowEventService);
+        $this->event = new Event($config, $this->binLogConnect, $this->binaryDataReaderService, $this->rowEventService);
     }
 
     /**
-     * @return \Doctrine\DBAL\Connection
+     * @return Connection
      */
     public function getDbConnection()
     {
@@ -89,7 +91,7 @@ class MySQLReplicationFactory
 
     /**
      * @return DeleteRowsDTO|EventDTO|GTIDLogDTO|QueryDTO|\MySQLReplication\Event\DTO\RotateDTO|TableMapDTO|UpdateRowsDTO|WriteRowsDTO|\MySQLReplication\Event\DTO\XidDTO
-     * @throws \MySQLReplication\Exception\MySQLReplicationException
+     * @throws MySQLReplicationException
      */
     public function getBinLogEvent()
     {
@@ -97,15 +99,13 @@ class MySQLReplicationFactory
     }
 
     /**
-     * @param callable $callback
+     * @param Callable $callback
      */
     public function parseBinLogUsingCallback(Callable $callback)
     {
-        while (1)
-        {
+        while (1) {
             $event = $this->event->consume();
-            if (!is_null($event))
-            {
+            if (null !== $event) {
                 call_user_func($callback, $event);
             }
         }

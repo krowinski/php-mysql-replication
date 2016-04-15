@@ -49,7 +49,7 @@ class Gtid
 
         foreach ($this->intervals as $interval)
         {
-            if (count($interval) != 1)
+            if (count($interval) !== 1)
             {
                 $buffer .= BinaryDataReader::pack64bit($interval[0]);
                 $buffer .= BinaryDataReader::pack64bit($interval[1]);

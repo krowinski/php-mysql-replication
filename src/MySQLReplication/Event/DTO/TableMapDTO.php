@@ -10,7 +10,7 @@ use MySQLReplication\Event\RowEvent\TableMap;
  * Class TableMapDTO
  * @package MySQLReplication\DTO
  */
-class TableMapDTO extends EventDTO implements \JsonSerializable
+class TableMapDTO extends EventDTO
 {
     /**
      * @var string

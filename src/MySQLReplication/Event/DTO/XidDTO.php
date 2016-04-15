@@ -6,24 +6,24 @@ use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
 /**
- * Class Xid
- * @package MySQLReplication\DTO
+ * Class XidDTO
+ * @package MySQLReplication\Event\DTO
  */
-class XidDTO extends EventDTO implements \JsonSerializable
+class XidDTO extends EventDTO
 {
     /**
      * @var string
      */
     private $type = ConstEventsNames::XID;
     /**
-     * @var
+     * @var string
      */
     private $xid;
 
     /**
      * GTIDLogEventDTO constructor.
      * @param EventInfo $eventInfo
-     * @param $xid
+     * @param string $xid
      */
     public function __construct(
         EventInfo $eventInfo,
@@ -35,7 +35,7 @@ class XidDTO extends EventDTO implements \JsonSerializable
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getXid()
     {

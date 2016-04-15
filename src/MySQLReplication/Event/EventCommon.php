@@ -4,6 +4,10 @@ namespace MySQLReplication\Event;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
+/**
+ * Class EventCommon
+ * @package MySQLReplication\Event
+ */
 abstract class EventCommon
 {
     /**

@@ -2,6 +2,10 @@
 
 namespace MySQLReplication\Gtid;
 
+/**
+ * Class GtidService
+ * @package MySQLReplication\Gtid
+ */
 class GtidService
 {
     /**

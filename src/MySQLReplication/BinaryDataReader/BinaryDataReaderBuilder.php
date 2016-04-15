@@ -2,6 +2,10 @@
 
 namespace MySQLReplication\BinaryDataReader;
 
+/**
+ * Class BinaryDataReaderBuilder
+ * @package MySQLReplication\BinaryDataReader
+ */
 class BinaryDataReaderBuilder
 {
     private $binaryData = '';

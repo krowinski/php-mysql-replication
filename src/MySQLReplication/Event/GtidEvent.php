@@ -4,6 +4,10 @@ namespace MySQLReplication\Event;
 
 use MySQLReplication\Event\DTO\GTIDLogDTO;
 
+/**
+ * Class GtidEvent
+ * @package MySQLReplication\Event
+ */
 class GtidEvent extends EventCommon
 {
     /**

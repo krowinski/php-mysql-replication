@@ -6,10 +6,10 @@ use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
 /**
- * Class QueryEventDTO
- * @package MySQLReplication\DTO
+ * Class QueryDTO
+ * @package MySQLReplication\Event\DTO
  */
-class QueryDTO extends EventDTO implements \JsonSerializable
+class QueryDTO extends EventDTO
 {
     /**
      * @var int
@@ -31,9 +31,9 @@ class QueryDTO extends EventDTO implements \JsonSerializable
     /**
      * QueryEventDTO constructor.
      * @param EventInfo $eventInfo
-     * @param $database
-     * @param $executionTime
-     * @param $query
+     * @param string $database
+     * @param int $executionTime
+     * @param string $query
      */
     public function __construct(
         EventInfo $eventInfo,
@@ -49,7 +49,7 @@ class QueryDTO extends EventDTO implements \JsonSerializable
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDatabase()
     {

@@ -3,7 +3,7 @@
 namespace MySQLReplication\Config;
 
 /**
- * Class ConfigFactory
+ * Class ConfigService
  * @package MySQLReplication\Config
  */
 class ConfigService

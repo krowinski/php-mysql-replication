@@ -5,13 +5,13 @@ namespace MySQLReplication\Repository;
 use Doctrine\DBAL\Connection;
 
 /**
- * Class DBHelper
+ * Class MySQLRepository
  * @package MySQLReplication\Repository
  */
 class MySQLRepository
 {
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     private $conn;
 
@@ -26,26 +26,13 @@ class MySQLRepository
     }
 
     /**
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection()
-    {
-        if (false === $this->conn->ping())
-        {
-            $this->conn->close();
-            $this->conn->connect();
-        }
-        return $this->conn;
-    }
-
-    /**
      * @param string $schema
      * @param string $table
      * @return array
      */
     public function getFields($schema, $table)
     {
-        $sql = "
+        $sql = '
             SELECT
                 `COLUMN_NAME`,
                 `COLLATION_NAME`,
@@ -59,8 +46,22 @@ class MySQLRepository
                     `table_schema` = ?
                 AND
                     `table_name` = ?
-       ";
+       ';
+
         return $this->getConnection()->fetchAll($sql, [$schema, $table]);
+    }
+
+    /**
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        if (false === $this->conn->ping()) {
+            $this->conn->close();
+            $this->conn->connect();
+        }
+
+        return $this->conn;
     }
 
     /**
@@ -68,8 +69,8 @@ class MySQLRepository
      */
     public function isCheckSum()
     {
-        $sql = "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM'";
-        $res = $this->getConnection()->fetchAssoc($sql);
+        $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
+
         return isset($res['Value']);
     }
 
@@ -84,7 +85,6 @@ class MySQLRepository
      */
     public function getMasterStatus()
     {
-        $sql = "SHOW MASTER STATUS";
-        return $this->getConnection()->fetchAssoc($sql);
+        return $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
     }
 }

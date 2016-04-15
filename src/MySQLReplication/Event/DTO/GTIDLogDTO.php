@@ -6,10 +6,10 @@ use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
 /**
- * Class GTIDLogEventDTO
- * @package MySQLReplication\DTO
+ * Class GTIDLogDTO
+ * @package MySQLReplication\Event\DTO
  */
-class GTIDLogDTO extends EventDTO implements \JsonSerializable
+class GTIDLogDTO extends EventDTO
 {
     /**
      * @var bool
@@ -27,8 +27,8 @@ class GTIDLogDTO extends EventDTO implements \JsonSerializable
     /**
      * GTIDLogEventDTO constructor.
      * @param EventInfo $eventInfo
-     * @param $commit
-     * @param $gtid
+     * @param bool $commit
+     * @param string $gtid
      */
     public function __construct(
         EventInfo $eventInfo,

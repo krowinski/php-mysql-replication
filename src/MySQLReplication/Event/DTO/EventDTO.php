@@ -7,6 +7,8 @@ use MySQLReplication\Event\EventInfo;
 /**
  * Class EventDTO
  * @package MySQLReplication\DTO
+ *
+ * @see https://dev.mysql.com/doc/internals/en/event-meanings.html
  */
 abstract class EventDTO implements \JsonSerializable
 {

@@ -3,8 +3,8 @@
 namespace MySQLReplication\BinLog;
 
 /**
- * Class ServerInfo
- * @package MySQLReplication\Pack
+ * Class BinLogServerInfo
+ * @package MySQLReplication\BinLog
  */
 class BinLogServerInfo
 {
@@ -50,23 +50,23 @@ class BinLogServerInfo
         {
             self::$serverInfo['salt'] .= $pack[$j];
         }
-        $i = $i + 8;
+        $i += 8;
 
         //filler_1 (1) -- 0x00
         $i++;
 
         //capability_flag_1 (2) -- lower 2 bytes of the Protocol::CapabilityFlags (optional)
-        $i = $i + 2;
+        $i += 2;
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
         self::$serverInfo['character_set'] = $pack[$i];
         $i++;
 
         //status_flags (2) -- Protocol::StatusFlags (optional)
-        $i = $i + 2;
+        $i += 2;
 
         //capability_flags_2 (2) -- upper 2 bytes of the Protocol::CapabilityFlags
-        $i = $i + 2;
+        $i += 2;
 
         //auth_plugin_data_len (1) -- length of the combined auth_plugin_data, if auth_plugin_data_len is > 0
         $salt_len = ord($pack[$i]);
@@ -74,7 +74,7 @@ class BinLogServerInfo
 
         $salt_len = max(12, $salt_len - 9);
 
-        $i = $i + 10;
+        $i += 10;
 
         //next salt
         if ($length >= $i + $salt_len)
