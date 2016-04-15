@@ -34,6 +34,10 @@ class Event
      * @var RowEventService
      */
     private $rowEventService;
+    /**
+     * @var Config
+     */
+    private $config;
 
     /**
      * BinLogPack constructor.
