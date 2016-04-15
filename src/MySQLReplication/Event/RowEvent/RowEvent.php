@@ -67,7 +67,12 @@ class RowEvent extends EventCommon
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
      */
-    public function __construct(Config $config, MySQLRepository $MySQLRepository, BinaryDataReader $binaryDataReader, EventInfo $eventInfo)
+    public function __construct(
+        Config $config,
+        MySQLRepository $MySQLRepository,
+        BinaryDataReader $binaryDataReader,
+        EventInfo $eventInfo
+    )
     {
         parent::__construct($eventInfo,$binaryDataReader);
 
@@ -90,7 +95,7 @@ class RowEvent extends EventCommon
         $data['schema_length'] = $this->binaryDataReader->readUInt8();
         $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
 
-        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly()))
+        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly(), true))
         {
             return null;
         }
@@ -99,7 +104,7 @@ class RowEvent extends EventCommon
         $data['table_length'] = $this->binaryDataReader->readUInt8();
         $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
 
-        if ([] !== $this->config->getTablesOnly() && !in_array($data['table_name'], $this->config->getTablesOnly()))
+        if ([] !== $this->config->getTablesOnly() && !in_array($data['table_name'], $this->config->getTablesOnly(), true))
         {
             return null;
         }
@@ -131,7 +136,8 @@ class RowEvent extends EventCommon
         // if you drop tables and parse of logs you will get empty scheme
         if (!empty($columns))
         {
-            for ($i = 0; $i < strlen($data['column_types']); $i++)
+            $columnLength = strlen($data['column_types']);
+            for ($i = 0; $i < $columnLength; $i++)
             {
                 // this a dirty hack to prevent row events containing columns which have been dropped
                 if (!isset($columns[$i]))
@@ -202,7 +208,7 @@ class RowEvent extends EventCommon
             ConstEventType::DELETE_ROWS_EVENT_V2,
             ConstEventType::WRITE_ROWS_EVENT_V2,
             ConstEventType::UPDATE_ROWS_EVENT_V2
-        ]))
+        ], true))
         {
             $this->binaryDataReader->read($this->binaryDataReader->readUInt16() / 8);
         }
@@ -240,7 +246,7 @@ class RowEvent extends EventCommon
         {
             $name = $column['name'];
 
-            if ($this->bitGet($colsBitmap, $i) == 0)
+            if ($this->bitGet($colsBitmap, $i) === 0)
             {
                 $values[$name] = null;
                 continue;
@@ -541,7 +547,7 @@ class RowEvent extends EventCommon
         $year = (int)($date / 10000);
         $month = (int)(($date % 10000) / 100);
         $day = (int)($date % 100);
-        if ($year == 0 || $month == 0 || $day == 0)
+        if ($year === 0 || $month === 0 || $day === 0)
         {
             return null;
         }
@@ -577,7 +583,7 @@ class RowEvent extends EventCommon
         $second = $this->getBinarySlice($data, 34, 6, 40);
 
         $date = new \DateTime($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
-        if (array_sum($date->getLastErrors()) > 0)
+        if (array_sum(\DateTime::getLastErrors()) > 0)
         {
             return null;
         }
@@ -600,7 +606,7 @@ class RowEvent extends EventCommon
      */
     private function getBinarySlice($binary, $start, $size, $data_length)
     {
-        $binary = $binary >> $data_length - ($start + $size);
+        $binary >>= $data_length - ($start + $size);
         $mask = ((1 << $size) - 1);
 
         return $binary & $mask;

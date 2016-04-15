@@ -6,7 +6,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
 /**
- * Class GtidSet
+ * Class GtidCollection
+ * @package MySQLReplication\Gtid
  */
 class GtidCollection extends ArrayCollection
 {

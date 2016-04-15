@@ -3,7 +3,8 @@
 namespace MySQLReplication\Definitions;
 
 /**
- * Capability flags
+ * Class ConstCapabilityFlags
+ * @package MySQLReplication\Definitions
  * http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-protocol::capabilityflags
  * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
  */

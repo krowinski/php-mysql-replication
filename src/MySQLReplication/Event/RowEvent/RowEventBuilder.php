@@ -30,7 +30,10 @@ class RowEventBuilder
      */
     private $eventInfo;
 
-    public function __construct(Config $config, MySQLRepository $MySQLRepository)
+    public function __construct(
+        Config $config,
+        MySQLRepository $MySQLRepository
+    )
     {
         $this->MySQLRepository = $MySQLRepository;
         $this->config = $config;

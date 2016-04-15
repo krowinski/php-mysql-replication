@@ -4,6 +4,10 @@ namespace MySQLReplication\Config\Exception;
 
 use MySQLReplication\Exception\MySQLReplicationException;
 
+/**
+ * Class ConfigException
+ * @package MySQLReplication\Config\Exception
+ */
 class ConfigException extends MySQLReplicationException
 {
     const USER_ERROR_MESSAGE = 'Incorrect user given';

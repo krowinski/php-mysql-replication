@@ -9,7 +9,7 @@ use MySQLReplication\Event\EventInfo;
  * Class RotateDTO
  * @package MySQLReplication\DTO
  */
-class RotateDTO extends EventDTO implements \JsonSerializable
+class RotateDTO extends EventDTO
 {
     /**
      * @var int

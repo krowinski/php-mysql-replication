@@ -9,7 +9,7 @@ use MySQLReplication\Event\RowEvent\TableMap;
  * Class RowsDTO
  * @package MySQLReplication\DTO
  */
-abstract class RowsDTO extends EventDTO implements \JsonSerializable
+abstract class RowsDTO extends EventDTO
 {
     /**
      * @var array
@@ -28,7 +28,7 @@ abstract class RowsDTO extends EventDTO implements \JsonSerializable
      * GTIDLogEventDTO constructor.
      * @param EventInfo $eventInfo
      * @param TableMap $tableMap
-     * @param $changedRows
+     * @param int $changedRows
      * @param array $values
      */
     public function __construct(

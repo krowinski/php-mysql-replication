@@ -10,7 +10,8 @@ use MySQLReplication\Definitions\ConstCommand;
 use MySQLReplication\Gtid\GtidCollection;
 
 /**
- * Class Connect
+ * Class BinLogConnect
+ * @package MySQLReplication\BinLog
  */
 class BinLogConnect
 {
@@ -151,7 +152,7 @@ class BinLogConnect
     public function isWriteSuccessful($packet)
     {
         $head = ord($packet[0]);
-        if (in_array($head, $this->packageOkHeader))
+        if (in_array($head, $this->packageOkHeader, true))
         {
             return ['status' => true, 'code' => 0, 'msg' => ''];
         }
@@ -159,7 +160,8 @@ class BinLogConnect
         {
             $error_code = unpack('v', $packet[1] . $packet[2])[1];
             $error_msg = '';
-            for ($i = 9; $i < strlen($packet); $i++)
+            $packetLength = strlen($packet);
+            for ($i = 9; $i < $packetLength; $i++)
             {
                 $error_msg .= $packet[$i];
             }

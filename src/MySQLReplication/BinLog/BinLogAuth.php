@@ -3,7 +3,8 @@
 namespace MySQLReplication\BinLog;
 
 /**
- * Class PackAuth
+ * Class BinLogAuth
+ * @package MySQLReplication\BinLog
  */
 class BinLogAuth
 {

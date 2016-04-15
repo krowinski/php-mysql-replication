@@ -18,7 +18,10 @@ class RowEventService
      * @param Config $config
      * @param MySQLRepository $mySQLRepository
      */
-    public function __construct(Config $config, MySQLRepository $mySQLRepository)
+    public function __construct(
+        Config $config,
+        MySQLRepository $mySQLRepository
+    )
     {
         $this->rowEventBuilder = new RowEventBuilder($config, $mySQLRepository);
     }

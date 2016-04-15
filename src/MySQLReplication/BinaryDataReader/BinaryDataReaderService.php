@@ -3,13 +3,13 @@
 namespace MySQLReplication\BinaryDataReader;
 
 /**
- * Class PackageService
+ * Class BinaryDataReaderService
  * @package MySQLReplication\BinaryDataReader
  */
 class BinaryDataReaderService
 {
     /**
-     * @param string $binaryData
+     * @param $binaryData
      * @return BinaryDataReader
      */
     public function makePackageFromBinaryData($binaryData)

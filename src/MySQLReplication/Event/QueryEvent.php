@@ -4,6 +4,10 @@ namespace MySQLReplication\Event;
 
 use MySQLReplication\Event\DTO\QueryDTO;
 
+/**
+ * Class QueryEvent
+ * @package MySQLReplication\Event
+ */
 class QueryEvent extends EventCommon
 {
     /**
@@ -19,7 +23,9 @@ class QueryEvent extends EventCommon
         $this->binaryDataReader->advance($status_vars_length);
         $schema = $this->binaryDataReader->read($schema_length);
         $this->binaryDataReader->advance(1);
-        $query = $this->binaryDataReader->read($this->eventInfo->getSize() - 36 - $status_vars_length - $schema_length - 1);
+        $query = $this->binaryDataReader->read(
+            $this->eventInfo->getSize() - 36 - $status_vars_length - $schema_length - 1
+        );
 
         return new QueryDTO(
             $this->eventInfo,
