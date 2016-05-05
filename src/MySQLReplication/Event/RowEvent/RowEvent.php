@@ -369,7 +369,14 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] == ConstFieldType::ENUM)
             {
-                $values[$name] = $column['enum_values'][$this->binaryDataReader->readUIntBySize($column['size']) - 1];
+                $value = $this->binaryDataReader->readUIntBySize($column['size']) - 1;
+
+                $values[$name] = '';
+                // check if given value exists in enums, if there not existing enum mysql sets to empty string.
+                if (array_key_exists($value, $column['enum_values']))
+                {
+                    $values[$name] = $column['enum_values'][$value];
+                }
             }
             elseif ($column['type'] == ConstFieldType::SET)
             {
