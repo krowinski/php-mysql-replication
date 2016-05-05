@@ -577,13 +577,20 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeEnum()
     {
-        $create_query = "CREATE TABLE test (test ENUM('a', 'ba', 'c'), test2 ENUM('a', 'ba', 'c')) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('ba', 'a')";
+        $create_query = "CREATE TABLE test
+            (
+                test ENUM('a', 'ba', 'c'),
+                test2 ENUM('a', 'ba', 'c'),
+                test3 ENUM('foo', 'bar')
+            )
+            CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('ba', 'a', 'not_exists')";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         $this->assertEquals('ba', $event->getValues()[0]['test']);
         $this->assertEquals('a', $event->getValues()[0]['test2']);
+        $this->assertEquals('', $event->getValues()[0]['test3']);
     }
 
     /**
