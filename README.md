@@ -79,7 +79,7 @@ User should have replication privileges [ REPLICATION CLIENT, SELECT]
 php example/dump_events.php
 ```
 
-For this SQL sessions:
+For test SQL events:
 
 ```sql
 CREATE DATABASE php_mysql_replication;
