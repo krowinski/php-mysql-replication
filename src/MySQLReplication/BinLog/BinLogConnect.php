@@ -115,7 +115,7 @@ class BinLogConnect
     }
 
     /**
-     *
+     * @throws BinLogException
      */
     private function serverInfo()
     {
@@ -177,14 +177,16 @@ class BinLogConnect
      */
     private function readFromSocket($length)
     {
-        if ($length == 5)
-        {
-            throw new BinLogException('read 5 bytes from mysql server has gone away');
-        }
-
-        if ($length === socket_recv($this->socket, $buf, $length, MSG_WAITALL))
+        $received = socket_recv($this->socket, $buf, $length, MSG_WAITALL);
+        if ($length === $received)
         {
             return $buf;
+        }
+
+        // http://php.net/manual/pl/function.socket-recv.php#47182
+        if (0 === $received)
+        {
+            throw new BinLogException('Disconnected by remote side');
         }
 
         throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());

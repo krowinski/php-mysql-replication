@@ -2,6 +2,7 @@
 
 namespace MySQLReplication\Event\RowEvent;
 
+use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
 use MySQLReplication\Event\EventCommon;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Config\Config;
@@ -86,6 +87,7 @@ class RowEvent extends EventCommon
      * A end user of the lib should have no usage of this
      *
      * @return TableMapDTO
+     * @throws BinaryDataReaderException
      */
     public function makeTableMapDTO()
     {
@@ -235,11 +237,9 @@ class RowEvent extends EventCommon
     {
         $values = [];
 
-        $length = $this->getColumnsBinarySize($this->bitCount($colsBitmap));
-
         // null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
         // see http://dev.mysql.com/doc/internals/en/rows-event.html
-        $null_bitmap = $this->binaryDataReader->read($length);
+        $null_bitmap = $this->binaryDataReader->read($this->getColumnsBinarySize($this->bitCount($colsBitmap)));
         $nullBitmapIndex = 0;
 
         foreach ($this->currentTableMap->getFields() as $i => $column)
@@ -256,11 +256,11 @@ class RowEvent extends EventCommon
             {
                 $values[$name] = null;
             }
-            elseif ($column['type'] == ConstFieldType::IGNORE)
+            elseif ($column['type'] === ConstFieldType::IGNORE)
             {
                 $values[$name] = null;
             }
-            elseif ($column['type'] == ConstFieldType::TINY)
+            elseif ($column['type'] === ConstFieldType::TINY)
             {
                 if (true === $column['unsigned'])
                 {
@@ -271,7 +271,7 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->binaryDataReader->readInt8();
                 }
             }
-            elseif ($column['type'] == ConstFieldType::SHORT)
+            elseif ($column['type'] === ConstFieldType::SHORT)
             {
                 if (true === $column['unsigned'])
                 {
@@ -282,7 +282,7 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->binaryDataReader->readInt16();
                 }
             }
-            elseif ($column['type'] == ConstFieldType::LONG)
+            elseif ($column['type'] === ConstFieldType::LONG)
             {
                 if (true === $column['unsigned'])
                 {
@@ -293,7 +293,7 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->binaryDataReader->readInt32();
                 }
             }
-            elseif ($column['type'] == ConstFieldType::LONGLONG)
+            elseif ($column['type'] === ConstFieldType::LONGLONG)
             {
                 if (true === $column['unsigned'])
                 {
@@ -304,7 +304,7 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->binaryDataReader->readInt64();
                 }
             }
-            elseif ($column['type'] == ConstFieldType::INT24)
+            elseif ($column['type'] === ConstFieldType::INT24)
             {
                 if (true === $column['unsigned'])
                 {
@@ -315,16 +315,16 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->binaryDataReader->readInt24();
                 }
             }
-            elseif ($column['type'] == ConstFieldType::FLOAT)
+            elseif ($column['type'] === ConstFieldType::FLOAT)
             {
                 // http://dev.mysql.com/doc/refman/5.7/en/floating-point-types.html FLOAT(7,4)
                 $values[$name] = round($this->binaryDataReader->readFloat(), 4);
             }
-            elseif ($column['type'] == ConstFieldType::DOUBLE)
+            elseif ($column['type'] === ConstFieldType::DOUBLE)
             {
                 $values[$name] = $this->binaryDataReader->readDouble();
             }
-            elseif ($column['type'] == ConstFieldType::VARCHAR || $column['type'] == ConstFieldType::STRING)
+            elseif ($column['type'] === ConstFieldType::VARCHAR || $column['type'] === ConstFieldType::STRING)
             {
                 if ($column['max_length'] > 255)
                 {
@@ -335,39 +335,39 @@ class RowEvent extends EventCommon
                     $values[$name] = $this->getString(1, $column);
                 }
             }
-            elseif ($column['type'] == ConstFieldType::NEWDECIMAL)
+            elseif ($column['type'] === ConstFieldType::NEWDECIMAL)
             {
                 $values[$name] = $this->getDecimal($column);
             }
-            elseif ($column['type'] == ConstFieldType::BLOB)
+            elseif ($column['type'] === ConstFieldType::BLOB)
             {
                 $values[$name] = $this->getString($column['length_size'], $column);
             }
-            elseif ($column['type'] == ConstFieldType::DATETIME)
+            elseif ($column['type'] === ConstFieldType::DATETIME)
             {
                 $values[$name] = $this->getDatetime();
             }
-            elseif ($column['type'] == ConstFieldType::DATETIME2)
+            elseif ($column['type'] === ConstFieldType::DATETIME2)
             {
                 $values[$name] = $this->getDatetime2($column);
             }
-            elseif ($column['type'] == ConstFieldType::TIME2)
+            elseif ($column['type'] === ConstFieldType::TIME2)
             {
                 $values[$name] = $this->getTime2($column);
             }
-            elseif ($column['type'] == ConstFieldType::TIMESTAMP2)
+            elseif ($column['type'] === ConstFieldType::TIMESTAMP2)
             {
                 $values[$name] = $this->getTimestamp2($column);
             }
-            elseif ($column['type'] == ConstFieldType::DATE)
+            elseif ($column['type'] === ConstFieldType::DATE)
             {
                 $values[$name] = $this->getDate();
             }
-            elseif ($column['type'] == ConstFieldType::YEAR)
+            elseif ($column['type'] === ConstFieldType::YEAR)
             {
                 $values[$name] = $this->binaryDataReader->readUInt8() + 1900;
             }
-            elseif ($column['type'] == ConstFieldType::ENUM)
+            elseif ($column['type'] === ConstFieldType::ENUM)
             {
                 $value = $this->binaryDataReader->readUIntBySize($column['size']) - 1;
 
@@ -378,15 +378,15 @@ class RowEvent extends EventCommon
                     $values[$name] = $column['enum_values'][$value];
                 }
             }
-            elseif ($column['type'] == ConstFieldType::SET)
+            elseif ($column['type'] === ConstFieldType::SET)
             {
                 $values[$name] = $this->getSet($column);
             }
-            elseif ($column['type'] == ConstFieldType::BIT)
+            elseif ($column['type'] === ConstFieldType::BIT)
             {
                 $values[$name] = $this->getBit($column);
             }
-            elseif ($column['type'] == ConstFieldType::GEOMETRY)
+            elseif ($column['type'] === ConstFieldType::GEOMETRY)
             {
                 $values[$name] = $this->binaryDataReader->readLengthCodedPascalString($column['length_size']);
             }
@@ -395,7 +395,7 @@ class RowEvent extends EventCommon
                 throw new MySQLReplicationException('Unknown row type: ' . $column['type']);
             }
 
-            $nullBitmapIndex += 1;
+            ++$nullBitmapIndex;
         }
 
         return $values;
@@ -454,7 +454,7 @@ class RowEvent extends EventCommon
      */
     private function checkNull($nullBitmap, $position)
     {
-        $bit = $nullBitmap[intval($position / 8)];
+        $bit = $nullBitmap[(int)($position / 8)];
         if (true === is_string($bit))
         {
             $bit = ord($bit);
@@ -467,6 +467,7 @@ class RowEvent extends EventCommon
      * @param int $size
      * @param array $column
      * @return string
+     * @throws BinaryDataReaderException
      */
     private function getString($size, array $column)
     {
@@ -483,6 +484,7 @@ class RowEvent extends EventCommon
      * Read MySQL's new decimal format introduced in MySQL 5
      * @param array $column
      * @return string
+     * @throws BinaryDataReaderException
      */
     private function getDecimal(array $column)
     {
@@ -495,7 +497,7 @@ class RowEvent extends EventCommon
         $comp_fractional = $column['decimals'] - ($uncomp_fractional * $digits_per_integer);
 
         $value = $this->binaryDataReader->readUInt8();
-        if (0 != ($value & 0x80))
+        if (0 !== ($value & 0x80))
         {
             $mask = 0;
             $res = '';
