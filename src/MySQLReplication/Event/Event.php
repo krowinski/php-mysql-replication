@@ -3,19 +3,14 @@
 namespace MySQLReplication\Event;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
+use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogConnect;
+use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
+use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Definitions\ConstEventType;
-use MySQLReplication\Event\DTO\DeleteRowsDTO;
-use MySQLReplication\Event\DTO\EventDTO;
-use MySQLReplication\Event\DTO\GTIDLogDTO;
-use MySQLReplication\Event\DTO\QueryDTO;
-use MySQLReplication\Event\DTO\RotateDTO;
-use MySQLReplication\Event\DTO\TableMapDTO;
-use MySQLReplication\Event\DTO\UpdateRowsDTO;
-use MySQLReplication\Event\DTO\WriteRowsDTO;
-use MySQLReplication\Event\DTO\XidDTO;
 use MySQLReplication\Event\RowEvent\RowEventService;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Class Event
@@ -38,6 +33,10 @@ class Event
      * @var Config
      */
     private $config;
+    /**
+     * @var EventDispatcher
+     */
+    private $eventDispatcher;
 
     /**
      * BinLogPack constructor.
@@ -45,21 +44,25 @@ class Event
      * @param BinLogConnect $binLogConnect
      * @param BinaryDataReaderService $packageService
      * @param RowEventService $rowEventService
+     * @param EventDispatcher $eventDispatcher
      */
     public function __construct(
         Config $config,
         BinLogConnect $binLogConnect,
         BinaryDataReaderService $packageService,
-        RowEventService $rowEventService
+        RowEventService $rowEventService,
+        EventDispatcher $eventDispatcher
     ) {
         $this->config = $config;
         $this->binLogConnect = $binLogConnect;
         $this->packageService = $packageService;
         $this->rowEventService = $rowEventService;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
-     * @return DeleteRowsDTO|EventDTO|GTIDLogDTO|QueryDTO|RotateDTO|TableMapDTO|UpdateRowsDTO|WriteRowsDTO|XidDTO
+     * @throws BinaryDataReaderException
+     * @throws BinLogException
      */
     public function consume()
     {
@@ -82,41 +85,31 @@ class Event
         );
 
         if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType()) {
-            $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
+            $this->eventDispatcher->dispatch(ConstEventsNames::TABLE_MAP, $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO());
+        } else {
+            if ([] !== $this->config->getEventsOnly() && !in_array($eventInfo->getType(), $this->config->getEventsOnly(), true)) {
+                return;
+            }
 
-            return $rowEvent->makeTableMapDTO();
+            if (in_array($eventInfo->getType(), $this->config->getEventsIgnore(), true)) {
+                return;
+            }
+
+            if (in_array($eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true)) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::UPDATE, $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO());
+            } elseif (in_array($eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true)) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::WRITE, $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO());
+            } elseif (in_array($eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true)) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::DELETE, $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO());
+            } elseif (ConstEventType::XID_EVENT === $eventInfo->getType()) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::XID, (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO());
+            } elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::ROTATE, (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO());
+            } elseif (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::GTID, (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO());
+            } elseif (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::QUERY, (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO());
+            }
         }
-
-        if ([] !== $this->config->getEventsOnly() && !in_array($eventInfo->getType(), $this->config->getEventsOnly(), true)) {
-            return null;
-        }
-
-        if (in_array($eventInfo->getType(), $this->config->getEventsIgnore(), true)) {
-            return null;
-        }
-
-        if (in_array($eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true)) {
-            $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
-
-            return $rowEvent->makeUpdateRowsDTO();
-        } elseif (in_array($eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true)) {
-            $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
-
-            return $rowEvent->makeWriteRowsDTO();
-        } elseif (in_array($eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true)) {
-            $rowEvent = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo);
-
-            return $rowEvent->makeDeleteRowsDTO();
-        } elseif (ConstEventType::XID_EVENT === $eventInfo->getType()) {
-            return (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO();
-        } elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
-            return (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO();
-        } elseif (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
-            return (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
-        } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
-            return (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO();
-        }
-
-        return null;
     }
 }

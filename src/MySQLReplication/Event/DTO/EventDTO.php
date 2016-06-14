@@ -3,6 +3,7 @@
 namespace MySQLReplication\Event\DTO;
 
 use MySQLReplication\Event\EventInfo;
+use Symfony\Component\EventDispatcher\Event;
 
 /**
  * Class EventDTO
@@ -10,7 +11,7 @@ use MySQLReplication\Event\EventInfo;
  *
  * @see https://dev.mysql.com/doc/internals/en/event-meanings.html
  */
-abstract class EventDTO implements \JsonSerializable
+abstract class EventDTO extends Event implements \JsonSerializable
 {
     /**
      * @var EventInfo
