@@ -115,6 +115,8 @@ class Event
             return (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
         } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
             return (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO();
+        } elseif (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
+            return (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO();
         }
 
         return null;
