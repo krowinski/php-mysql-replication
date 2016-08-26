@@ -16,7 +16,7 @@ In you project
 composer require krowinski/php-mysql-replication
 ```
 
-or stand alone 
+or standalone 
 
 ```sh
 git clone https://github.com/krowinski/php-mysql-replication.git
