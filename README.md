@@ -10,8 +10,16 @@ Based on a great work of creators：https://github.com/noplay/python-mysql-repli
 Installation
 =========
 
+In you project
+
 ```sh
 composer require krowinski/php-mysql-replication
+```
+
+or standalone 
+
+```sh
+git clone https://github.com/krowinski/php-mysql-replication.git
 ```
 
 MySQL server settings
@@ -33,7 +41,7 @@ Mysql replication events explained
 Configuration
 =========
 
-You can pass this params to ConfigService->makeConfigFromArray([])
+You can pass this array keys to ConfigService->makeConfigFromArray([])
 
 'user' - your mysql user (mandatory)
 
@@ -48,6 +56,8 @@ You can pass this params to ConfigService->makeConfigFromArray([])
 'charset' - db connection charset
 
 'gtid' - GTID marker(s) to start from (format 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592)
+
+'mariaDbGtid' - MariaDB GTID marker(s) to start from (format 1-1-3,0-1-88)
 
 'slaveId' - script slave id for identification
 

@@ -66,6 +66,10 @@ class Config
      * @var array
      */
     private $databasesOnly;
+    /**
+     * @var string
+     */
+    private $mariaDbGtid;
 
     /**
      * Config constructor.
@@ -76,6 +80,7 @@ class Config
      * @param string $dbName
      * @param string $charset
      * @param string $gtid
+     * @param string $mariaGtid
      * @param int $slaveId
      * @param string $binLogFileName
      * @param $binLogPosition
@@ -92,6 +97,7 @@ class Config
         $dbName,
         $charset,
         $gtid,
+        $mariaGtid,
         $slaveId,
         $binLogFileName,
         $binLogPosition,
@@ -114,6 +120,7 @@ class Config
         $this->eventsIgnore = $eventsIgnore;
         $this->tablesOnly = $tablesOnly;
         $this->databasesOnly = $databasesOnly;
+        $this->mariaDbGtid = $mariaGtid;
     }
 
     /**
@@ -166,6 +173,10 @@ class Config
         if (!empty($this->binLogPosition) && false === filter_var($this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
         {
             throw new ConfigException(ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE);
+        }
+        if (!empty($this->mariaDbGtid) && false === is_string($this->mariaDbGtid))
+        {
+            throw new ConfigException(ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE);
         }
     }
 
@@ -223,6 +234,14 @@ class Config
     public function getGtid()
     {
         return $this->gtid;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMariaDbGtid()
+    {
+        return $this->mariaDbGtid;
     }
 
     /**
