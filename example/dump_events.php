@@ -12,6 +12,7 @@ $binLogStream = new MySQLReplicationFactory(
         'user' => 'root',
         'ip' => '127.0.0.1',
         'password' => 'root',
+        //'mariaDbGtid' => '1-1-3,0-1-88',
         //'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
     ])
 );

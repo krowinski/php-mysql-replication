@@ -73,6 +73,10 @@ class ConfigService
             {
                 $configBuilder->withDatabasesOnly($v);
             }
+            if ('mariaDbGtid' === $k)
+            {
+                $configBuilder->withMariaDbGtid($v);
+            }
         }
 
         return $configBuilder->build();

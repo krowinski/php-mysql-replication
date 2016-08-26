@@ -16,4 +16,5 @@ class ConstEventsNames
     const DELETE = 'delete';
     const UPDATE = 'update';
     const WRITE = 'write';
+    const MARIADB_GTID = 'mariadb gtid';
 }

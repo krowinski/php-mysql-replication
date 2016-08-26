@@ -64,6 +64,10 @@ class ConfigBuilder
      * @var array
      */
     private $databasesOnly = [];
+    /**
+     * @var string
+     */
+    private $mariaDbGtid;
 
     /**
      * @return Config
@@ -78,6 +82,7 @@ class ConfigBuilder
             $this->dbName,
             $this->charset,
             $this->gtid,
+            $this->mariaDbGtid,
             $this->slaveId,
             $this->binLogFileName,
             $this->binLogPosition,
@@ -199,4 +204,11 @@ class ConfigBuilder
         $this->databasesOnly = $databasesOnly;
     }
 
+    /**
+     * @param string $mariaDbGtid
+     */
+    public function withMariaDbGtid($mariaDbGtid)
+    {
+        $this->mariaDbGtid = $mariaDbGtid;
+    }
 }
