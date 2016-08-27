@@ -58,4 +58,7 @@ class ConstEventType
     const WRITE_ROWS_EVENT_V2 = 30;
     const UPDATE_ROWS_EVENT_V2 = 31;
     const DELETE_ROWS_EVENT_V2 = 32;
+
+    // mariadb
+    const MARIA_GTID_EVENT = 162;
 }
