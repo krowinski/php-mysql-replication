@@ -46,10 +46,6 @@ class MySQLReplicationFactory
      */
     private $binLogAuth;
     /**
-     * @var GtidCollection
-     */
-    private $GtidCollection;
-    /**
      * @var Connection
      */
     private $connection;
@@ -57,6 +53,10 @@ class MySQLReplicationFactory
      * @var BinaryDataReaderService
      */
     private $binaryDataReaderService;
+    /**
+     * @var GtidService
+     */
+    private $GtiService;
 
     /**
      * @param Config $config
@@ -78,8 +78,8 @@ class MySQLReplicationFactory
         ]);
         $this->binLogAuth = new BinLogAuth();
         $this->MySQLRepository = new MySQLRepository($this->connection);
-        $this->GtidCollection = (new GtidService())->makeCollectionFromString($config->getGtid());
-        $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtidCollection);
+        $this->GtiService = new GtidService();
+        $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtiService);
         $this->binLogConnect->connectToStream();
         $this->binaryDataReaderService = new BinaryDataReaderService();
         $this->rowEventService = new RowEventService($config, $this->MySQLRepository);
@@ -109,5 +109,40 @@ class MySQLReplicationFactory
     public function binLogEvent()
     {
         $this->event->consume();
+    }
+
+    public function binLogDisconnect()
+    {
+        $this->binLogConnect->disconnect();
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
+        echo 1;
     }
 }
