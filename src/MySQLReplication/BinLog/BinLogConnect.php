@@ -59,7 +59,7 @@ class BinLogConnect
         $this->gtidService = $gtidService;
     }
 
-    public function disconnect()
+    public function __destruct()
     {
         if (true === $this->isConnected())
         {
