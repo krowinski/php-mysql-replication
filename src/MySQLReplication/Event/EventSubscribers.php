@@ -6,6 +6,7 @@ use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\DTO\GTIDLogDTO;
+use MySQLReplication\Event\DTO\MariaDbGtidLogDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
@@ -49,6 +50,7 @@ class EventSubscribers implements EventSubscriberInterface
             ConstEventsNames::ROTATE => 'onRotate',
             ConstEventsNames::XID => 'onXID',
             ConstEventsNames::WRITE => 'onWrite',
+            ConstEventsNames::MARIADB_GTID => 'onMariaDbGtid',
         ];
     }
 
@@ -119,6 +121,14 @@ class EventSubscribers implements EventSubscriberInterface
      * @param WriteRowsDTO $event
      */
     public function onWrite(WriteRowsDTO $event)
+    {
+        $this->allEvents($event);
+    }
+
+    /**
+     * @param MariaDbGtidLogDTO $event
+     */
+    public function onMariaDbGtid(MariaDbGtidLogDTO $event)
     {
         $this->allEvents($event);
     }
