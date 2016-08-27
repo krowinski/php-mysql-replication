@@ -110,39 +110,4 @@ class MySQLReplicationFactory
     {
         $this->event->consume();
     }
-
-    public function binLogDisconnect()
-    {
-        $this->binLogConnect->disconnect();
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-        echo 1;
-    }
 }
