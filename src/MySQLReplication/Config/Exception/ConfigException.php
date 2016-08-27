@@ -30,4 +30,6 @@ class ConfigException extends MySQLReplicationException
     const BIN_LOG_FILE_NAME_ERROR_CODE = 9;
     const BIN_LOG_FILE_POSITION_ERROR_MESSAGE = 'Incorrect binlog position type';
     const BIN_LOG_FILE_POSITION_ERROR_CODE = 10;
+    const MARIADBGTID_ERROR_MESSAGE = 'Maria gtid must be string';
+    const MARIADBGTID_ERROR_CODE = 11;
 }

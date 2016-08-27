@@ -236,6 +236,14 @@ class BinLogConnect
             $binFilePos = $this->config->getBinLogPosition();
             $binFileName = $this->config->getBinLogFileName();
 
+            if ('' !== $this->config->getMariaDbGtid())
+            {
+                $this->execute("SET @mariadb_slave_capability = 4");
+                $this->execute("SET @slave_connect_state = '" . $this->config->getMariaDbGtid() . "'");
+                $this->execute("SET @slave_gtid_strict_mode = 0");
+                $this->execute("SET @slave_gtid_ignore_duplicates = 0");
+            }
+            
             if ('' === $binFilePos || '' === $binFileName)
             {
                 $master = $this->mySQLRepository->getMasterStatus();

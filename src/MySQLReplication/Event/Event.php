@@ -14,6 +14,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Class Event
+ * @package MySQLReplication\Event
  */
 class Event
 {
@@ -109,6 +110,8 @@ class Event
                 $this->eventDispatcher->dispatch(ConstEventsNames::GTID, (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO());
             } elseif (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
                 $this->eventDispatcher->dispatch(ConstEventsNames::QUERY, (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO());
+            } elseif (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::MARIADB_GTID, (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO());
             }
         }
     }
