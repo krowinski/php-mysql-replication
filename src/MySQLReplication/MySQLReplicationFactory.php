@@ -1,4 +1,5 @@
 <?php
+
 namespace MySQLReplication;
 
 use Doctrine\DBAL\Connection;
@@ -14,7 +15,6 @@ use MySQLReplication\Event\Event;
 use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\Event\RowEvent\RowEventService;
 use MySQLReplication\Exception\MySQLReplicationException;
-use MySQLReplication\Gtid\GtidCollection;
 use MySQLReplication\Gtid\GtidService;
 use MySQLReplication\Repository\MySQLRepository;
 use Symfony\Component\EventDispatcher\EventDispatcher;

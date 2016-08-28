@@ -19,6 +19,7 @@ class GtidService
     /**
      * @param string $gtids
      * @return GtidCollection
+     * @throws GtidException
      */
     public function makeCollectionFromString($gtids)
     {
