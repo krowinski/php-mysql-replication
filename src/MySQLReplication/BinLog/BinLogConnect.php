@@ -4,10 +4,10 @@ namespace MySQLReplication\BinLog;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
-use MySQLReplication\Gtid\GtidCollection;
+use MySQLReplication\Gtid\GtidService;
+use MySQLReplication\Repository\MySQLRepository;
 
 /**
  * Class BinLogConnect
@@ -36,10 +36,6 @@ class BinLogConnect
      */
     private $packAuth;
     /**
-     * @var GtidCollection
-     */
-    private $gtidCollection;
-    /**
      * http://dev.mysql.com/doc/internals/en/auth-phase-fast-path.html 00 FE
      * @var array
      */
@@ -49,23 +45,20 @@ class BinLogConnect
      * @param Config $config
      * @param MySQLRepository $mySQLRepository
      * @param BinLogAuth $packAuth
-     * @param GtidCollection $gtidCollection
+     * @param GtidService $gtidService
      */
     public function __construct(
         Config $config,
         MySQLRepository $mySQLRepository,
         BinLogAuth $packAuth,
-        GtidCollection $gtidCollection
+        GtidService $gtidService
     ) {
         $this->mySQLRepository = $mySQLRepository;
         $this->config = $config;
         $this->packAuth = $packAuth;
-        $this->gtidCollection = $gtidCollection;
+        $this->gtidService = $gtidService;
     }
 
-    /**
-     *
-     */
     public function __destruct()
     {
         if (true === $this->isConnected())
@@ -91,7 +84,6 @@ class BinLogConnect
         return $this->checkSum;
     }
 
-
     /**
      * @throws BinLogException
      */
@@ -115,7 +107,7 @@ class BinLogConnect
     }
 
     /**
-     *
+     * @throws BinLogException
      */
     private function serverInfo()
     {
@@ -141,7 +133,30 @@ class BinLogConnect
         {
             $this->isWriteSuccessful($result);
         }
+
         return $result;
+    }
+
+    /**
+     * @param $length
+     * @return mixed
+     * @throws BinLogException
+     */
+    private function readFromSocket($length)
+    {
+        $received = socket_recv($this->socket, $buf, $length, MSG_WAITALL);
+        if ($length === $received)
+        {
+            return $buf;
+        }
+
+        // http://php.net/manual/pl/function.socket-recv.php#47182
+        if (0 === $received)
+        {
+            throw new BinLogException('Disconnected by remote side');
+        }
+
+        throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
     }
 
     /**
@@ -168,26 +183,6 @@ class BinLogConnect
 
             throw new BinLogException($error_msg, $error_code);
         }
-    }
-
-    /**
-     * @param $length
-     * @return mixed
-     * @throws BinLogException
-     */
-    private function readFromSocket($length)
-    {
-        if ($length == 5)
-        {
-            throw new BinLogException('read 5 bytes from mysql server has gone away');
-        }
-
-        if ($length === socket_recv($this->socket, $buf, $length, MSG_WAITALL))
-        {
-            return $buf;
-        }
-
-        throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
     }
 
     /**
@@ -229,49 +224,16 @@ class BinLogConnect
             $this->execute('SET @master_binlog_checksum=@@global.binlog_checksum');
         }
 
-        if (0 === $this->gtidCollection->count())
+        $this->registerSlave();
+
+        if ('' !== $this->config->getGtid())
         {
-            $binFilePos = $this->config->getBinLogPosition();
-            $binFileName = $this->config->getBinLogFileName();
-
-            if ('' !== $this->config->getMariaDbGtid())
-            {
-                $this->execute("SET @mariadb_slave_capability = 4");
-                $this->execute("SET @slave_connect_state = '" . $this->config->getMariaDbGtid() . "'");
-                $this->execute("SET @slave_gtid_strict_mode = 0");
-                $this->execute("SET @slave_gtid_ignore_duplicates = 0");
-            }
-            
-            if ('' === $binFilePos || '' === $binFileName)
-            {
-                $master = $this->mySQLRepository->getMasterStatus();
-                $binFilePos = $master['Position'];
-                $binFileName = $master['File'];
-            }
-
-            $prelude = pack('i', strlen($binFileName) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
-            $prelude .= pack('I', $binFilePos);
-            $prelude .= pack('v', 0);
-            $prelude .= pack('I', $this->config->getSlaveId());
-            $prelude .= $binFileName;
+            $this->setBinLogDumpGtid();
         }
         else
         {
-            $prelude = pack('l', 26 + $this->gtidCollection->getEncodedLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
-            $prelude .= pack('S', 0);
-            $prelude .= pack('I', $this->config->getSlaveId());
-            $prelude .= pack('I', 3);
-            $prelude .= chr(0);
-            $prelude .= chr(0);
-            $prelude .= chr(0);
-            $prelude .= BinaryDataReader::pack64bit(4);
-
-            $prelude .= pack('I', $this->gtidCollection->getEncodedLength());
-            $prelude .= $this->gtidCollection->getEncoded();
+            $this->setBinLogDump();
         }
-
-        $this->writeToSocket($prelude);
-        $this->getPacket();
     }
 
     /**
@@ -284,6 +246,83 @@ class BinLogConnect
         $prelude = pack('LC', $chunk_size, 0x03);
 
         $this->writeToSocket($prelude . $sql);
+        $this->getPacket();
+    }
+
+    /**
+     * @see https://dev.mysql.com/doc/internals/en/com-register-slave.html
+     * @throws BinLogException
+     */
+    private function registerSlave()
+    {
+        $prelude = pack('l', 18) . chr(ConstCommand::COM_REGISTER_SLAVE);
+        $prelude .= pack('I', $this->config->getSlaveId());
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= pack('s', '');
+        $prelude .= pack('I', 0);
+        $prelude .= pack('I', 0);
+
+        $this->writeToSocket($prelude);
+        $this->getPacket();
+    }
+
+    /**
+     * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump-gtid.html
+     * @throws BinLogException
+     */
+    private function setBinLogDumpGtid()
+    {
+        $collection = $this->gtidService->makeCollectionFromString($this->config->getGtid());
+
+        $prelude = pack('l', 26 + $collection->getEncodedLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
+        $prelude .= pack('S', 0);
+        $prelude .= pack('I', $this->config->getSlaveId());
+        $prelude .= pack('I', 3);
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= chr(0);
+        $prelude .= BinaryDataReader::pack64bit(4);
+
+        $prelude .= pack('I', $collection->getEncodedLength());
+        $prelude .= $collection->getEncoded();
+
+        $this->writeToSocket($prelude);
+        $this->getPacket();
+    }
+
+    /**
+     * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump.html
+     * @throws BinLogException
+     */
+    private function setBinLogDump()
+    {
+        $binFilePos = $this->config->getBinLogPosition();
+        $binFileName = $this->config->getBinLogFileName();
+
+        if ('' !== $this->config->getMariaDbGtid())
+        {
+            $this->execute('SET @mariadb_slave_capability = 4');
+            $this->execute('SET @slave_connect_state = \'' . $this->config->getMariaDbGtid() . '\'');
+            $this->execute('SET @slave_gtid_strict_mode = 0');
+            $this->execute('SET @slave_gtid_ignore_duplicates = 0');
+        }
+
+        if ('' === $binFilePos || '' === $binFileName)
+        {
+            $master = $this->mySQLRepository->getMasterStatus();
+            $binFilePos = $master['Position'];
+            $binFileName = $master['File'];
+        }
+
+        $prelude = pack('i', strlen($binFileName) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
+        $prelude .= pack('I', $binFilePos);
+        $prelude .= pack('v', 0);
+        $prelude .= pack('I', $this->config->getSlaveId());
+        $prelude .= $binFileName;
+
+        $this->writeToSocket($prelude);
         $this->getPacket();
     }
 }

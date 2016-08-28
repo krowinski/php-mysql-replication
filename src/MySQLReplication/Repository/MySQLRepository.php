@@ -13,16 +13,16 @@ class MySQLRepository
     /**
      * @var Connection
      */
-    private $conn;
+    private $connection;
 
     public function __construct(Connection $connection)
     {
-        $this->conn = $connection;
+        $this->connection = $connection;
     }
 
     public function __destruct()
     {
-        $this->conn->close();
+        $this->connection->close();
     }
 
     /**
@@ -56,12 +56,12 @@ class MySQLRepository
      */
     public function getConnection()
     {
-        if (false === $this->conn->ping()) {
-            $this->conn->close();
-            $this->conn->connect();
+        if (false === $this->connection->ping()) {
+            $this->connection->close();
+            $this->connection->connect();
         }
 
-        return $this->conn;
+        return $this->connection;
     }
 
     /**
