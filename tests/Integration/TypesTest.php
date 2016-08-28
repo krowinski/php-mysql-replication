@@ -2,8 +2,35 @@
 
 namespace Integration;
 
+use MySQLReplication\Event\DTO\EventDTO;
+use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Config\ConfigService;
+
+/**
+ * Class BenchmarkEventSubscribers
+ * @package example
+ */
+class MyEventSubscribers extends EventSubscribers
+{
+    /**
+     * @var TypesTest
+     */
+    private $typesTest;
+
+    public function __construct(TypesTest $typesTest)
+    {
+        $this->typesTest = $typesTest;
+    }
+
+    /**
+     * @param EventDTO $event (your own handler more in EventSubscribers class )
+     */
+    public function allEvents(EventDTO $event)
+    {
+        $this->typesTest->setEvent($event);
+    }
+}
 
 /**
  * Class TypesTest
@@ -23,6 +50,10 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      * @var \MySQLReplication\MySQLReplicationFactory
      */
     private $binLogStream;
+    /**
+     * @var EventDTO
+     */
+    private $currentEvent;
 
     protected function setUp()
     {
@@ -34,12 +65,32 @@ class TypesTest extends \PHPUnit_Framework_TestCase
             'password' => 'root'
         ]);
         $this->binLogStream = new MySQLReplicationFactory($config);
+        $this->binLogStream->registerSubscriber(new MyEventSubscribers($this));
+
         $this->conn = $this->binLogStream->getDbConnection();
 
-        $this->conn->exec("SET GLOBAL time_zone = 'UTC'");
-        $this->conn->exec("DROP DATABASE IF EXISTS " . $this->database);
-        $this->conn->exec("CREATE DATABASE " . $this->database);
-        $this->conn->exec("USE " . $this->database);
+        $this->conn->exec('SET GLOBAL time_zone = "UTC"');
+        $this->conn->exec('DROP DATABASE IF EXISTS ' . $this->database);
+        $this->conn->exec('CREATE DATABASE ' . $this->database);
+        $this->conn->exec('USE ' . $this->database);
+    }
+
+    /**
+     * @param EventDTO $eventDTO
+     * @return EventDTO
+     */
+    public function setEvent(EventDTO $eventDTO)
+    {
+        $this->currentEvent = $eventDTO;
+    }
+
+    /**
+     * @return EventDTO
+     */
+    public function getEvent()
+    {
+        $this->binLogStream->binLogEvent();
+        return $this->currentEvent;
     }
 
     protected function tearDown()
@@ -61,18 +112,18 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $this->conn->exec($create_query);
         $this->conn->exec($insert_query);
 
-        $this->assertEquals(null, $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->binLogStream->getBinLogEvent());
-        $this->assertInstanceOf('MySQLReplication\Event\DTO\TableMapDTO', $this->binLogStream->getBinLogEvent());
+        $this->assertEquals(null, $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
+        $this->assertInstanceOf('MySQLReplication\Event\DTO\TableMapDTO', $this->getEvent());
 
-        return $this->binLogStream->getBinLogEvent();
+        return $this->getEvent();
     }
 
     /**
