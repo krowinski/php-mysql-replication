@@ -75,7 +75,7 @@ class MySQLReplicationFactory
             'host' => $config->getIp(),
             'port' => $config->getPort(),
             'driver' => 'pdo_mysql',
-			'charset' => $config->getCharset() ? $config->getCharset() : 'utf8'
+			'charset' => $config->getCharset()
         ]);
         $this->binLogAuth = new BinLogAuth();
         $this->MySQLRepository = new MySQLRepository($this->connection);
