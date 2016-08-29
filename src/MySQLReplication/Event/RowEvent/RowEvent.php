@@ -75,7 +75,7 @@ class RowEvent extends EventCommon
         EventInfo $eventInfo
     )
     {
-        parent::__construct($eventInfo,$binaryDataReader);
+        parent::__construct($eventInfo, $binaryDataReader);
 
         $this->MySQLRepository = $MySQLRepository;
         $this->config = $config;
@@ -351,7 +351,7 @@ class RowEvent extends EventCommon
             {
                 $values[$name] = $this->getDatetime2($column);
             }
-            elseif ($column['type'] == ConstFieldType::TIMESTAMP)
+            elseif ($column['type'] === ConstFieldType::TIMESTAMP)
 			{
 				$values[$name] = date('c', $this->binaryDataReader->readUInt32());
 			}
