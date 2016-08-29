@@ -24,7 +24,7 @@ class QueryEvent extends EventCommon
         $schema = $this->binaryDataReader->read($schema_length);
         $this->binaryDataReader->advance(1);
         $query = $this->binaryDataReader->read(
-            $this->eventInfo->getSize() - 36 - $status_vars_length - $schema_length - 1
+            $this->eventInfo->getSize() - 13 - $status_vars_length - $schema_length - 1
         );
 
         return new QueryDTO(
