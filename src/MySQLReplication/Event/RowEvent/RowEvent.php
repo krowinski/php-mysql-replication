@@ -351,6 +351,10 @@ class RowEvent extends EventCommon
             {
                 $values[$name] = $this->getDatetime2($column);
             }
+            elseif ($column['type'] == ConstFieldType::TIMESTAMP)
+			{
+				$values[$name] = date('c', $this->binaryDataReader->readUInt32());
+			}
             elseif ($column['type'] === ConstFieldType::TIME2)
             {
                 $values[$name] = $this->getTime2($column);
