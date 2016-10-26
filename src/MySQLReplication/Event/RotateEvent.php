@@ -16,9 +16,7 @@ class RotateEvent  extends EventCommon
     public function makeRotateEventDTO()
     {
         $pos = $this->binaryDataReader->readUInt64();
-        $binFileName = $this->binaryDataReader->read(
-            $this->eventInfo->getSizeNoHeader() - 8
-        );
+        $binFileName = $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader());
 
         return new RotateDTO(
             $this->eventInfo,
