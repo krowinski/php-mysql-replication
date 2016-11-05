@@ -44,8 +44,6 @@ class QueryEvent extends EventCommon
      */
     private function getSizeToRemoveByVersion()
     {
-
-        var_dump(BinLogServerInfo::getVersion());
         if (BinLogServerInfo::MYSQL_VERSION_MARIADB === BinLogServerInfo::getVersion())
         {
             return 13;
