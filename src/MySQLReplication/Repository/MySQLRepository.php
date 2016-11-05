@@ -80,12 +80,16 @@ class MySQLRepository
      */
     public function getVersion()
     {
-        $res = $this->getConnection()->fetchAssoc('SHOW VARIABLES LIKE "version_comment"');
-        if (!empty($res['Value']))
+        $r = '';
+        $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
+        if (is_array($versions) && 0 !== count($versions))
         {
-            return $res['Value'];
+            foreach ($versions as $version)
+            {
+                $r .= $version['Value'];
+            }
         }
-        return '';
+        return $r;
     }
 
     /**
