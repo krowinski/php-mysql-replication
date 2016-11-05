@@ -1,10 +1,7 @@
-.idea
 out.log
 log
 /vendor
 composer.phar
 composer.lock
 .php_cs.cache
-.DS_Store
-Thumbs.db
 /example/profiler.php
