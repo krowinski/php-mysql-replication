@@ -8,6 +8,9 @@ namespace MySQLReplication\BinLog;
  */
 class BinLogServerInfo
 {
+    const MYSQL_VERSION_MARIADB = 'MariaDB';
+    const MYSQL_VERSION_PERCONA = 'Percona';
+    const MYSQL_VERSION_GENERIC = 'MySQL';
     /**
      * @var array
      */
@@ -91,6 +94,7 @@ class BinLogServerInfo
         {
             self::$serverInfo['auth_plugin_name'] .= $pack[$j];
         }
+        self::$serverInfo['version_name'] = self::MYSQL_VERSION_GENERIC;
     }
 
     /**
@@ -99,5 +103,32 @@ class BinLogServerInfo
     public static function getSalt()
     {
         return self::$serverInfo['salt'];
+    }
+
+    /**
+     * @see http://stackoverflow.com/questions/37317869/determine-if-mysql-or-percona-or-mariadb
+     * @param string $version
+     */
+    public static function parseVersion($version)
+    {
+        if ('' !== $version)
+        {
+            if (false !== strpos($version, self::MYSQL_VERSION_MARIADB))
+            {
+                self::$serverInfo['version_name'] = self::MYSQL_VERSION_MARIADB;
+            }
+            else if (false !== strpos($version, self::MYSQL_VERSION_PERCONA))
+            {
+                self::$serverInfo['version_name'] = self::MYSQL_VERSION_PERCONA;
+            }
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public static function getVersion()
+    {
+        return self::$serverInfo['version_name'];
     }
 }
