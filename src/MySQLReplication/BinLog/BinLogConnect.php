@@ -112,6 +112,7 @@ class BinLogConnect
     private function serverInfo()
     {
         BinLogServerInfo::parsePackage($this->getPacket(false));
+        BinLogServerInfo::parseVersion($this->mySQLRepository->getVersion());
     }
 
     /**
