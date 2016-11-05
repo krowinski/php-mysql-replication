@@ -56,7 +56,8 @@ class MySQLRepository
      */
     public function getConnection()
     {
-        if (false === $this->connection->ping()) {
+        if (false === $this->connection->ping())
+        {
             $this->connection->close();
             $this->connection->connect();
         }
@@ -72,6 +73,19 @@ class MySQLRepository
         $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
         return isset($res['Value']);
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersion()
+    {
+        $res = $this->getConnection()->fetchAssoc('SHOW VARIABLES LIKE "version_comment"');
+        if (!empty($res['Value']))
+        {
+            return $res['Value'];
+        }
+        return '';
     }
 
     /**
