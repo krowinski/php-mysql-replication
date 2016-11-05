@@ -3,7 +3,6 @@
 namespace example;
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
 
@@ -37,7 +36,7 @@ class MyEventSubscribers extends EventSubscribers
         echo $event;
 
         // all events got JsonSerializable implementation
-        //echo json_encode($result, JSON_PRETTY_PRINT);
+        echo json_encode($event, JSON_PRETTY_PRINT);
 
         echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }
