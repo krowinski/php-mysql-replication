@@ -3,7 +3,6 @@
 namespace MySQLReplication\BinLog;
 
 /**
- * todo ugly class, for refactoring
  * Class BinLogServerInfo
  * @package MySQLReplication\BinLog
  */

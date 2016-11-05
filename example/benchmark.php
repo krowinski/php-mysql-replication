@@ -3,7 +3,6 @@
 namespace example;
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
 
@@ -18,6 +17,7 @@ use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Config\ConfigService;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
+use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * Class BenchmarkEventSubscribers
@@ -113,13 +113,14 @@ class Benchmark
     /**
      * @throws MySQLReplicationException
      * @throws DBALException
+     * @throws \InvalidArgumentException
      */
     public function run()
     {
         $pid = pcntl_fork();
         if ($pid === -1)
         {
-            die('could not fork');
+            throw new \InvalidArgumentException('Could not fork');
         }
         else if ($pid)
         {
@@ -157,7 +158,6 @@ class Benchmark
         }
 
         $conn->close();
-        die;
     }
 }
 
