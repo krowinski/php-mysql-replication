@@ -96,7 +96,7 @@ class BinLogConnect
         socket_set_block($this->socket);
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
 
-        if (false === socket_connect($this->socket, $this->config->getIp(), $this->config->getPort()))
+        if (false === socket_connect($this->socket, $this->config->getHost(), $this->config->getPort()))
         {
             throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
         }

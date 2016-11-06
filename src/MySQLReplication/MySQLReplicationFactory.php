@@ -72,7 +72,7 @@ class MySQLReplicationFactory
         $this->connection = DriverManager::getConnection([
             'user' => $config->getUser(),
             'password' => $config->getPassword(),
-            'host' => $config->getIp(),
+            'host' => $config->getHost(),
             'port' => $config->getPort(),
             'driver' => 'pdo_mysql',
 			'charset' => $config->getCharset()

@@ -43,7 +43,7 @@ class BinLogServerInfo
         }
 
         //connection_id 4 bytes
-        self::$serverInfo['connection_id'] = $pack[$i] . $pack[++$i] . $pack[++$i] . $pack[++$i];
+        self::$serverInfo['connection_id'] = unpack('I', $pack[$i] . $pack[++$i] . $pack[++$i] . $pack[++$i])[1];
         $i++;
 
         //auth_plugin_data_part_1
