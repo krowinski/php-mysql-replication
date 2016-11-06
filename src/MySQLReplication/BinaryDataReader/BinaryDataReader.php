@@ -183,7 +183,7 @@ class BinaryDataReader
     public function readInt64()
     {
         $data = unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
-        return bcadd($data[1], ($data[2] << 32));
+        return bcadd($data[1], $data[2] << 32);
     }
 
     /**
@@ -424,15 +424,6 @@ class BinaryDataReader
      */
     public static function pack64bit($value)
     {
-        return pack('C8',
-            ($value >>  0) & 0xFF,
-            ($value >>  8) & 0xFF,
-            ($value >> 16) & 0xFF,
-            ($value >> 24) & 0xFF,
-            ($value >> 32) & 0xFF,
-            ($value >> 40) & 0xFF,
-            ($value >> 48) & 0xFF,
-            ($value >> 56) & 0xFF
-        );
+        return pack('C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF, ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF);
     }
 }
