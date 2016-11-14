@@ -14,6 +14,8 @@ use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\Exception\EventException;
 use MySQLReplication\Exception\MySQLReplicationException;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFormatter;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderService;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
@@ -393,6 +395,13 @@ class RowEvent extends EventCommon
             elseif ($column['type'] === ConstFieldType::GEOMETRY)
             {
                 $values[$name] = $this->binaryDataReader->readLengthCodedPascalString($column['length_size']);
+            }
+            elseif ($column['type'] === ConstFieldType::JSON)
+            {
+                $values[$name] = (new JsonBinaryDecoderService(
+                    new BinaryDataReader($this->getString(4, $column)),
+                    new JsonBinaryDecoderFormatter())
+                )->parseToString();
             }
             else
             {

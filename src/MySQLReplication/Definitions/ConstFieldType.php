@@ -28,6 +28,7 @@ class ConstFieldType
     const TIMESTAMP2 = 17;
     const DATETIME2 = 18;
     const TIME2 = 19;
+    const JSON = 245;
     const NEWDECIMAL = 246;
     const ENUM = 247;
     const SET = 248;
