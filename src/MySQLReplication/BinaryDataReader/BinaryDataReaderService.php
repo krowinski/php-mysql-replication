@@ -9,7 +9,7 @@ namespace MySQLReplication\BinaryDataReader;
 class BinaryDataReaderService
 {
     /**
-     * @param $binaryData
+     * @param string $binaryData
      * @return BinaryDataReader
      */
     public function makePackageFromBinaryData($binaryData)

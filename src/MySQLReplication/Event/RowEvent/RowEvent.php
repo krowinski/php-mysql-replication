@@ -14,6 +14,7 @@ use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\Exception\EventException;
 use MySQLReplication\Exception\MySQLReplicationException;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFormatter;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderService;
 use MySQLReplication\Repository\MySQLRepository;
@@ -62,6 +63,10 @@ class RowEvent extends EventCommon
      * @var TableMap
      */
     private $currentTableMap;
+    /**
+     * @var JsonBinaryDecoderFactory
+     */
+    private $jsonBinaryDecoderFactory;
 
     /**
      * RowEvent constructor.
@@ -69,18 +74,21 @@ class RowEvent extends EventCommon
      * @param MySQLRepository $MySQLRepository
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
+     * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      */
     public function __construct(
         Config $config,
         MySQLRepository $MySQLRepository,
         BinaryDataReader $binaryDataReader,
-        EventInfo $eventInfo
+        EventInfo $eventInfo,
+        JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
     )
     {
         parent::__construct($eventInfo, $binaryDataReader);
 
         $this->MySQLRepository = $MySQLRepository;
         $this->config = $config;
+        $this->jsonBinaryDecoderFactory = $jsonBinaryDecoderFactory;
     }
 
     /**
@@ -398,10 +406,7 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] === ConstFieldType::JSON)
             {
-                $values[$name] = (new JsonBinaryDecoderService(
-                    new BinaryDataReader($this->getString(4, $column)),
-                    new JsonBinaryDecoderFormatter())
-                )->parseToString();
+                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder($this->getString(BinaryDataReader::UNSIGNED_INT32_LENGTH, $column))->parseToString();
             }
             else
             {

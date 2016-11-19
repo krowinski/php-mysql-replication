@@ -16,6 +16,8 @@ use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\Event\RowEvent\RowEventService;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidService;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderService;
 use MySQLReplication\Repository\MySQLRepository;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -80,12 +82,22 @@ class MySQLReplicationFactory
         $this->binLogAuth = new BinLogAuth();
         $this->MySQLRepository = new MySQLRepository($this->connection);
         $this->GtiService = new GtidService();
+
         $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtiService);
         $this->binLogConnect->connectToStream();
+
+        $this->jsonBinaryDecoderFactory = new JsonBinaryDecoderFactory();
         $this->binaryDataReaderService = new BinaryDataReaderService();
-        $this->rowEventService = new RowEventService($config, $this->MySQLRepository);
+        $this->rowEventService = new RowEventService($config, $this->MySQLRepository, $this->jsonBinaryDecoderFactory);
         $this->eventDispatcher = new EventDispatcher();
-        $this->event = new Event($config, $this->binLogConnect, $this->binaryDataReaderService, $this->rowEventService, $this->eventDispatcher);
+
+        $this->event = new Event(
+            $config,
+            $this->binLogConnect,
+            $this->binaryDataReaderService,
+            $this->rowEventService,
+            $this->eventDispatcher
+        );
     }
 
     /**

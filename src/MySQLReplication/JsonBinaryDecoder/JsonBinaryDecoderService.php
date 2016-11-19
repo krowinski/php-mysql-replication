@@ -44,7 +44,6 @@ class JsonBinaryDecoderService
     public function __construct(BinaryDataReader $binaryDataReader, JsonBinaryDecoderFormatter $jsonBinaryDecoderFormatter)
     {
         $this->binaryDataReader = $binaryDataReader;
-
         $this->jsonBinaryDecoderFormatter = $jsonBinaryDecoderFormatter;
     }
 
@@ -56,8 +55,6 @@ class JsonBinaryDecoderService
     public function parseToString()
     {
         $this->parseJson($this->binaryDataReader->readUInt8());
-
-        echo $this->jsonBinaryDecoderFormatter->getJsonString() . PHP_EOL;
 
         return $this->jsonBinaryDecoderFormatter->getJsonString();
     }

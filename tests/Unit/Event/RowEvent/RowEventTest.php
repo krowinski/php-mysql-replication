@@ -7,6 +7,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\RowEvent;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\MySQLRepository;
 use Unit\BaseTest;
 
@@ -36,6 +37,10 @@ class RowEventTest extends BaseTest
      * @var Config|\PHPUnit_Framework_MockObject_MockObject
      */
     private $config;
+    /**
+     * @var JsonBinaryDecoderFactory
+     */
+    private $jsonBinaryDecoderFactory;
 
     public function setUp()
     {
@@ -45,12 +50,14 @@ class RowEventTest extends BaseTest
         $this->mySQLRepository = $this->getMockBuilder(MySQLRepository::class)->disableOriginalConstructor()->getMock();
         $this->binaryDataReader = $this->getMockBuilder(BinaryDataReader::class)->disableOriginalConstructor()->getMock();
         $this->eventInfo = $this->getMockBuilder(EventInfo::class)->disableOriginalConstructor()->getMock();
+        $this->jsonBinaryDecoderFactory = $this->getMockBuilder(JsonBinaryDecoderFactory::class)->disableOriginalConstructor()->getMock();
 
         $this->rowEvent = new RowEvent(
             $this->config,
             $this->mySQLRepository,
             $this->binaryDataReader,
-            $this->eventInfo
+            $this->eventInfo,
+            $this->jsonBinaryDecoderFactory
         );
     }
 
