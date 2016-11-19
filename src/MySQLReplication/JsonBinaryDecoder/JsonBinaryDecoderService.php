@@ -9,6 +9,8 @@ use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
 /**
  * Class JsonBinaryDecoderService
  * @package MySQLReplication\JsonBinaryDecoder
+ * @see https://github.com/mysql/mysql-server/blob/5.7/sql/json_binary.cc
+ * @see https://github.com/shyiko/mysql-binlog-connector-java/blob/master/src/main/java/com/github/shyiko/mysql/binlog/event/deserialization/json/JsonBinary.java
  */
 class JsonBinaryDecoderService
 {
@@ -65,8 +67,9 @@ class JsonBinaryDecoderService
      */
     private function readVariableInt()
     {
+        $length = $this->binaryDataReader->getBinaryDataLength();
         $len = 0;
-        for ($i = 0; $i < $this->binaryDataReader->getBinaryDataLength(); $i++)
+        for ($i = 0; $i < $length; $i++)
         {
             $size = $this->binaryDataReader->readUInt8();
             // Get the next 7 bits of the length.
@@ -74,8 +77,6 @@ class JsonBinaryDecoderService
             if (($size & 128) === 0)
             {
                 // This was the last byte. Return successfully.
-                // $num = $i + 1;
-                //$len;
                 return $len;
             }
         }

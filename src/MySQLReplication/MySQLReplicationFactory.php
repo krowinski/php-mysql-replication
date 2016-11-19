@@ -17,7 +17,6 @@ use MySQLReplication\Event\RowEvent\RowEventService;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidService;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
-use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderService;
 use MySQLReplication\Repository\MySQLRepository;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -77,7 +76,7 @@ class MySQLReplicationFactory
             'host' => $config->getHost(),
             'port' => $config->getPort(),
             'driver' => 'pdo_mysql',
-			'charset' => $config->getCharset()
+            'charset' => $config->getCharset()
         ]);
         $this->binLogAuth = new BinLogAuth();
         $this->MySQLRepository = new MySQLRepository($this->connection);
