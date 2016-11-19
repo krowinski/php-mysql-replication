@@ -426,4 +426,20 @@ class BinaryDataReader
     {
         return pack('C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF, ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF);
     }
+
+    /**
+     * @return int
+     */
+    public function getBinaryDataLength()
+    {
+        return strlen($this->binaryData);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBinaryData()
+    {
+        return $this->binaryData;
+    }
 }

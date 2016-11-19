@@ -7,10 +7,6 @@ namespace MySQLReplication\JsonBinaryDecoder;
  * Class JsonBinaryDecoderFormatter
  * @package MySQLReplication\JsonBinaryDecoder
  */
-/**
- * Class JsonBinaryDecoderFormatter
- * @package MySQLReplication\JsonBinaryDecoder
- */
 class JsonBinaryDecoderFormatter
 {
     /**
@@ -57,9 +53,6 @@ class JsonBinaryDecoderFormatter
         $this->jsonString .= ']';
     }
 
-    /**
-     *
-     */
     public function formatBeginObject()
     {
         $this->jsonString .= '{';
