@@ -62,6 +62,10 @@ class MySQLReplicationFactory
      * @var RowEventService
      */
     private $rowEventService;
+    /**
+     * @var JsonBinaryDecoderFactory
+     */
+    private $jsonBinaryDecoderFactory;
 
     /**
      * @param Config $config

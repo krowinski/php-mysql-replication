@@ -129,7 +129,7 @@ class BinLogConnect
         $header = $this->readFromSocket(4);
         if (false === $header)
         {
-            return false;
+            return '';
         }
         $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
 
