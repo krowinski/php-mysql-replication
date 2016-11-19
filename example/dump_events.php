@@ -49,3 +49,4 @@ $binLogStream->registerSubscriber(new MyEventSubscribers());
 while (1) {
     $binLogStream->binLogEvent();
 }
+

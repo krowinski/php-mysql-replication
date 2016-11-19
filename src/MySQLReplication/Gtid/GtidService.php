@@ -9,6 +9,11 @@ namespace MySQLReplication\Gtid;
 class GtidService
 {
     /**
+     * @var GtidCollection
+     */
+    private $GtidCollection;
+
+    /**
      * GtidSet constructor.
      */
     public function __construct()
