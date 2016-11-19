@@ -8,6 +8,9 @@ namespace MySQLReplication\BinaryDataReader;
  */
 class BinaryDataReaderBuilder
 {
+    /**
+     * @var string
+     */
     private $binaryData = '';
 
     /**
@@ -18,6 +21,9 @@ class BinaryDataReaderBuilder
         $this->binaryData = $binaryData;
     }
 
+    /**
+     * @return BinaryDataReader
+     */
     public function build()
     {
         return new BinaryDataReader(

@@ -36,6 +36,10 @@ class BinLogConnect
      */
     private $packAuth;
     /**
+     * @var GtidService
+     */
+    private $gtidService;
+    /**
      * http://dev.mysql.com/doc/internals/en/auth-phase-fast-path.html 00 FE
      * @var array
      */
@@ -96,7 +100,7 @@ class BinLogConnect
         socket_set_block($this->socket);
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
 
-        if (false === socket_connect($this->socket, $this->config->getIp(), $this->config->getPort()))
+        if (false === socket_connect($this->socket, $this->config->getHost(), $this->config->getPort()))
         {
             throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
         }
@@ -125,7 +129,7 @@ class BinLogConnect
         $header = $this->readFromSocket(4);
         if (false === $header)
         {
-            return false;
+            return '';
         }
         $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
 
@@ -310,7 +314,7 @@ class BinLogConnect
             $this->execute('SET @slave_gtid_ignore_duplicates = 0');
         }
 
-        if ('' === $binFilePos || '' === $binFileName)
+        if (0 === $binFilePos || '' === $binFileName)
         {
             $master = $this->mySQLRepository->getMasterStatus();
             $binFilePos = $master['Position'];

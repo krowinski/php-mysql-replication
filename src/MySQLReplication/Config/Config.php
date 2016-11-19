@@ -17,7 +17,7 @@ class Config
     /**
      * @var string
      */
-    private $ip;
+    private $host;
     /**
      * @var int
      */
@@ -74,7 +74,7 @@ class Config
     /**
      * Config constructor.
      * @param string $user
-     * @param string $ip
+     * @param string $host
      * @param int $port
      * @param string $password
      * @param string $dbName
@@ -91,7 +91,7 @@ class Config
      */
     public function __construct(
         $user,
-        $ip,
+        $host,
         $port,
         $password,
         $dbName,
@@ -107,7 +107,7 @@ class Config
         array $databasesOnly
     ) {
         $this->user = $user;
-        $this->ip = $ip;
+        $this->host = $host;
         $this->port = $port;
         $this->password = $password;
         $this->dbName = $dbName;
@@ -132,9 +132,13 @@ class Config
         {
             throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
         }
-        if (!empty($this->ip) && false === filter_var($this->ip, FILTER_VALIDATE_IP))
+        if (!empty($this->host))
         {
-            throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
+            $ip = gethostbyname($this->host);
+            if (false === filter_var($ip, FILTER_VALIDATE_IP))
+            {
+                throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
+            }
         }
         if (!empty($this->port) && false === filter_var($this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
         {
@@ -191,9 +195,9 @@ class Config
     /**
      * @return string
      */
-    public function getIp()
+    public function getHost()
     {
-        return $this->ip;
+        return $this->host;
     }
 
     /**
@@ -299,5 +303,4 @@ class Config
     {
         return $this->databasesOnly;
     }
-
 }

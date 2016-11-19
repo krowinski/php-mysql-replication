@@ -16,6 +16,7 @@ use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\Event\RowEvent\RowEventService;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidService;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\MySQLRepository;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -57,6 +58,14 @@ class MySQLReplicationFactory
      * @var GtidService
      */
     private $GtiService;
+    /**
+     * @var RowEventService
+     */
+    private $rowEventService;
+    /**
+     * @var JsonBinaryDecoderFactory
+     */
+    private $jsonBinaryDecoderFactory;
 
     /**
      * @param Config $config
@@ -72,20 +81,30 @@ class MySQLReplicationFactory
         $this->connection = DriverManager::getConnection([
             'user' => $config->getUser(),
             'password' => $config->getPassword(),
-            'host' => $config->getIp(),
+            'host' => $config->getHost(),
             'port' => $config->getPort(),
             'driver' => 'pdo_mysql',
-			'charset' => $config->getCharset()
+            'charset' => $config->getCharset()
         ]);
         $this->binLogAuth = new BinLogAuth();
         $this->MySQLRepository = new MySQLRepository($this->connection);
         $this->GtiService = new GtidService();
+
         $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtiService);
         $this->binLogConnect->connectToStream();
+
+        $this->jsonBinaryDecoderFactory = new JsonBinaryDecoderFactory();
         $this->binaryDataReaderService = new BinaryDataReaderService();
-        $this->rowEventService = new RowEventService($config, $this->MySQLRepository);
+        $this->rowEventService = new RowEventService($config, $this->MySQLRepository, $this->jsonBinaryDecoderFactory);
         $this->eventDispatcher = new EventDispatcher();
-        $this->event = new Event($config, $this->binLogConnect, $this->binaryDataReaderService, $this->rowEventService, $this->eventDispatcher);
+
+        $this->event = new Event(
+            $config,
+            $this->binLogConnect,
+            $this->binaryDataReaderService,
+            $this->rowEventService,
+            $this->eventDispatcher
+        );
     }
 
     /**

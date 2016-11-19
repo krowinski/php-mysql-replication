@@ -2,10 +2,10 @@
 
 namespace Integration;
 
+use MySQLReplication\Config\ConfigService;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\MySQLReplicationFactory;
-use MySQLReplication\Config\ConfigService;
 
 /**
  * Class BenchmarkEventSubscribers
@@ -73,6 +73,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $this->conn->exec('DROP DATABASE IF EXISTS ' . $this->database);
         $this->conn->exec('CREATE DATABASE ' . $this->database);
         $this->conn->exec('USE ' . $this->database);
+        $this->conn->exec('SET SESSION sql_mode = \'\';');
     }
 
     /**
@@ -572,7 +573,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeYear()
     {
-        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR(2))";
+        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR)";
         $insert_query = "INSERT INTO test VALUES(1984, 1984)";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
@@ -811,5 +812,88 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         $this->assertEquals($string, $event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeJson()
+    {
+        if (false === strpos($this->conn->fetchColumn('SELECT VERSION()'), '5.7'))
+        {
+            $this->markTestIncomplete('Only for mysql 5.7');
+        }
+
+        $create_query = "create table t1 (i INT, j JSON)";
+        $insert_query = "INSERT INTO t1 VALUES 
+            (0, NULL) , 
+            (1, '{\"a\": 2}'),
+            (2, '[1,2]'),
+            (3, '{\"a\":\"b\", \"c\":\"d\",\"ab\":\"abc\", \"bc\": [\"x\", \"y\"]}'),
+            (4, '[\"here\", [\"I\", \"am\"], \"!!!\"]'),
+            (5, '\"scalar string\"'),
+            (6, 'true'),
+            (7, 'false'),
+            (8, 'null'),
+            (9, '-1'),
+            (10, CAST(CAST(1 AS UNSIGNED) AS JSON)),
+            (11, '32767'),
+            (12, '32768'),
+            (13, '-32768'),
+            (14, '-32769'),
+            (15, '2147483647'),
+            (16, '2147483648'),
+            (17, '-2147483648'),
+            (18, '-2147483649'),
+            (19, '18446744073709551615'),
+            (20, '18446744073709551616'),
+            (21, '3.14'),
+            (22, '{}'),
+            (23, '[]'),
+            -- (24, CAST(CAST('2015-01-15 23:24:25' AS DATETIME) AS JSON)),
+            -- (25, CAST(CAST('23:24:25' AS TIME) AS JSON)),
+            -- (125, CAST(CAST('23:24:25.12' AS TIME(3)) AS JSON)),
+            -- (225, CAST(CAST('23:24:25.0237' AS TIME(3)) AS JSON)),
+            -- (26, CAST(CAST('2015-01-15' AS DATE) AS JSON)),
+            -- (27, CAST(TIMESTAMP'2015-01-15 23:24:25' AS JSON)),
+            -- (127, CAST(TIMESTAMP'2015-01-15 23:24:25.12' AS JSON)),
+            -- (227, CAST(TIMESTAMP'2015-01-15 23:24:25.0237' AS JSON)),
+            -- (327, CAST(UNIX_TIMESTAMP('2015-01-15 23:24:25') AS JSON)),
+            -- (28, CAST(ST_GeomFromText('POINT(1 1)') AS JSON)),
+            (29, CAST('[]' AS CHAR CHARACTER SET 'ascii')),
+            -- (30, CAST(x'cafe' AS JSON)),
+            -- (31, CAST(x'cafebabe' AS JSON)),
+            (100, CONCAT('{\"', REPEAT('a', 64 * 1024 - 1), '\":123}'))
+        ";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        $results = $event->getValues();
+
+        $this->assertEquals($results[0]['j'], null);
+        $this->assertEquals($results[1]['j'], '{"a":2}');
+        $this->assertEquals($results[2]['j'], '[1,2]');
+        $this->assertEquals($results[3]['j'], '{"a":"b","c":"d","ab":"abc","bc":["x","y"]}');
+        $this->assertEquals($results[4]['j'], '["here",["I","am"],"!!!"]');
+        $this->assertEquals($results[5]['j'], '"scalar string"');
+        $this->assertEquals($results[6]['j'], 'true');
+        $this->assertEquals($results[7]['j'], 'false');
+        $this->assertEquals($results[8]['j'], '"null"');
+        $this->assertEquals($results[9]['j'], '"-1"');
+        $this->assertEquals($results[10]['j'], '"1"');
+        $this->assertEquals($results[11]['j'], '"32767"');
+        $this->assertEquals($results[12]['j'], '"32768"');
+        $this->assertEquals($results[13]['j'], '"-32768"');
+        $this->assertEquals($results[14]['j'], '"-32769"');
+        $this->assertEquals($results[15]['j'], '"2147483647"');
+        $this->assertEquals($results[16]['j'], '"2147483648"');
+        $this->assertEquals($results[17]['j'], '"-2147483648"');
+        $this->assertEquals($results[18]['j'], '"-2147483649"');
+        $this->assertEquals($results[19]['j'], '"18446744073709551615"');
+        $this->assertEquals($results[20]['j'], '"1.844674407371E+19"');
+        $this->assertEquals($results[21]['j'], '"3.14"');
+        $this->assertEquals($results[22]['j'], '{}');
+        $this->assertEquals($results[23]['j'], '[]');
+        $this->assertEquals($results[24]['j'], '[]');
     }
 }

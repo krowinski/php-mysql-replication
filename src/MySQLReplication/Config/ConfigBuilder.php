@@ -47,7 +47,7 @@ class ConfigBuilder
     /**
      * @var int
      */
-    private $binLogPosition = '';
+    private $binLogPosition = 0;
     /**
      * @var array
      */
@@ -68,6 +68,171 @@ class ConfigBuilder
      * @var string
      */
     private $mariaDbGtid;
+
+    /**
+     * @param string $user
+     * @return ConfigBuilder
+     */
+    public function withUser($user)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @param string $host
+     * @return ConfigBuilder
+     */
+    public function withHost($host)
+    {
+        $this->host = $host;
+
+        return $this;
+    }
+
+    /**
+     * @param int $port
+     * @return ConfigBuilder
+     */
+    public function withPort($port)
+    {
+        $this->port = $port;
+
+        return $this;
+    }
+
+    /**
+     * @param string $password
+     * @return ConfigBuilder
+     */
+    public function withPassword($password)
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @param string $dbName
+     * @return ConfigBuilder
+     */
+    public function withDbName($dbName)
+    {
+        $this->dbName = $dbName;
+
+        return $this;
+    }
+
+    /**
+     * @param string $charset
+     * @return ConfigBuilder
+     */
+    public function withCharset($charset)
+    {
+        $this->charset = $charset;
+
+        return $this;
+    }
+
+    /**
+     * @param string $gtid
+     * @return ConfigBuilder
+     */
+    public function withGtid($gtid)
+    {
+        $this->gtid = $gtid;
+
+        return $this;
+    }
+
+    /**
+     * @param int $slaveId
+     * @return ConfigBuilder
+     */
+    public function withSlaveId($slaveId)
+    {
+        $this->slaveId = $slaveId;
+
+        return $this;
+    }
+
+    /**
+     * @param string $binLogFileName
+     * @return ConfigBuilder
+     */
+    public function withBinLogFileName($binLogFileName)
+    {
+        $this->binLogFileName = $binLogFileName;
+
+        return $this;
+    }
+
+    /**
+     * @param int $binLogPosition
+     * @return ConfigBuilder
+     */
+    public function withBinLogPosition($binLogPosition)
+    {
+        $this->binLogPosition = $binLogPosition;
+
+        return $this;
+    }
+
+    /**
+     * @param array $eventsOnly
+     * @return ConfigBuilder
+     */
+    public function withEventsOnly($eventsOnly)
+    {
+        $this->eventsOnly = $eventsOnly;
+
+        return $this;
+    }
+
+    /**
+     * @param array $eventsIgnore
+     * @return ConfigBuilder
+     */
+    public function withEventsIgnore(array $eventsIgnore)
+    {
+        $this->eventsIgnore = $eventsIgnore;
+
+        return $this;
+    }
+
+    /**
+     * @param array $tablesOnly
+     * @return ConfigBuilder
+     */
+    public function withTablesOnly(array $tablesOnly)
+    {
+        $this->tablesOnly = $tablesOnly;
+
+        return $this;
+    }
+
+    /**
+     * @param array $databasesOnly
+     * @return ConfigBuilder
+     */
+    public function withDatabasesOnly(array $databasesOnly)
+    {
+        $this->databasesOnly = $databasesOnly;
+
+        return $this;
+    }
+
+    /**
+     * @param string $mariaDbGtid
+     * @return ConfigBuilder
+     */
+    public function withMariaDbGtid($mariaDbGtid)
+    {
+        $this->mariaDbGtid = $mariaDbGtid;
+
+        return $this;
+    }
 
     /**
      * @return Config
@@ -92,123 +257,5 @@ class ConfigBuilder
             $this->databasesOnly
         );
     }
-    /**
-     * @param string $user
-     */
-    public function withUser($user)
-    {
-        $this->user = $user;
-    }
 
-    /**
-     * @param string $host
-     */
-    public function withHost($host)
-    {
-        $this->host = $host;
-    }
-
-    /**
-     * @param int $port
-     */
-    public function withPort($port)
-    {
-        $this->port = $port;
-    }
-
-    /**
-     * @param string $password
-     */
-    public function withPassword($password)
-    {
-        $this->password = $password;
-    }
-
-    /**
-     * @param string $dbName
-     */
-    public function withDbName($dbName)
-    {
-        $this->dbName = $dbName;
-    }
-
-    /**
-     * @param string $charset
-     */
-    public function withCharset($charset)
-    {
-        $this->charset = $charset;
-    }
-
-    /**
-     * @param string $gtid
-     */
-    public function withGtid($gtid)
-    {
-        $this->gtid = $gtid;
-    }
-
-    /**
-     * @param int $slaveId
-     */
-    public function withSlaveId($slaveId)
-    {
-        $this->slaveId = $slaveId;
-    }
-
-    /**
-     * @param string $binLogFileName
-     */
-    public function withBinLogFileName($binLogFileName)
-    {
-        $this->binLogFileName = $binLogFileName;
-    }
-
-    /**
-     * @param int $binLogPosition
-     */
-    public function withBinLogPosition($binLogPosition)
-    {
-        $this->binLogPosition = $binLogPosition;
-    }
-
-    /**
-     * @param array $eventsOnly
-     */
-    public function withEventsOnly(array $eventsOnly)
-    {
-        $this->eventsOnly = $eventsOnly;
-    }
-
-    /**
-     * @param array $eventsIgnore
-     */
-    public function withEventsIgnore(array $eventsIgnore)
-    {
-        $this->eventsIgnore = $eventsIgnore;
-    }
-
-    /**
-     * @param array $tablesOnly
-     */
-    public function withTablesOnly(array $tablesOnly)
-    {
-        $this->tablesOnly = $tablesOnly;
-    }
-
-    /**
-     * @param array $databasesOnly
-     */
-    public function withDatabasesOnly(array $databasesOnly)
-    {
-        $this->databasesOnly = $databasesOnly;
-    }
-
-    /**
-     * @param string $mariaDbGtid
-     */
-    public function withMariaDbGtid($mariaDbGtid)
-    {
-        $this->mariaDbGtid = $mariaDbGtid;
-    }
 }
