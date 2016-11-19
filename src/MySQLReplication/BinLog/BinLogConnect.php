@@ -36,6 +36,10 @@ class BinLogConnect
      */
     private $packAuth;
     /**
+     * @var GtidService
+     */
+    private $gtidService;
+    /**
      * http://dev.mysql.com/doc/internals/en/auth-phase-fast-path.html 00 FE
      * @var array
      */
@@ -310,7 +314,7 @@ class BinLogConnect
             $this->execute('SET @slave_gtid_ignore_duplicates = 0');
         }
 
-        if ('' === $binFilePos || '' === $binFileName)
+        if (0 === $binFilePos || '' === $binFileName)
         {
             $master = $this->mySQLRepository->getMasterStatus();
             $binFilePos = $master['Position'];

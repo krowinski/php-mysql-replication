@@ -58,6 +58,10 @@ class MySQLReplicationFactory
      * @var GtidService
      */
     private $GtiService;
+    /**
+     * @var RowEventService
+     */
+    private $rowEventService;
 
     /**
      * @param Config $config

@@ -15,6 +15,11 @@ use MySQLReplication\Repository\MySQLRepository;
 class RowEventService
 {
     /**
+     * @var RowEventBuilder
+     */
+    private $rowEventBuilder;
+
+    /**
      * RowEventService constructor.
      * @param Config $config
      * @param MySQLRepository $mySQLRepository

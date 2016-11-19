@@ -47,7 +47,7 @@ class ConfigBuilder
     /**
      * @var int
      */
-    private $binLogPosition = '';
+    private $binLogPosition = 0;
     /**
      * @var array
      */
