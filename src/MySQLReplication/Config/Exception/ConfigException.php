@@ -32,4 +32,6 @@ class ConfigException extends MySQLReplicationException
     const BIN_LOG_FILE_POSITION_ERROR_CODE = 10;
     const MARIADBGTID_ERROR_MESSAGE = 'Maria gtid must be string';
     const MARIADBGTID_ERROR_CODE = 11;
+    const TABLE_CACHE_SIZE_ERROR_MESSAGE = 'Table cache must be integer';
+    const TABLE_CACHE_SIZE_ERROR_CODE = 12;
 }
