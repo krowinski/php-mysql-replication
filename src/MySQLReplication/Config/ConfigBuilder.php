@@ -68,6 +68,10 @@ class ConfigBuilder
      * @var string
      */
     private $mariaDbGtid;
+    /**
+     * @var int
+     */
+    private $tableCacheSize = 128;
 
     /**
      * @param string $user
@@ -235,6 +239,14 @@ class ConfigBuilder
     }
 
     /**
+     * @param int $tableCacheSize
+     */
+    public function withTableCacheSize($tableCacheSize)
+    {
+        $this->tableCacheSize = $tableCacheSize;
+    }
+
+    /**
      * @return Config
      */
     public function build()
@@ -254,8 +266,8 @@ class ConfigBuilder
             $this->eventsOnly,
             $this->eventsIgnore,
             $this->tablesOnly,
-            $this->databasesOnly
+            $this->databasesOnly,
+            $this->tableCacheSize
         );
     }
-
 }

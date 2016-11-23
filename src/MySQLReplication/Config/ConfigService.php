@@ -77,6 +77,10 @@ class ConfigService
             {
                 $configBuilder->withMariaDbGtid($v);
             }
+            if ('tableCacheSize' === $k)
+            {
+                $configBuilder->withTableCacheSize($v);
+            }
         }
 
         return $configBuilder->build();
