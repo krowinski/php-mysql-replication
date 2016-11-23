@@ -129,7 +129,7 @@ class RowEvent extends EventCommon
         // automatically clear table cache to save memory
         if (count(self::$tableMapCache) >= $this->config->getTableCacheSize())
         {
-            self::$tableMapCache = array_slice(self::$tableMapCache, $this->config->getTableCacheSize() / 2, null, true);
+            self::$tableMapCache = array_slice(self::$tableMapCache, ceil($this->config->getTableCacheSize() / 2), null, true);
         }
 
         // already in cache don't parse
