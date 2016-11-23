@@ -127,7 +127,7 @@ class RowEvent extends EventCommon
         $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
 
         // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) >= $this->config->getTableCacheSize())
+        if (count(self::$tableMapCache) > $this->config->getTableCacheSize())
         {
             self::$tableMapCache = array_slice(self::$tableMapCache, ceil($this->config->getTableCacheSize() / 2), null, true);
         }
