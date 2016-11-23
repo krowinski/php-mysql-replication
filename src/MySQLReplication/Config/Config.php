@@ -70,6 +70,10 @@ class Config
      * @var string
      */
     private $mariaDbGtid;
+    /**
+     * @var int
+     */
+    private $tableCacheSize;
 
     /**
      * Config constructor.
@@ -88,6 +92,7 @@ class Config
      * @param array $eventsIgnore
      * @param array $tablesOnly
      * @param array $databasesOnly
+     * @param int $tableCacheSize
      */
     public function __construct(
         $user,
@@ -104,7 +109,8 @@ class Config
         array $eventsOnly,
         array $eventsIgnore,
         array $tablesOnly,
-        array $databasesOnly
+        array $databasesOnly,
+        $tableCacheSize
     ) {
         $this->user = $user;
         $this->host = $host;
@@ -121,6 +127,7 @@ class Config
         $this->tablesOnly = $tablesOnly;
         $this->databasesOnly = $databasesOnly;
         $this->mariaDbGtid = $mariaGtid;
+        $this->tableCacheSize = $tableCacheSize;
     }
 
     /**
@@ -181,6 +188,10 @@ class Config
         if (!empty($this->mariaDbGtid) && false === is_string($this->mariaDbGtid))
         {
             throw new ConfigException(ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE);
+        }
+        if (false === filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
+        {
+            throw new ConfigException(ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE);
         }
     }
 
@@ -302,5 +313,13 @@ class Config
     public function getDatabasesOnly()
     {
         return $this->databasesOnly;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTableCacheSize()
+    {
+        return $this->tableCacheSize;
     }
 }

@@ -5,6 +5,7 @@ namespace MySQLReplication\Event\RowEvent;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
 use MySQLReplication\Config\Config;
+use MySQLReplication\Config\Exception\ConfigException;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstFieldType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
@@ -97,6 +98,7 @@ class RowEvent extends EventCommon
      *
      * @return TableMapDTO
      * @throws BinaryDataReaderException
+     * @throws ConfigException
      */
     public function makeTableMapDTO()
     {
@@ -125,9 +127,9 @@ class RowEvent extends EventCommon
         $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
 
         // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) >= 128)
+        if (count(self::$tableMapCache) > $this->config->getTableCacheSize())
         {
-            self::$tableMapCache = array_slice(self::$tableMapCache, 64, -1, true);
+            self::$tableMapCache = array_slice(self::$tableMapCache, ceil($this->config->getTableCacheSize() / 2), null, true);
         }
 
         // already in cache don't parse
@@ -443,7 +445,9 @@ class RowEvent extends EventCommon
             }
             elseif ($column['type'] === ConstFieldType::JSON)
             {
-                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder($this->getString(BinaryDataReader::UNSIGNED_INT32_LENGTH, $column))->parseToString();
+                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder(
+                    $this->binaryDataReader->readLengthCodedPascalString($column['length_size'])
+                )->parseToString();
             }
             else
             {
