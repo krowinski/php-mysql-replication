@@ -93,19 +93,19 @@ class JsonBinaryDecoderService
     {
         if (self::SMALL_OBJECT === $type)
         {
-            $this->parseObject();
+            $this->parseObject(BinaryDataReader::UNSIGNED_SHORT_LENGTH);
         }
         else if (self::LARGE_OBJECT === $type)
         {
-            //TODO
+            $this->parseObject(BinaryDataReader::UNSIGNED_INT32_LENGTH);
         }
         else if (self::SMALL_ARRAY === $type)
         {
-            $this->parseArray();
+            $this->parseArray(BinaryDataReader::UNSIGNED_SHORT_LENGTH);
         }
         else if (self::LARGE_ARRAY === $type)
         {
-            //TODO
+            $this->parseObject(BinaryDataReader::UNSIGNED_INT32_LENGTH);
         }
         else
         {
@@ -113,23 +113,23 @@ class JsonBinaryDecoderService
         }
     }
 
-    private function parseObject()
+    private function parseObject($intSize)
     {
-        $elementCount = $this->binaryDataReader->readUInt16();
-        $size = $this->binaryDataReader->readUInt16();
+        $elementCount = $this->binaryDataReader->readUIntBySize($intSize);
+        $size = $this->binaryDataReader->readUIntBySize($intSize);
 
         // Read each key-entry, consisting of the offset and length of each key ...
         $keyLengths = [];
         for ($i = 0; $i !== $elementCount; ++$i)
         {
-            $this->binaryDataReader->readUInt16(); // $keyOffset unused
+            $this->binaryDataReader->readUIntBySize($intSize); // $keyOffset unused
             $keyLengths[$i] = $this->binaryDataReader->readUInt16();
         }
 
         $entries = [];
         for ($i = 0; $i !== $elementCount; ++$i)
         {
-            $entries[$i] = $this->parseValueType($size);
+            $entries[$i] = $this->parseValueType($size, $intSize);
         }
 
         // Read each key ...
@@ -159,11 +159,12 @@ class JsonBinaryDecoderService
 
     /**
      * @param int $numBytes
+     * @param int $intSize
      * @return JsonBinaryDecoderValue
      * @throws BinaryDataReaderException
      * @throws \LengthException
      */
-    private function parseValueType($numBytes)
+    private function parseValueType($numBytes, $intSize)
     {
         $type = $this->binaryDataReader->readInt8();
 
@@ -191,25 +192,28 @@ class JsonBinaryDecoderService
                 $type
             );
         }
-        else if (self::INT32 === $type)
+        else if (BinaryDataReader::UNSIGNED_INT32_LENGTH === $intSize)
         {
-            return new JsonBinaryDecoderValue(
-                true,
-                $this->binaryDataReader->readInt32(),
-                $type
-            );
-        }
-        else if (self::UINT32 === $type)
-        {
-            return new JsonBinaryDecoderValue(
-                true,
-                $this->binaryDataReader->readUInt32(),
-                $type
-            );
+            if (self::INT32 === $type)
+            {
+                return new JsonBinaryDecoderValue(
+                    true,
+                    $this->binaryDataReader->readInt32(),
+                    $type
+                );
+            }
+            else if (self::UINT32 === $type)
+            {
+                return new JsonBinaryDecoderValue(
+                    true,
+                    $this->binaryDataReader->readUInt32(),
+                    $type
+                );
+            }
         }
         else
         {
-            $offset = $this->binaryDataReader->readUInt16();
+            $offset = $this->binaryDataReader->readUIntBySize($intSize);
             if ($offset > $numBytes)
             {
                 throw new \LengthException(
@@ -277,7 +281,7 @@ class JsonBinaryDecoderService
         }
     }
 
-    private function parseArray()
+    private function parseArray($size)
     {
         $numElements = $this->binaryDataReader->readUInt16();
         $numBytes = $this->binaryDataReader->readUInt16();
@@ -285,7 +289,7 @@ class JsonBinaryDecoderService
         $entries = [];
         for ($i = 0; $i !== $numElements; ++$i)
         {
-            $entries[$i] = $this->parseValueType($numBytes);
+            $entries[$i] = $this->parseValueType($numBytes, $size);
         }
 
         $this->jsonBinaryDecoderFormatter->formatBeginArray();
