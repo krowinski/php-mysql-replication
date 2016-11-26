@@ -9,7 +9,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
 use MySQLReplication\BinLog\BinLogAuth;
 use MySQLReplication\BinLog\BinLogSocketConnect;
 use MySQLReplication\BinLog\Exception\BinLogException;
-use MySQLReplication\BinLog\SocketConnect;
+use MySQLReplication\BinLog\BinLogSocketConnectInterface;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\Exception\ConfigException;
 use MySQLReplication\Event\Event;
@@ -19,7 +19,7 @@ use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidService;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\MySQLRepository;
-use MySQLReplication\Repository\Repository;
+use MySQLReplication\Repository\RepositoryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
@@ -33,11 +33,11 @@ class MySQLReplicationFactory
      */
     private $eventDispatcher;
     /**
-     * @var Repository
+     * @var RepositoryInterface
      */
     private $repository;
     /**
-     * @var SocketConnect
+     * @var BinLogSocketConnectInterface
      */
     private $socketConnect;
     /**

@@ -8,13 +8,13 @@ use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Gtid\GtidService;
-use MySQLReplication\Repository\Repository;
+use MySQLReplication\Repository\RepositoryInterface;
 
 /**
  * Class BinLogSocketConnect
  * @package MySQLReplication\BinLog
  */
-class BinLogSocketConnect implements SocketConnect
+class BinLogSocketConnect implements BinLogSocketConnectInterface
 {
     /**
      * @var resource
@@ -25,7 +25,7 @@ class BinLogSocketConnect implements SocketConnect
      */
     private $checkSum = false;
     /**
-     * @var Repository
+     * @var RepositoryInterface
      */
     private $repository;
     /**
@@ -48,13 +48,13 @@ class BinLogSocketConnect implements SocketConnect
 
     /**
      * @param Config $config
-     * @param Repository $repository
+     * @param RepositoryInterface $repository
      * @param BinLogAuth $packAuth
      * @param GtidService $gtidService
      */
     public function __construct(
         Config $config,
-        Repository $repository,
+        RepositoryInterface $repository,
         BinLogAuth $packAuth,
         GtidService $gtidService
     ) {

@@ -5,7 +5,7 @@ namespace MySQLReplication\Repository;
  * Class MySQLRepository
  * @package MySQLReplication\Repository
  */
-interface Repository
+interface RepositoryInterface
 {
     /**
      * @param string $schema

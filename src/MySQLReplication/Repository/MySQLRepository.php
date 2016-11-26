@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
  * Class MySQLRepository
  * @package MySQLReplication\Repository
  */
-class MySQLRepository implements Repository
+class MySQLRepository implements RepositoryInterface
 {
     /**
      * @var Connection

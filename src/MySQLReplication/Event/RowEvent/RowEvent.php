@@ -18,7 +18,7 @@ use MySQLReplication\Event\Exception\EventException;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
-use MySQLReplication\Repository\Repository;
+use MySQLReplication\Repository\RepositoryInterface;
 
 /**
  * Class RowEvent
@@ -52,7 +52,7 @@ class RowEvent extends EventCommon
         4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
     ];
     /**
-     * @var Repository
+     * @var RepositoryInterface
      */
     private $repository;
     /**
@@ -71,14 +71,14 @@ class RowEvent extends EventCommon
     /**
      * RowEvent constructor.
      * @param Config $config
-     * @param Repository $repository
+     * @param RepositoryInterface $repository
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
      * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      */
     public function __construct(
         Config $config,
-        Repository $repository,
+        RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
         EventInfo $eventInfo,
         JsonBinaryDecoderFactory $jsonBinaryDecoderFactory

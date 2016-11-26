@@ -8,7 +8,7 @@ use MySQLReplication\BinLog\Exception\BinLogException;
  * Class SocketConnect
  * @package MySQLReplication\BinLog
  */
-interface SocketConnect
+interface BinLogSocketConnectInterface
 {
     /**
      * @return bool
