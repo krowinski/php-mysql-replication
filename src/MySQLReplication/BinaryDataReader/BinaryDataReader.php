@@ -145,7 +145,7 @@ class BinaryDataReader
     }
 
     /**
-     * @return int
+     * @return string
      */
     public function readUInt64()
     {

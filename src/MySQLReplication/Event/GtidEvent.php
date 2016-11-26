@@ -2,6 +2,7 @@
 
 namespace MySQLReplication\Event;
 
+use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
 use MySQLReplication\Event\DTO\GTIDLogDTO;
 
 /**
@@ -12,10 +13,11 @@ class GtidEvent extends EventCommon
 {
     /**
      * @return GTIDLogDTO
+     * @throws BinaryDataReaderException
      */
     public function makeGTIDLogDTO()
     {
-        $commit_flag = $this->binaryDataReader->readUInt8() == 1;
+        $commit_flag = 1 === $this->binaryDataReader->readUInt8();
         $sid = unpack('H*', $this->binaryDataReader->read(16))[1];
         $gno = $this->binaryDataReader->readUInt64();
 
