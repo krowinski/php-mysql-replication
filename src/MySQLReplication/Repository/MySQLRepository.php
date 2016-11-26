@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
  * Class MySQLRepository
  * @package MySQLReplication\Repository
  */
-class MySQLRepository
+class MySQLRepository implements Repository
 {
     /**
      * @var Connection
@@ -33,19 +33,29 @@ class MySQLRepository
     public function getFields($schema, $table)
     {
         $sql = '
-            SELECT
-                `COLUMN_NAME`,
-                `COLLATION_NAME`,
-                `CHARACTER_SET_NAME`,
-                `COLUMN_COMMENT`,
-                `COLUMN_TYPE`,
-                `COLUMN_KEY`
+             SELECT
+                c.`COLUMN_NAME`,
+                c.`COLLATION_NAME`,
+                c.`CHARACTER_SET_NAME`,
+                c.`COLUMN_COMMENT`,
+                c.`COLUMN_TYPE`,
+                c.`COLUMN_KEY`,
+                `kcu`.`REFERENCED_TABLE_NAME`,
+                `kcu`.`REFERENCED_COLUMN_NAME`
             FROM
-                `information_schema`.`columns`
-            WHERE
-                    `table_schema` = ?
+                `information_schema`.`COLUMNS`   c
+            LEFT JOIN
+                `information_schema`.KEY_COLUMN_USAGE kcu
+            ON
+                    c.`TABLE_SCHEMA` = kcu.`TABLE_SCHEMA`
                 AND
-                    `table_name` = ?
+                    c.`TABLE_NAME` = kcu.`TABLE_NAME`
+                AND
+                    c.`COLUMN_NAME` = kcu.`COLUMN_NAME`
+            WHERE
+                    c.`TABLE_SCHEMA` = ?
+                AND
+                    c.`TABLE_NAME` = ?
        ';
 
         return $this->getConnection()->fetchAll($sql, [$schema, $table]);

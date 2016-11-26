@@ -6,7 +6,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Config\Config;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
-use MySQLReplication\Repository\MySQLRepository;
+use MySQLReplication\Repository\Repository;
 
 /**
  * Class RowEventBuilder
@@ -19,9 +19,9 @@ class RowEventBuilder
      */
     private $package;
     /**
-     * @var MySQLRepository
+     * @var Repository
      */
-    private $MySQLRepository;
+    private $repository;
     /**
      * @var Config
      */
@@ -38,16 +38,16 @@ class RowEventBuilder
     /**
      * RowEventBuilder constructor.
      * @param Config $config
-     * @param MySQLRepository $MySQLRepository
+     * @param Repository $repository
      * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      */
     public function __construct(
         Config $config,
-        MySQLRepository $MySQLRepository,
+        Repository $repository,
         JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
     )
     {
-        $this->MySQLRepository = $MySQLRepository;
+        $this->repository = $repository;
         $this->config = $config;
         $this->jsonBinaryDecoderFactory = $jsonBinaryDecoderFactory;
     }
@@ -67,7 +67,7 @@ class RowEventBuilder
     {
         return new RowEvent(
             $this->config,
-            $this->MySQLRepository,
+            $this->repository,
             $this->package,
             $this->eventInfo,
             $this->jsonBinaryDecoderFactory

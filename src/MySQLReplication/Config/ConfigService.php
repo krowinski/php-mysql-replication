@@ -33,10 +33,6 @@ class ConfigService
             {
                 $configBuilder->withPassword($v);
             }
-            if ('dbName' === $k)
-            {
-                $configBuilder->withDbName($v);
-            }
             if ('charset' === $k)
             {
                 $configBuilder->withCharset($v);

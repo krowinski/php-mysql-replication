@@ -6,14 +6,15 @@ use MySQLReplication\BinLog\Exception\BinLogException;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
+use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Gtid\GtidService;
-use MySQLReplication\Repository\MySQLRepository;
+use MySQLReplication\Repository\Repository;
 
 /**
- * Class BinLogConnect
+ * Class BinLogSocketConnect
  * @package MySQLReplication\BinLog
  */
-class BinLogConnect
+class BinLogSocketConnect implements SocketConnect
 {
     /**
      * @var resource
@@ -24,9 +25,9 @@ class BinLogConnect
      */
     private $checkSum = false;
     /**
-     * @var MySQLRepository
+     * @var Repository
      */
-    private $mySQLRepository;
+    private $repository;
     /**
      * @var Config
      */
@@ -47,17 +48,17 @@ class BinLogConnect
 
     /**
      * @param Config $config
-     * @param MySQLRepository $mySQLRepository
+     * @param Repository $repository
      * @param BinLogAuth $packAuth
      * @param GtidService $gtidService
      */
     public function __construct(
         Config $config,
-        MySQLRepository $mySQLRepository,
+        Repository $repository,
         BinLogAuth $packAuth,
         GtidService $gtidService
     ) {
-        $this->mySQLRepository = $mySQLRepository;
+        $this->repository = $repository;
         $this->config = $config;
         $this->packAuth = $packAuth;
         $this->gtidService = $gtidService;
@@ -95,7 +96,7 @@ class BinLogConnect
     {
         if (false === ($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
         {
-            throw new BinLogException('Unable to create a socket:' . socket_strerror(socket_last_error()), socket_last_error());
+            throw new BinLogException(BinLogException::UNABLE_TO_CREATE_SOCKET. socket_strerror(socket_last_error()), socket_last_error());
         }
         socket_set_block($this->socket);
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
@@ -116,7 +117,7 @@ class BinLogConnect
     private function serverInfo()
     {
         BinLogServerInfo::parsePackage($this->getPacket(false));
-        BinLogServerInfo::parseVersion($this->mySQLRepository->getVersion());
+        BinLogServerInfo::parseVersion($this->repository->getVersion());
     }
 
     /**
@@ -143,8 +144,8 @@ class BinLogConnect
     }
 
     /**
-     * @param $length
-     * @return mixed
+     * @param int $length
+     * @return string
      * @throws BinLogException
      */
     private function readFromSocket($length)
@@ -158,14 +159,14 @@ class BinLogConnect
         // http://php.net/manual/pl/function.socket-recv.php#47182
         if (0 === $received)
         {
-            throw new BinLogException('Disconnected by remote side');
+            throw new BinLogException(BinLogException::DISCONNECTED_MESSAGE);
         }
 
         throw new BinLogException(socket_strerror(socket_last_error()), socket_last_error());
     }
 
     /**
-     * @param $packet
+     * @param string $packet
      * @return array
      * @throws BinLogException
      */
@@ -207,23 +208,24 @@ class BinLogConnect
     }
 
     /**
-     * @param $data
+     * @param string $data
      * @throws BinLogException
      */
     private function writeToSocket($data)
     {
         if (false === socket_write($this->socket, $data, strlen($data)))
         {
-            throw new BinLogException('Unable to write to socket: ' . socket_strerror(socket_last_error()), socket_last_error());
+            throw new BinLogException(BinLogException::UNABLE_TO_WRITE_SOCKET . socket_strerror(socket_last_error()), socket_last_error());
         }
     }
 
     /**
      * @throws BinLogException
+     * @throws GtidException
      */
     private function getBinlogStream()
     {
-        $this->checkSum = $this->mySQLRepository->isCheckSum();
+        $this->checkSum = $this->repository->isCheckSum();
         if (true === $this->checkSum)
         {
             $this->execute('SET @master_binlog_checksum=@@global.binlog_checksum');
@@ -260,14 +262,23 @@ class BinLogConnect
      */
     private function registerSlave()
     {
-        $prelude = pack('l', 18) . chr(ConstCommand::COM_REGISTER_SLAVE);
-        $prelude .= pack('I', $this->config->getSlaveId());
-        $prelude .= chr(0);
-        $prelude .= chr(0);
-        $prelude .= chr(0);
-        $prelude .= pack('s', '');
-        $prelude .= pack('I', 0);
-        $prelude .= pack('I', 0);
+        $host = gethostname();
+        $hostLength = strlen($host);
+        $userLength = strlen($this->config->getUser());
+        $passLength = strlen($this->config->getPassword());
+
+        $prelude = pack('l', 18 + $hostLength + $userLength + $passLength);
+        $prelude .= chr(ConstCommand::COM_REGISTER_SLAVE);
+        $prelude .= pack('V', $this->config->getSlaveId());
+        $prelude .= pack('C', $hostLength);
+        $prelude .= $host;
+        $prelude .= pack('C', $userLength);
+        $prelude .= $this->config->getUser();
+        $prelude .= pack('C', $passLength);
+        $prelude .= $this->config->getPassword();
+        $prelude .= pack('v', $this->config->getPort());
+        $prelude .= pack('V', 0);
+        $prelude .= pack('V', 0);
 
         $this->writeToSocket($prelude);
         $this->getPacket();
@@ -276,6 +287,7 @@ class BinLogConnect
     /**
      * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump-gtid.html
      * @throws BinLogException
+     * @throws GtidException
      */
     private function setBinLogDumpGtid()
     {
@@ -316,7 +328,7 @@ class BinLogConnect
 
         if (0 === $binFilePos || '' === $binFileName)
         {
-            $master = $this->mySQLRepository->getMasterStatus();
+            $master = $this->repository->getMasterStatus();
             $binFilePos = $master['Position'];
             $binFileName = $master['File'];
         }
