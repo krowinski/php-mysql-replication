@@ -600,7 +600,7 @@ class RowEvent extends EventCommon
     {
         $value = $this->binaryDataReader->readUInt64();
         // nasty mysql 0000-00-00 dates
-        if ($value === 0)
+        if ('0' === $value)
         {
             return null;
         }
