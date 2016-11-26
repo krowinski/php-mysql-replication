@@ -18,7 +18,7 @@ use MySQLReplication\Event\Exception\EventException;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
-use MySQLReplication\Repository\MySQLRepository;
+use MySQLReplication\Repository\RepositoryInterface;
 
 /**
  * Class RowEvent
@@ -52,9 +52,9 @@ class RowEvent extends EventCommon
         4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
     ];
     /**
-     * @var MySQLRepository
+     * @var RepositoryInterface
      */
-    private $MySQLRepository;
+    private $repository;
     /**
      * @var Config
      */
@@ -71,14 +71,14 @@ class RowEvent extends EventCommon
     /**
      * RowEvent constructor.
      * @param Config $config
-     * @param MySQLRepository $MySQLRepository
+     * @param RepositoryInterface $repository
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
      * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      */
     public function __construct(
         Config $config,
-        MySQLRepository $MySQLRepository,
+        RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
         EventInfo $eventInfo,
         JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
@@ -86,7 +86,7 @@ class RowEvent extends EventCommon
     {
         parent::__construct($eventInfo, $binaryDataReader);
 
-        $this->MySQLRepository = $MySQLRepository;
+        $this->repository = $repository;
         $this->config = $config;
         $this->jsonBinaryDecoderFactory = $jsonBinaryDecoderFactory;
     }
@@ -143,7 +143,7 @@ class RowEvent extends EventCommon
 
         $this->binaryDataReader->readCodedBinary();
 
-        $columns = $this->MySQLRepository->getFields($data['schema_name'], $data['table_name']);
+        $columns = $this->repository->getFields($data['schema_name'], $data['table_name']);
 
         $fields = [];
         // if you drop tables and parse of logs you will get empty scheme
@@ -162,7 +162,10 @@ class RowEvent extends EventCommon
                         'COLUMN_COMMENT' => null,
                         'COLUMN_TYPE' => 'BLOB',
                         'COLUMN_KEY' => '',
+                        'REFERENCED_TABLE_NAME' => '',
+                        'REFERENCED_COLUMN_NAME' => '',
                     ];
+
                     $type = ConstFieldType::IGNORE;
                 }
                 else
@@ -217,7 +220,7 @@ class RowEvent extends EventCommon
      * @return bool
      * @throws BinaryDataReaderException
      */
-    private function rowInit()
+    protected function rowInit()
     {
         $tableId = $this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
@@ -251,7 +254,7 @@ class RowEvent extends EventCommon
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
-    private function getValues()
+    protected function getValues()
     {
         $columnsBinarySize = $this->getColumnsBinarySize($this->currentTableMap->getColumnsAmount());
         $binaryData = $this->binaryDataReader->read($columnsBinarySize);
@@ -269,7 +272,7 @@ class RowEvent extends EventCommon
      * @param int $columnsAmount
      * @return int
      */
-    private function getColumnsBinarySize($columnsAmount)
+    protected function getColumnsBinarySize($columnsAmount)
     {
         return (int)(($columnsAmount + 7) / 8);
     }
@@ -282,7 +285,7 @@ class RowEvent extends EventCommon
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
-    private function getColumnData($colsBitmap)
+    protected function getColumnData($colsBitmap)
     {
         $values = [];
 
@@ -486,7 +489,7 @@ class RowEvent extends EventCommon
      * @param int $position
      * @return int
      */
-    private function bitGet($bitmap, $position)
+    protected function bitGet($bitmap, $position)
     {
         $bit = $bitmap[(int)($position / 8)];
         if (true === is_string($bit))
@@ -502,7 +505,7 @@ class RowEvent extends EventCommon
      * @param int $position
      * @return int
      */
-    private function checkNull($nullBitmap, $position)
+    protected function checkNull($nullBitmap, $position)
     {
         $bit = $nullBitmap[(int)($position / 8)];
         if (true === is_string($bit))
@@ -519,7 +522,7 @@ class RowEvent extends EventCommon
      * @return string
      * @throws BinaryDataReaderException
      */
-    private function getString($size, array $column)
+    protected function getString($size, array $column)
     {
         $string = $this->binaryDataReader->readLengthCodedPascalString($size);
         if ($column['character_set_name'])
@@ -536,7 +539,7 @@ class RowEvent extends EventCommon
      * @return string
      * @throws BinaryDataReaderException
      */
-    private function getDecimal(array $column)
+    protected function getDecimal(array $column)
     {
         $digits_per_integer = 9;
         $compressed_bytes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4];
@@ -593,11 +596,11 @@ class RowEvent extends EventCommon
     /**
      * @return float|null
      */
-    private function getDatetime()
+    protected function getDatetime()
     {
         $value = $this->binaryDataReader->readUInt64();
         // nasty mysql 0000-00-00 dates
-        if ($value === 0)
+        if ('0' === $value)
         {
             return null;
         }
@@ -628,7 +631,7 @@ class RowEvent extends EventCommon
      * @return string
      * @throws BinaryDataReaderException
      */
-    private function getDatetime2(array $column)
+    protected function getDatetime2(array $column)
     {
         $data = $this->binaryDataReader->readIntBeBySize(5);
 
@@ -663,7 +666,7 @@ class RowEvent extends EventCommon
      * @param int $data_length
      * @return int
      */
-    private function getBinarySlice($binary, $start, $size, $data_length)
+    protected function getBinarySlice($binary, $start, $size, $data_length)
     {
         $binary >>= $data_length - ($start + $size);
         $mask = ((1 << $size) - 1);
@@ -680,7 +683,7 @@ class RowEvent extends EventCommon
      * @return int|string
      * @throws BinaryDataReaderException
      */
-    private function getFSP(array $column)
+    protected function getFSP(array $column)
     {
         $read = 0;
         $time = '';
@@ -724,7 +727,7 @@ class RowEvent extends EventCommon
      * @return string
      * @throws BinaryDataReaderException
      */
-    private function getTime2(array $column)
+    protected function getTime2(array $column)
     {
         $data = $this->binaryDataReader->readInt24Be();
 
@@ -741,7 +744,7 @@ class RowEvent extends EventCommon
      * @throws EventException
      * @throws BinaryDataReaderException
      */
-    private function getTimestamp2(array $column)
+    protected function getTimestamp2(array $column)
     {
         $time = date('Y-m-d H:i:s', $this->binaryDataReader->readInt32Be());
         $fsp = $this->getFSP($column);
@@ -755,7 +758,7 @@ class RowEvent extends EventCommon
     /**
      * @return string
      */
-    private function getDate()
+    protected function getDate()
     {
         $time = $this->binaryDataReader->readUInt24();
         if (0 === $time)
@@ -780,7 +783,7 @@ class RowEvent extends EventCommon
      * @throws EventException
      * @throws BinaryDataReaderException
      */
-    private function getSet(array $column)
+    protected function getSet(array $column)
     {
         // we read set columns as a bitmap telling us which options are enabled
         $bit_mask = $this->binaryDataReader->readUIntBySize($column['size']);
@@ -801,7 +804,7 @@ class RowEvent extends EventCommon
      * @param array $column
      * @return string
      */
-    private function getBit(array $column)
+    protected function getBit(array $column)
     {
         $res = '';
         for ($byte = 0; $byte < $column['bytes']; $byte++)

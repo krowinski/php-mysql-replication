@@ -43,25 +43,23 @@ Mysql replication events explained
 Configuration
 =========
 
-You can pass this array keys to ConfigService->makeConfigFromArray([])
+You can pass this array keys to ConfigService->makeConfigFromArray([]) or use ConfigBuilder to generate config.
 
 'user' - your mysql user (mandatory)
 
-'ip' - your mysql host ip (mandatory)
+'ip' or 'host' - your mysql host/ip (mandatory)
 
 'password' - your mysql password (mandatory)
 
-'port' - your mysql host port
+'port' - your mysql host port (default 3306)
 
-'dbName' - db name you want to listen 
-
-'charset' - db connection charset
+'charset' - db connection charset (default utf8)
 
 'gtid' - GTID marker(s) to start from (format 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592)
 
 'mariaDbGtid' - MariaDB GTID marker(s) to start from (format 1-1-3,0-1-88)
 
-'slaveId' - script slave id for identification
+'slaveId' - script slave id for identification (SHOW SLAVE HOSTS)
 
 'binLogFileName' - bin log file name to start from
 
@@ -69,11 +67,13 @@ You can pass this array keys to ConfigService->makeConfigFromArray([])
 
 'eventsOnly' - array  to listen on events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file)
 
-'eventsIgnore' - array yo ignore events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file) 
+'eventsIgnore' - array to ignore events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file) 
 
-'tablesOnly' - array to only listen on given tables
+'tablesOnly' - array to only listen on given tables (default all tables) 
 
-'databasesOnly' - array to only listen on given databases 
+'databasesOnly' - array to only listen on given databases (default all databases) 
+ 
+'tableCacheSize' - some data are collected from information schema, this data is cached. This variable set cache for tables bigger takes more memory. (default 128 objects) 
 
 
 Examples

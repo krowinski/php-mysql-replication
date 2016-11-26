@@ -27,10 +27,6 @@ class ConfigBuilder
     /**
      * @var string
      */
-    private $dbName = '';
-    /**
-     * @var string
-     */
     private $charset = 'utf8';
     /**
      * @var string
@@ -118,17 +114,6 @@ class ConfigBuilder
     }
 
     /**
-     * @param string $dbName
-     * @return ConfigBuilder
-     */
-    public function withDbName($dbName)
-    {
-        $this->dbName = $dbName;
-
-        return $this;
-    }
-
-    /**
      * @param string $charset
      * @return ConfigBuilder
      */
@@ -187,7 +172,7 @@ class ConfigBuilder
      * @param array $eventsOnly
      * @return ConfigBuilder
      */
-    public function withEventsOnly($eventsOnly)
+    public function withEventsOnly(array $eventsOnly)
     {
         $this->eventsOnly = $eventsOnly;
 
@@ -256,7 +241,6 @@ class ConfigBuilder
             $this->host,
             $this->port,
             $this->password,
-            $this->dbName,
             $this->charset,
             $this->gtid,
             $this->mariaDbGtid,

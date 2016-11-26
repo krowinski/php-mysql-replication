@@ -7,8 +7,9 @@ use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
 use MySQLReplication\BinLog\BinLogAuth;
-use MySQLReplication\BinLog\BinLogConnect;
+use MySQLReplication\BinLog\BinLogSocketConnect;
 use MySQLReplication\BinLog\Exception\BinLogException;
+use MySQLReplication\BinLog\BinLogSocketConnectInterface;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\Exception\ConfigException;
 use MySQLReplication\Event\Event;
@@ -18,6 +19,7 @@ use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidService;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\MySQLRepository;
+use MySQLReplication\Repository\RepositoryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
@@ -31,13 +33,13 @@ class MySQLReplicationFactory
      */
     private $eventDispatcher;
     /**
-     * @var MySQLRepository
+     * @var RepositoryInterface
      */
-    private $MySQLRepository;
+    private $repository;
     /**
-     * @var BinLogConnect
+     * @var BinLogSocketConnectInterface
      */
-    private $binLogConnect;
+    private $socketConnect;
     /**
      * @var Event
      */
@@ -57,7 +59,7 @@ class MySQLReplicationFactory
     /**
      * @var GtidService
      */
-    private $GtiService;
+    private $gtiService;
     /**
      * @var RowEventService
      */
@@ -86,21 +88,30 @@ class MySQLReplicationFactory
             'driver' => 'pdo_mysql',
             'charset' => $config->getCharset()
         ]);
+        $this->repository = new MySQLRepository($this->connection);
+        $this->gtiService = new GtidService();
         $this->binLogAuth = new BinLogAuth();
-        $this->MySQLRepository = new MySQLRepository($this->connection);
-        $this->GtiService = new GtidService();
 
-        $this->binLogConnect = new BinLogConnect($config, $this->MySQLRepository, $this->binLogAuth, $this->GtiService);
-        $this->binLogConnect->connectToStream();
+        $this->socketConnect = new BinLogSocketConnect(
+            $config,
+            $this->repository,
+            $this->binLogAuth,
+            $this->gtiService
+        );
+        $this->socketConnect->connectToStream();
 
         $this->jsonBinaryDecoderFactory = new JsonBinaryDecoderFactory();
+        $this->rowEventService = new RowEventService(
+            $config,
+            $this->repository,
+            $this->jsonBinaryDecoderFactory
+        );
         $this->binaryDataReaderService = new BinaryDataReaderService();
-        $this->rowEventService = new RowEventService($config, $this->MySQLRepository, $this->jsonBinaryDecoderFactory);
         $this->eventDispatcher = new EventDispatcher();
 
         $this->event = new Event(
             $config,
-            $this->binLogConnect,
+            $this->socketConnect,
             $this->binaryDataReaderService,
             $this->rowEventService,
             $this->eventDispatcher

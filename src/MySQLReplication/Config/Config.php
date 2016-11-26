@@ -29,10 +29,6 @@ class Config
     /**
      * @var string
      */
-    private $dbName;
-    /**
-     * @var string
-     */
     private $charset;
     /**
      * @var string
@@ -81,7 +77,6 @@ class Config
      * @param string $host
      * @param int $port
      * @param string $password
-     * @param string $dbName
      * @param string $charset
      * @param string $gtid
      * @param string $mariaGtid
@@ -99,7 +94,6 @@ class Config
         $host,
         $port,
         $password,
-        $dbName,
         $charset,
         $gtid,
         $mariaGtid,
@@ -116,7 +110,6 @@ class Config
         $this->host = $host;
         $this->port = $port;
         $this->password = $password;
-        $this->dbName = $dbName;
         $this->charset = $charset;
         $this->gtid = $gtid;
         $this->slaveId = $slaveId;
@@ -154,10 +147,6 @@ class Config
         if (!empty($this->password) && false === is_string($this->password) && false === is_numeric($this->password))
         {
             throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
-        }
-        if (!empty($this->dbName) && false === is_string($this->dbName))
-        {
-            throw new ConfigException(ConfigException::DB_NAME_ERROR_MESSAGE, ConfigException::DB_NAME_ERROR_CODE);
         }
         if (!empty($this->charset) && false === is_string($this->charset))
         {
@@ -225,14 +214,6 @@ class Config
     public function getPassword()
     {
         return $this->password;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDbName()
-    {
-        return $this->dbName;
     }
 
     /**
