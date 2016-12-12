@@ -42,9 +42,10 @@ Mysql replication events explained
 
 
 mysql user privileges:
+`
 GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'user'@'host';
 GRANT SELECT ON `dbName`.* TO 'user'@'host';
-
+`
 Configuration
 =========
 
