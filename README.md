@@ -40,6 +40,14 @@ In your MySQL server configuration file you need to enable replication:
 Mysql replication events explained
     https://dev.mysql.com/doc/internals/en/event-meanings.html
 
+
+Mysql user privileges:
+```
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'user'@'host';
+
+GRANT SELECT ON `dbName`.* TO 'user'@'host';
+```
+
 Configuration
 =========
 
