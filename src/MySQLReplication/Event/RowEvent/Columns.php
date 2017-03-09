@@ -35,14 +35,7 @@ class Columns
         self::$field['unsigned'] = !(stripos($columnSchema['COLUMN_TYPE'], 'unsigned') === false);
         self::$field['type_is_bool'] = false;
         self::$field['is_primary'] = $columnSchema['COLUMN_KEY'] === 'PRI';
-        self::$field['is_foreign'] = null !== $columnSchema['REFERENCED_TABLE_NAME'] && null !== $columnSchema['REFERENCED_COLUMN_NAME'];
-
-        if (self::$field['is_foreign'])
-        {
-            self::$field['referenced_table_name'] = $columnSchema['REFERENCED_TABLE_NAME'];
-            self::$field['referenced_column_name'] = $columnSchema['REFERENCED_COLUMN_NAME'];
-        }
-
+        
         if (self::$field['type'] === ConstFieldType::VARCHAR)
         {
             self::$field['max_length'] = $binaryDataReader->readInt16();
