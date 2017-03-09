@@ -34,28 +34,18 @@ class MySQLRepository implements RepositoryInterface
     {
         $sql = '
              SELECT
-                c.`COLUMN_NAME`,
-                c.`COLLATION_NAME`,
-                c.`CHARACTER_SET_NAME`,
-                c.`COLUMN_COMMENT`,
-                c.`COLUMN_TYPE`,
-                c.`COLUMN_KEY`,
-                `kcu`.`REFERENCED_TABLE_NAME`,
-                `kcu`.`REFERENCED_COLUMN_NAME`
+                `COLUMN_NAME`,
+                `COLLATION_NAME`,
+                `CHARACTER_SET_NAME`,
+                `COLUMN_COMMENT`,
+                `COLUMN_TYPE`,
+                `COLUMN_KEY`
             FROM
-                `information_schema`.`COLUMNS`   c
-            LEFT JOIN
-                `information_schema`.KEY_COLUMN_USAGE kcu
-            ON
-                    c.`TABLE_SCHEMA` = kcu.`TABLE_SCHEMA`
-                AND
-                    c.`TABLE_NAME` = kcu.`TABLE_NAME`
-                AND
-                    c.`COLUMN_NAME` = kcu.`COLUMN_NAME`
+                `information_schema`.`COLUMNS`
             WHERE
-                    c.`TABLE_SCHEMA` = ?
+                    `TABLE_SCHEMA` = ?
                 AND
-                    c.`TABLE_NAME` = ?
+                    `TABLE_NAME` = ?
        ';
 
         return $this->getConnection()->fetchAll($sql, [$schema, $table]);

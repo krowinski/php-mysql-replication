@@ -161,9 +161,7 @@ class RowEvent extends EventCommon
                         'CHARACTER_SET_NAME' => null,
                         'COLUMN_COMMENT' => null,
                         'COLUMN_TYPE' => 'BLOB',
-                        'COLUMN_KEY' => '',
-                        'REFERENCED_TABLE_NAME' => '',
-                        'REFERENCED_COLUMN_NAME' => '',
+                        'COLUMN_KEY' => ''
                     ];
 
                     $type = ConstFieldType::IGNORE;
