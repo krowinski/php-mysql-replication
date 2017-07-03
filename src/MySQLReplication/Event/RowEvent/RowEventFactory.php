@@ -7,12 +7,13 @@ use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Config\Config;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\RepositoryInterface;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * Class RowEventService
  * @package MySQLReplication\RowEvent
  */
-class RowEventService
+class RowEventFactory
 {
     /**
      * @var RowEventBuilder
@@ -24,17 +25,20 @@ class RowEventService
      * @param Config $config
      * @param RepositoryInterface $repository
      * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
+     * @param CacheInterface $cache
      */
     public function __construct(
         Config $config,
         RepositoryInterface $repository,
-        JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
+        JsonBinaryDecoderFactory $jsonBinaryDecoderFactory,
+        CacheInterface $cache
     )
     {
         $this->rowEventBuilder = new RowEventBuilder(
             $config,
             $repository,
-            $jsonBinaryDecoderFactory
+            $jsonBinaryDecoderFactory,
+            $cache
         );
     }
 

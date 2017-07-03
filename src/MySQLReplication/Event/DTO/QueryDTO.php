@@ -86,13 +86,13 @@ class QueryDTO extends EventDTO
     public function __toString()
     {
         return PHP_EOL .
-        '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
-        'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-        'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-        'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Database: ' . $this->database . PHP_EOL .
-        'Execution time: ' . $this->executionTime . PHP_EOL .
-        'Query: ' . $this->query . PHP_EOL;
+            '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
+            'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
+            'Database: ' . $this->database . PHP_EOL .
+            'Execution time: ' . $this->executionTime . PHP_EOL .
+            'Query: ' . $this->query . PHP_EOL;
     }
 
     /**

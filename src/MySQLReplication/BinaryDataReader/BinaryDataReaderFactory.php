@@ -3,19 +3,19 @@
 namespace MySQLReplication\BinaryDataReader;
 
 /**
- * Class BinaryDataReaderService
+ * Class BinaryDataReaderFactory
  * @package MySQLReplication\BinaryDataReader
  */
-class BinaryDataReaderService
+class BinaryDataReaderFactory
 {
     /**
-     * @param string $binaryData
+     * @param string $data
      * @return BinaryDataReader
      */
-    public function makePackageFromBinaryData($binaryData)
+    public function makePackageFromBinaryData($data)
     {
         $packageBuilder = new BinaryDataReaderBuilder();
-        $packageBuilder->withBinaryData($binaryData);
+        $packageBuilder->withBinaryData($data);
 
         return $packageBuilder->build();
     }

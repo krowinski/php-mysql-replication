@@ -6,19 +6,17 @@ error_reporting(E_ALL);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
 
-use MySQLReplication\Config\ConfigService;
+use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\MySQLReplicationFactory;
 
 $binLogStream = new MySQLReplicationFactory(
-    (new ConfigService())->makeConfigFromArray([
-        'user' => 'root',
-        'ip' => '127.0.0.1',
-        'password' => 'root',
-        //'mariaDbGtid' => '1-1-3,0-1-88',
-        //'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
-    ])
+    (new ConfigBuilder())
+        ->withUser('root')
+        ->withHost('127.0.0.1')
+        ->withPassword('root')
+        ->build()
 );
 
 /**
@@ -36,7 +34,7 @@ class MyEventSubscribers extends EventSubscribers
         echo $event;
 
         // all events got JsonSerializable implementation
-        echo json_encode($event, JSON_PRETTY_PRINT);
+        //echo json_encode($event, JSON_PRETTY_PRINT);
 
         echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
     }

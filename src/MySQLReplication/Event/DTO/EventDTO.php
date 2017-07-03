@@ -45,6 +45,7 @@ abstract class EventDTO extends Event implements \JsonSerializable
      * @return string
      */
     abstract public function __toString();
+
     /**
      * Specify data which should be serialized to JSON
      * @link http://php.net/manual/en/jsonserializable.jsonserialize.php

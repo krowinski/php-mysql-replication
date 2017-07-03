@@ -71,12 +71,12 @@ class GTIDLogDTO extends EventDTO
     public function __toString()
     {
         return PHP_EOL .
-        '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
-        'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-        'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-        'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Commit: ' . var_export($this->commit, true) . PHP_EOL .
-        'GTID NEXT: ' . $this->gtid . PHP_EOL;
+            '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
+            'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
+            'Commit: ' . var_export($this->commit, true) . PHP_EOL .
+            'GTID NEXT: ' . $this->gtid . PHP_EOL;
     }
 
     /**

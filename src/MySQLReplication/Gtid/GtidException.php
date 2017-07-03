@@ -2,12 +2,12 @@
 
 namespace MySQLReplication\Gtid;
 
+use MySQLReplication\Exception\MySQLReplicationException;
+
 /**
  * Class GtidException
  * @package MySQLReplication\Gtid
  */
-class GtidException extends \Exception
+class GtidException extends MySQLReplicationException
 {
-    const INCORRECT_GTID_MESSAGE = 'Incorrect gtid';
-    const INCORRECT_GTID_CODE = 1;
 }

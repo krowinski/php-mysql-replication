@@ -78,10 +78,10 @@ class EventInfo implements \JsonSerializable
      */
     public function getDateTime()
     {
-        if (empty($this->dateTime))
-        {
+        if (empty($this->dateTime)) {
             $this->dateTime = date('c', $this->timestamp);
         }
+
         return $this->dateTime;
     }
 
@@ -90,10 +90,10 @@ class EventInfo implements \JsonSerializable
      */
     public function getSizeNoHeader()
     {
-        if (empty($this->sizeNoHeader))
-        {
+        if (empty($this->sizeNoHeader)) {
             $this->sizeNoHeader = (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
         }
+
         return $this->sizeNoHeader;
     }
 

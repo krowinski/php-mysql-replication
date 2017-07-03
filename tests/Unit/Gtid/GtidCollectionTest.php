@@ -1,10 +1,10 @@
 <?php
 
-namespace Unit\Gtid;
+namespace MySQLReplication\Unit\Gtid;
 
 use MySQLReplication\Gtid\Gtid;
 use MySQLReplication\Gtid\GtidCollection;
-use Unit\BaseTest;
+use MySQLReplication\Unit\BaseTest;
 
 /**
  * Class GtidCollectionTest

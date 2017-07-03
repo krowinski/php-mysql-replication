@@ -12,6 +12,7 @@ class XidEvent extends EventCommon
 {
     /**
      * @return XidDTO
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function makeXidDTO()
     {

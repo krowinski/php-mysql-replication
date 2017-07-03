@@ -1,6 +1,6 @@
 <?php
 
-namespace MySQLReplication\Event\Exception;
+namespace MySQLReplication\Event;
 
 use MySQLReplication\Exception\MySQLReplicationException;
 

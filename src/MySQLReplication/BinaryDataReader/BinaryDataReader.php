@@ -2,8 +2,6 @@
 
 namespace MySQLReplication\BinaryDataReader;
 
-use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
-
 /**
  * Class BinaryDataReader
  * @package MySQLReplication\BinaryDataReader
@@ -33,15 +31,15 @@ class BinaryDataReader
     /**
      * @var string
      */
-    private $binaryData = '';
+    private $data;
 
     /**
      * Package constructor.
-     * @param string $binaryData
+     * @param string $data
      */
-    public function __construct($binaryData)
+    public function __construct($data)
     {
-        $this->binaryData = $binaryData;
+        $this->data = $data;
     }
 
     /**
@@ -51,7 +49,7 @@ class BinaryDataReader
     {
         $length = (int)$length;
         $this->readBytes += $length;
-        $this->binaryData = substr($this->binaryData, $length);
+        $this->data = substr($this->data, $length);
     }
 
     /**
@@ -62,15 +60,16 @@ class BinaryDataReader
     public function read($length)
     {
         $length = (int)$length;
-        $return = substr($this->binaryData, 0, $length);
+        $return = substr($this->data, 0, $length);
         $this->readBytes += $length;
-        $this->binaryData = substr($this->binaryData, $length);
+        $this->data = substr($this->data, $length);
 
         return $return;
     }
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt16()
     {
@@ -87,7 +86,7 @@ class BinaryDataReader
     public function unread($data)
     {
         $this->readBytes -= strlen($data);
-        $this->binaryData = $data . $this->binaryData;
+        $this->data = $data . $this->data;
     }
 
     /**
@@ -95,32 +94,23 @@ class BinaryDataReader
      * Length coded numbers can be anywhere from 1 to 9 bytes depending
      * on the value of the first byte.
      * From PyMYSQL source code
-     * 
+     *
      * @return int|string
      * @throws BinaryDataReaderException
      */
     public function readCodedBinary()
     {
         $c = ord($this->read(self::UNSIGNED_CHAR_LENGTH));
-        if ($c == self::NULL_COLUMN)
-        {
+        if ($c === self::NULL_COLUMN) {
             return '';
         }
-        if ($c < self::UNSIGNED_CHAR_COLUMN)
-        {
+        if ($c < self::UNSIGNED_CHAR_COLUMN) {
             return $c;
-        }
-        elseif ($c == self::UNSIGNED_SHORT_COLUMN)
-        {
+        } elseif ($c === self::UNSIGNED_SHORT_COLUMN) {
             return $this->readUInt16();
-
-        }
-        elseif ($c == self::UNSIGNED_INT24_COLUMN)
-        {
+        } elseif ($c === self::UNSIGNED_INT24_COLUMN) {
             return $this->readUInt24();
-        }
-        elseif ($c == self::UNSIGNED_INT64_COLUMN)
-        {
+        } elseif ($c === self::UNSIGNED_INT64_COLUMN) {
             return $this->readUInt64();
         }
 
@@ -129,6 +119,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt16()
     {
@@ -137,15 +128,18 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt24()
     {
         $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
+
         return $data[1] + ($data[2] << 8) + ($data[3] << 16);
     }
 
     /**
      * @return string
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt64()
     {
@@ -153,36 +147,40 @@ class BinaryDataReader
     }
 
     /**
-     * @param string $data
+     * @param string $binary
      * @return string
      */
-    public function unpackUInt64($data)
+    public function unpackUInt64($binary)
     {
-        $data = unpack('V*', $data);
+        $data = unpack('V*', $binary);
+
         return bcadd($data[1], bcmul($data[2], bcpow(2, 32)));
     }
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt24()
     {
         $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
 
         $res = $data[1] | ($data[2] << 8) | ($data[3] << 16);
-        if ($res >= 0x800000)
-        {
+        if ($res >= 0x800000) {
             $res -= 0x1000000;
         }
+
         return $res;
     }
 
     /**
      * @return string
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt64()
     {
         $data = unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
+
         return bcadd($data[1], $data[2] << 32);
     }
 
@@ -199,42 +197,27 @@ class BinaryDataReader
     /**
      * Read a little endian integer values based on byte number
      *
-     * @param $size
+     * @param int $size
      * @return mixed
      * @throws BinaryDataReaderException
      */
     public function readUIntBySize($size)
     {
-        if ($size == self::UNSIGNED_CHAR_LENGTH)
-        {
+        if ($size === self::UNSIGNED_CHAR_LENGTH) {
             return $this->readUInt8();
-        }
-        elseif ($size == self::UNSIGNED_SHORT_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_SHORT_LENGTH) {
             return $this->readUInt16();
-        }
-        elseif ($size == self::UNSIGNED_INT24_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT24_LENGTH) {
             return $this->readUInt24();
-        }
-        elseif ($size == self::UNSIGNED_INT32_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT32_LENGTH) {
             return $this->readUInt32();
-        }
-        elseif ($size == self::UNSIGNED_INT40_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT40_LENGTH) {
             return $this->readUInt40();
-        }
-        elseif ($size == self::UNSIGNED_INT48_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT48_LENGTH) {
             return $this->readUInt48();
-        }
-        elseif ($size == self::UNSIGNED_INT56_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT56_LENGTH) {
             return $this->readUInt56();
-        }
-        elseif ($size == self::UNSIGNED_INT64_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT64_LENGTH) {
             return $this->readUInt64();
         }
 
@@ -243,6 +226,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt8()
     {
@@ -251,6 +235,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt32()
     {
@@ -259,6 +244,7 @@ class BinaryDataReader
 
     /**
      * @return mixed
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt40()
     {
@@ -270,6 +256,7 @@ class BinaryDataReader
 
     /**
      * @return mixed
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt48()
     {
@@ -280,6 +267,7 @@ class BinaryDataReader
 
     /**
      * @return mixed
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt56()
     {
@@ -299,24 +287,15 @@ class BinaryDataReader
      */
     public function readIntBeBySize($size)
     {
-        if ($size == self::UNSIGNED_CHAR_LENGTH)
-        {
+        if ($size === self::UNSIGNED_CHAR_LENGTH) {
             return $this->readInt8();
-        }
-        elseif ($size == self::UNSIGNED_SHORT_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_SHORT_LENGTH) {
             return $this->readInt16Be();
-        }
-        elseif ($size == self::UNSIGNED_INT24_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT24_LENGTH) {
             return $this->readInt24Be();
-        }
-        elseif ($size == self::UNSIGNED_INT32_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT32_LENGTH) {
             return $this->readInt32Be();
-        }
-        elseif ($size == self::UNSIGNED_INT40_LENGTH)
-        {
+        } elseif ($size === self::UNSIGNED_INT40_LENGTH) {
             return $this->readInt40Be();
         }
 
@@ -325,6 +304,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt8()
     {
@@ -333,6 +313,7 @@ class BinaryDataReader
 
     /**
      * @return mixed
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt16Be()
     {
@@ -341,13 +322,13 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt24Be()
     {
         $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
         $res = ($data[1] << 16) | ($data[2] << 8) | $data[3];
-        if ($res >= 0x800000)
-        {
+        if ($res >= 0x800000) {
             $res -= 0x1000000;
         }
 
@@ -356,6 +337,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt32Be()
     {
@@ -364,6 +346,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt40Be()
     {
@@ -375,6 +358,7 @@ class BinaryDataReader
 
     /**
      * @return int
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt32()
     {
@@ -383,6 +367,7 @@ class BinaryDataReader
 
     /**
      * @return float
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readFloat()
     {
@@ -391,6 +376,7 @@ class BinaryDataReader
 
     /**
      * @return double
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readDouble()
     {
@@ -399,6 +385,7 @@ class BinaryDataReader
 
     /**
      * @return string
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readTableId()
     {
@@ -411,10 +398,10 @@ class BinaryDataReader
      */
     public function isComplete($size)
     {
-        if ($this->readBytes + 1 - 20 < $size)
-        {
+        if ($this->readBytes + 1 - 20 < $size) {
             return false;
         }
+
         return true;
     }
 
@@ -424,7 +411,10 @@ class BinaryDataReader
      */
     public static function pack64bit($value)
     {
-        return pack('C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF, ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF);
+        return pack(
+            'C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF,
+            ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF
+        );
     }
 
     /**
@@ -432,14 +422,31 @@ class BinaryDataReader
      */
     public function getBinaryDataLength()
     {
-        return strlen($this->binaryData);
+        return strlen($this->data);
     }
 
     /**
      * @return string
      */
-    public function getBinaryData()
+    public function getData()
     {
-        return $this->binaryData;
+        return $this->data;
+    }
+
+    /**
+     * Read a part of binary data and extract a number
+     *
+     * @param int $binary
+     * @param int $start
+     * @param int $size
+     * @param int $binaryLength
+     * @return int
+     */
+    public function getBinarySlice($binary, $start, $size, $binaryLength)
+    {
+        $binary >>= $binaryLength - ($start + $size);
+        $mask = ((1 << $size) - 1);
+
+        return $binary & $mask;
     }
 }

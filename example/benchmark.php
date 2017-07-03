@@ -9,15 +9,14 @@ include __DIR__ . '/../vendor/autoload.php';
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
-use MySQLReplication\BinLog\Exception\BinLogException;
-use MySQLReplication\Config\Exception\ConfigException;
+use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\Config\ConfigBuilder;
+use MySQLReplication\Config\ConfigException;
+use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\MySQLReplicationFactory;
-use MySQLReplication\Config\ConfigService;
-use MySQLReplication\Definitions\ConstEventType;
-use MySQLReplication\Event\DTO\UpdateRowsDTO;
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * Class BenchmarkEventSubscribers
@@ -28,7 +27,7 @@ class BenchmarkEventSubscribers extends EventSubscribers
     /**
      * @var int
      */
-    private $start = 0;
+    private $start;
     /**
      * @var int
      */
@@ -39,11 +38,13 @@ class BenchmarkEventSubscribers extends EventSubscribers
         $this->start = microtime(true);
     }
 
+    /**
+     * @param UpdateRowsDTO $event
+     */
     public function onUpdate(UpdateRowsDTO $event)
     {
         ++$this->counter;
-        if (0 === ($this->counter % 1000))
-        {
+        if (0 === ($this->counter % 1000)) {
             echo ((int)($this->counter / (microtime(true) - $this->start)) . ' event by seconds (' . $this->counter . ' total)') . PHP_EOL;
         }
     }
@@ -66,6 +67,8 @@ class Benchmark
      * @throws ConfigException
      * @throws BinLogException
      * @throws MySQLReplicationException
+     * @throws \MySQLReplication\Gtid\GtidException
+     * @throws \MySQLReplication\Socket\SocketException
      */
     public function __construct()
     {
@@ -80,14 +83,14 @@ class Benchmark
         $conn->exec('RESET MASTER');
 
         $this->binLogStream = new MySQLReplicationFactory(
-            (new ConfigService())->makeConfigFromArray([
-                'user' => 'root',
-                'ip' => '127.0.0.1',
-                'password' => 'root',
-                // we only interest in update row event
-                'eventsOnly' => [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
-                'slaveId' => 9999
-            ])
+            (new ConfigBuilder())
+                ->withUser('root')
+                ->withPassword('root')
+                ->withHost('127.0.0.1')
+                ->withEventsOnly([ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2])
+                ->withSlaveId(9999)
+                ->withDatabasesOnly([$this->database])
+                ->build()
         );
 
         // register benchmark subscriber handler
@@ -100,45 +103,59 @@ class Benchmark
      */
     private function getConnection()
     {
-        return DriverManager::getConnection([
-            'user' => 'root',
-            'password' => 'root',
-            'host' => '127.0.0.1',
-            'port' => 3306,
-            'driver' => 'pdo_mysql',
-            'dbname' => $this->database
-        ]);
+        return DriverManager::getConnection(
+            [
+                'user' => 'root',
+                'password' => 'root',
+                'host' => '127.0.0.1',
+                'port' => 3306,
+                'driver' => 'pdo_mysql',
+                'dbname' => $this->database
+            ]
+        );
     }
 
     /**
-     * @throws MySQLReplicationException
-     * @throws DBALException
+     * @throws \Exception
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \MySQLReplication\BinLog\BinLogException
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws \MySQLReplication\Config\ConfigException
+     * @throws \MySQLReplication\Event\EventException
+     * @throws \MySQLReplication\Exception\MySQLReplicationException
+     * @throws \MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException
+     * @throws \MySQLReplication\Socket\SocketException
      * @throws \InvalidArgumentException
+     * @throws \Exception
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function run()
     {
         $pid = pcntl_fork();
-        if ($pid === -1)
-        {
+        if ($pid === -1) {
             throw new \InvalidArgumentException('Could not fork');
-        }
-        else if ($pid)
-        {
+        } else if ($pid) {
             $this->consume();
             pcntl_wait($status);
-        }
-        else
-        {
+        } else {
             $this->produce();
         }
     }
 
     /**
-     * @throws MySQLReplicationException
+     * @throws \Exception
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \MySQLReplication\BinLog\BinLogException
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws \MySQLReplication\Config\ConfigException
+     * @throws \MySQLReplication\Event\EventException
+     * @throws \MySQLReplication\Exception\MySQLReplicationException
+     * @throws \MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException
+     * @throws \MySQLReplication\Socket\SocketException
      */
     private function consume()
     {
-        while(1) {
+        while (1) {
             $this->binLogStream->binLogEvent();
         }
     }
@@ -151,13 +168,10 @@ class Benchmark
         $conn = $this->getConnection();
 
         echo 'Start insert data' . PHP_EOL;
-        while (1)
-        {
-            $conn->exec('UPDATE test SET i = i + 1;');
+        while (1) {
+            $conn->exec('UPDATE  test SET i = i + 1;');
             $conn->exec('UPDATE test2 SET i = i + 1;');
         }
-
-        $conn->close();
     }
 }
 

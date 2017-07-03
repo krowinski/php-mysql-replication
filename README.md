@@ -22,6 +22,8 @@ or standalone
 
 ```sh
 git clone https://github.com/krowinski/php-mysql-replication.git
+
+composer install
 ```
 
 MySQL server settings
@@ -51,7 +53,8 @@ GRANT SELECT ON `dbName`.* TO 'user'@'host';
 Configuration
 =========
 
-You can pass this array keys to ConfigService->makeConfigFromArray([]) or use ConfigBuilder to generate config.
+Use ConfigBuilder or ConfigFactory to create configuration.
+Available options:
 
 'user' - your mysql user (mandatory)
 
@@ -110,7 +113,7 @@ UPDATE test4 SET data = "World", data2="Hello" WHERE id = 1;
 DELETE FROM test4 WHERE id = 1;
 ```
 
-Output will be similar to this:
+Output will be similar to this (depends on configuration):
 
     === Event gtid ===
     Date: 2016-03-13T21:46:31+00:00

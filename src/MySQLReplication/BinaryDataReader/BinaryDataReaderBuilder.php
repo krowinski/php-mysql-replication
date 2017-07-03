@@ -11,14 +11,14 @@ class BinaryDataReaderBuilder
     /**
      * @var string
      */
-    private $binaryData = '';
+    private $data = '';
 
     /**
-     * @param string $binaryData
+     * @param string $data
      */
-    public function withBinaryData($binaryData)
+    public function withBinaryData($data)
     {
-        $this->binaryData = $binaryData;
+        $this->data = $data;
     }
 
     /**
@@ -26,8 +26,6 @@ class BinaryDataReaderBuilder
      */
     public function build()
     {
-        return new BinaryDataReader(
-            $this->binaryData
-        );
+        return new BinaryDataReader($this->data);
     }
 }

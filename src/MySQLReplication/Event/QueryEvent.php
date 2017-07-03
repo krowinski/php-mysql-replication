@@ -2,7 +2,7 @@
 
 namespace MySQLReplication\Event;
 
-use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Event\DTO\QueryDTO;
 
@@ -44,10 +44,10 @@ class QueryEvent extends EventCommon
      */
     private function getSizeToRemoveByVersion()
     {
-        if (BinLogServerInfo::MYSQL_VERSION_MARIADB === BinLogServerInfo::getVersion())
-        {
+        if (BinLogServerInfo::MYSQL_VERSION_MARIADB === BinLogServerInfo::getVersion()) {
             return 13;
         }
+
         return 36;
     }
 }

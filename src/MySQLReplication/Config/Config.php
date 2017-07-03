@@ -2,7 +2,7 @@
 
 namespace MySQLReplication\Config;
 
-use MySQLReplication\Config\Exception\ConfigException;
+use MySQLReplication\Config\ConfigException;
 
 /**
  * Class Config
@@ -128,59 +128,65 @@ class Config
      */
     public function validate()
     {
-        if (!empty($this->user) && false === is_string($this->user))
-        {
+        if (!empty($this->user) && false === is_string($this->user)) {
             throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
         }
-        if (!empty($this->host))
-        {
+        if (!empty($this->host)) {
             $ip = gethostbyname($this->host);
-            if (false === filter_var($ip, FILTER_VALIDATE_IP))
-            {
+            if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty($this->port) && false === filter_var($this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
-        {
+        if (!empty($this->port) && false === filter_var(
+                $this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+            )
+        ) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty($this->password) && false === is_string($this->password) && false === is_numeric($this->password))
-        {
+        if (!empty($this->password) && false === is_string($this->password) && false === is_numeric($this->password)) {
             throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
         }
-        if (!empty($this->charset) && false === is_string($this->charset))
-        {
+        if (!empty($this->charset) && false === is_string($this->charset)) {
             throw new ConfigException(ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE);
         }
-        if (!empty($this->gtid) && false === is_string($this->gtid))
-        {
-            foreach (explode(',', $this->gtid) as $gtid)
-            {
-                if (false === (bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches))
-                {
+        if (!empty($this->gtid) && false === is_string($this->gtid)) {
+            foreach (explode(',', $this->gtid) as $gtid) {
+                if (false === (bool)preg_match(
+                        '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
+                    )
+                ) {
                     throw new ConfigException(ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE);
                 }
             }
         }
-        if (!empty($this->slaveId) && false === filter_var($this->slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
-        {
+        if (!empty($this->slaveId) && false === filter_var(
+                $this->slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+            )
+        ) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
-        if (!empty($this->binLogFileName) && false === is_string($this->binLogFileName))
-        {
-            throw new ConfigException(ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE);
+        if (!empty($this->binLogFileName) && false === is_string($this->binLogFileName)) {
+            throw new ConfigException(
+                ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE
+            );
         }
-        if (!empty($this->binLogPosition) && false === filter_var($this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
-        {
-            throw new ConfigException(ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE);
+        if (!empty($this->binLogPosition) && false === filter_var(
+                $this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+            )
+        ) {
+            throw new ConfigException(
+                ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
+            );
         }
-        if (!empty($this->mariaDbGtid) && false === is_string($this->mariaDbGtid))
-        {
-            throw new ConfigException(ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE);
+        if (!empty($this->mariaDbGtid) && false === is_string($this->mariaDbGtid)) {
+            throw new ConfigException(
+                ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE
+            );
         }
-        if (false === filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]))
-        {
-            throw new ConfigException(ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE);
+        if (false === filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+            throw new ConfigException(
+                ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
+            );
         }
     }
 

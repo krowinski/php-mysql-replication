@@ -1,9 +1,9 @@
 <?php
 
-namespace Unit\Gtid;
+namespace MySQLReplication\Unit\Gtid;
 
-use MySQLReplication\Gtid\GtidService;
-use Unit\BaseTest;
+use MySQLReplication\Gtid\GtidFactory;
+use MySQLReplication\Unit\BaseTest;
 
 /**
  * Class GtidServiceTest
@@ -12,22 +12,10 @@ use Unit\BaseTest;
 class GtidServiceTest extends BaseTest
 {
     /**
-     * @var GtidService
-     */
-    private $gtidService;
-
-    public function setUp()
-    {
-        parent::setUp();
-
-        $this->gtidService = new GtidService();
-    }
-
-    /**
      * @test
      */
     public function shouldCreateCollection()
     {
-        $this->assertInstanceOf('\MySQLReplication\Gtid\GtidCollection', $this->gtidService->makeCollectionFromString('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592'));
+        $this->assertInstanceOf('\MySQLReplication\Gtid\GtidCollection', GtidFactory::makeCollectionFromString('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592'));
     }
 }

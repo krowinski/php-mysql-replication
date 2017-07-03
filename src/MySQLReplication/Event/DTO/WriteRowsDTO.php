@@ -14,6 +14,7 @@ class WriteRowsDTO extends RowsDTO
      * @var string
      */
     protected $type = ConstEventsNames::WRITE;
+
     /**
      * @return string
      */

@@ -56,8 +56,7 @@ class MySQLRepository implements RepositoryInterface
      */
     public function getConnection()
     {
-        if (false === $this->connection->ping())
-        {
+        if (false === $this->connection->ping()) {
             $this->connection->close();
             $this->connection->connect();
         }
@@ -82,13 +81,12 @@ class MySQLRepository implements RepositoryInterface
     {
         $r = '';
         $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
-        if (is_array($versions) && 0 !== count($versions))
-        {
-            foreach ($versions as $version)
-            {
+        if (is_array($versions) && 0 !== count($versions)) {
+            foreach ($versions as $version) {
                 $r .= $version['Value'];
             }
         }
+
         return $r;
     }
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace MySQLReplication\BinaryDataReader\Exception;
+namespace MySQLReplication\BinaryDataReader;
 
 use MySQLReplication\Exception\MySQLReplicationException;
 
 /**
  * Class BinaryDataReaderException
- * @package MySQLReplication\BinaryDataReader\Exception
+ * @package MySQLReplication\BinaryDataReader
  */
 class BinaryDataReaderException extends MySQLReplicationException
 {

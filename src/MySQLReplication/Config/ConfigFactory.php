@@ -6,7 +6,7 @@ namespace MySQLReplication\Config;
  * Class ConfigService
  * @package MySQLReplication\Config
  */
-class ConfigService
+class ConfigFactory
 {
     /**
      * @param array $config
