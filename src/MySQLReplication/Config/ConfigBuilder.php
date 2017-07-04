@@ -63,11 +63,15 @@ class ConfigBuilder
     /**
      * @var string
      */
-    private $mariaDbGtid;
+    private $mariaDbGtid = '';
     /**
      * @var int
      */
     private $tableCacheSize = 128;
+    /**
+     * @var array
+     */
+    private $custom = [];
 
     /**
      * @param string $user
@@ -232,6 +236,14 @@ class ConfigBuilder
     }
 
     /**
+     * @param array $custom
+     */
+    public function withCustom(array $custom)
+    {
+        $this->custom = $custom;
+    }
+
+    /**
      * @return Config
      */
     public function build()
@@ -251,7 +263,8 @@ class ConfigBuilder
             $this->eventsIgnore,
             $this->tablesOnly,
             $this->databasesOnly,
-            $this->tableCacheSize
+            $this->tableCacheSize,
+            $this->custom
         );
     }
 }

@@ -10,6 +10,10 @@
 - Changed all exception messages moved to MySQLReplicationException
 - Added CHANGELOG.md
 - Simplify many classes and removed some of them 
+- Added decorators for server version recognition
+- Changed if datetime not recognised will return null (0000-00-00 00:00:00 is invalid date) 
+- Added 'custom' param to config if some custom params must be set in extended/implemented own classes
+- Added new tests
 
 ## v2.2.0 (2017-03-10)
 - Removed foreign keys from events 

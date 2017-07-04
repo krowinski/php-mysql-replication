@@ -124,4 +124,28 @@ class BinLogServerInfo
     {
         return self::$serverInfo['version_name'];
     }
+
+    /**
+     * @return bool
+     */
+    public static function isMariaDb()
+    {
+        return self::MYSQL_VERSION_MARIADB === self::getVersion();
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isPercona()
+    {
+        return self::MYSQL_VERSION_PERCONA === self::getVersion();
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isGeneric()
+    {
+        return self::MYSQL_VERSION_GENERIC === self::getVersion();
+    }
 }

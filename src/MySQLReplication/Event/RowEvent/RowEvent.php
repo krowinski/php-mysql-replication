@@ -435,6 +435,7 @@ class RowEvent extends EventCommon
 
     /**
      * Read MySQL's new decimal format introduced in MySQL 5
+     * https://dev.mysql.com/doc/refman/5.6/en/precision-math-decimal-characteristics.html
      * @param array $column
      * @return string
      * @throws BinaryDataReaderException

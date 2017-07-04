@@ -61,7 +61,6 @@ class BinLogSocketConnect
         $this->config = $config;
         $this->socket = $socket;
 
-
         $this->socket->connectToStream($this->config->getHost(), $this->config->getPort());
         BinLogServerInfo::parsePackage($this->getResponse(false), $this->repository->getVersion());
         $this->authenticate();
@@ -120,10 +119,10 @@ class BinLogSocketConnect
     /**
      * @throws BinLogException
      * @throws \MySQLReplication\Socket\SocketException
+     * @link http://dev.mysql.com/doc/internals/en/secure-password-authentication.html#packet-Authentication::Native41
      */
     private function authenticate()
     {
-        // http://dev.mysql.com/doc/internals/en/secure-password-authentication.html#packet-Authentication::Native41
         $data = pack('L', ConstCapabilityFlags::getCapabilities());
         $data .= pack('L', $this->binaryDataMaxLength);
         $data .= chr(33);

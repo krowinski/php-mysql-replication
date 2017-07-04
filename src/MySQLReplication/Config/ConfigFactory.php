@@ -77,6 +77,10 @@ class ConfigFactory
             {
                 $configBuilder->withTableCacheSize($v);
             }
+            if ('custom' === $k)
+            {
+                $configBuilder->withCustom($v);
+            }
         }
 
         return $configBuilder->build();

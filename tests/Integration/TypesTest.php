@@ -572,6 +572,19 @@ class TypesTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldReturnNullOnZeroDateDateTime()
+    {
+        $create_query = "CREATE TABLE test (test DATETIME NOT NULL);";
+        $insert_query = "INSERT INTO test VALUES('0000-00-00 00:00:00')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
     public function shouldBeYear()
     {
         $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR)";

@@ -2,8 +2,6 @@
 
 namespace MySQLReplication\Config;
 
-use MySQLReplication\Config\ConfigException;
-
 /**
  * Class Config
  * @package MySQLReplication\Config
@@ -70,6 +68,10 @@ class Config
      * @var int
      */
     private $tableCacheSize;
+    /**
+     * @var array
+     */
+    private $custom;
 
     /**
      * Config constructor.
@@ -88,6 +90,7 @@ class Config
      * @param array $tablesOnly
      * @param array $databasesOnly
      * @param int $tableCacheSize
+     * @param array $custom
      */
     public function __construct(
         $user,
@@ -104,7 +107,8 @@ class Config
         array $eventsIgnore,
         array $tablesOnly,
         array $databasesOnly,
-        $tableCacheSize
+        $tableCacheSize,
+        array $custom
     ) {
         $this->user = $user;
         $this->host = $host;
@@ -121,6 +125,7 @@ class Config
         $this->databasesOnly = $databasesOnly;
         $this->mariaDbGtid = $mariaGtid;
         $this->tableCacheSize = $tableCacheSize;
+        $this->custom = $custom;
     }
 
     /**
@@ -188,6 +193,14 @@ class Config
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
             );
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustom()
+    {
+        return $this->custom;
     }
 
     /**
