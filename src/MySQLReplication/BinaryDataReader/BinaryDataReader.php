@@ -47,7 +47,6 @@ class BinaryDataReader
      */
     public function advance($length)
     {
-        $length = (int)$length;
         $this->readBytes += $length;
         $this->data = substr($this->data, $length);
     }
@@ -59,7 +58,6 @@ class BinaryDataReader
      */
     public function read($length)
     {
-        $length = (int)$length;
         $return = substr($this->data, 0, $length);
         $this->readBytes += $length;
         $this->data = substr($this->data, $length);
@@ -398,11 +396,7 @@ class BinaryDataReader
      */
     public function isComplete($size)
     {
-        if ($this->readBytes + 1 - 20 < $size) {
-            return false;
-        }
-
-        return true;
+        return !($this->readBytes + 1 - 20 < $size);
     }
 
     /**
@@ -423,14 +417,6 @@ class BinaryDataReader
     public function getBinaryDataLength()
     {
         return strlen($this->data);
-    }
-
-    /**
-     * @return string
-     */
-    public function getData()
-    {
-        return $this->data;
     }
 
     /**

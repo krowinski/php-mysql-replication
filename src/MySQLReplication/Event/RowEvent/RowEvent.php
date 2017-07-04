@@ -5,7 +5,6 @@ namespace MySQLReplication\Event\RowEvent;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Definitions\ConstFieldType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
@@ -101,9 +100,9 @@ class RowEvent extends EventCommon
      * A end user of the lib should have no usage of this
      *
      * @return TableMapDTO
+     * @throws \MySQLReplication\BinLog\BinLogException
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
-     * @throws ConfigException
      */
     public function makeTableMapDTO()
     {
@@ -113,7 +112,10 @@ class RowEvent extends EventCommon
         $data['schema_length'] = $this->binaryDataReader->readUInt8();
         $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
 
-        if ([] !== $this->config->getDatabasesOnly() && !in_array($data['schema_name'], $this->config->getDatabasesOnly(), true)) {
+        if ([] !== $this->config->getDatabasesOnly() && !in_array(
+                $data['schema_name'], $this->config->getDatabasesOnly(), true
+            )
+        ) {
             return null;
         }
 
@@ -121,7 +123,10 @@ class RowEvent extends EventCommon
         $data['table_length'] = $this->binaryDataReader->readUInt8();
         $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
 
-        if ([] !== $this->config->getTablesOnly() && !in_array($data['table_name'], $this->config->getTablesOnly(), true)) {
+        if ([] !== $this->config->getTablesOnly() && !in_array(
+                $data['table_name'], $this->config->getTablesOnly(), true
+            )
+        ) {
             return null;
         }
 
@@ -169,7 +174,6 @@ class RowEvent extends EventCommon
             $data['columns_amount'],
             $fields
         );
-
 
         $this->cache->set($data['table_id'], $tableMap);
 
@@ -331,11 +335,7 @@ class RowEvent extends EventCommon
             } elseif ($column['type'] === ConstFieldType::DOUBLE) {
                 $values[$name] = $this->binaryDataReader->readDouble();
             } elseif ($column['type'] === ConstFieldType::VARCHAR || $column['type'] === ConstFieldType::STRING) {
-                if ($column['max_length'] > 255) {
-                    $values[$name] = $this->getString(2);
-                } else {
-                    $values[$name] = $this->getString(1);
-                }
+                $values[$name] = $column['max_length'] > 255 ? $this->getString(2) : $this->getString(1);
             } elseif ($column['type'] === ConstFieldType::NEWDECIMAL) {
                 $values[$name] = $this->getDecimal($column);
             } elseif ($column['type'] === ConstFieldType::BLOB) {
@@ -353,7 +353,9 @@ class RowEvent extends EventCommon
             } elseif ($column['type'] === ConstFieldType::DATE) {
                 $values[$name] = $this->getDate();
             } elseif ($column['type'] === ConstFieldType::YEAR) {
-                $values[$name] = $this->binaryDataReader->readUInt8() + 1900;
+                // https://dev.mysql.com/doc/refman/5.7/en/year.html
+                $year = $this->binaryDataReader->readUInt8();
+                $values[$name] = 0 === $year ? null : 1900 + $year;
             } elseif ($column['type'] === ConstFieldType::ENUM) {
                 $values[$name] = $this->getEnum($column);
             } elseif ($column['type'] === ConstFieldType::SET) {
@@ -363,7 +365,9 @@ class RowEvent extends EventCommon
             } elseif ($column['type'] === ConstFieldType::GEOMETRY) {
                 $values[$name] = $this->getString($column['length_size']);
             } elseif ($column['type'] === ConstFieldType::JSON) {
-                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder($this->getString($column['length_size']))->parseToString();
+                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder(
+                    $this->getString($column['length_size'])
+                )->parseToString();
             } else {
                 throw new MySQLReplicationException('Unknown row type: ' . $column['type']);
             }
@@ -466,14 +470,14 @@ class RowEvent extends EventCommon
             $res .= $value;
         }
 
-        for ($i = 0; $i < $unCompIntegral; $i++) {
+        for ($i = 0; $i < $unCompIntegral; ++$i) {
             $value = $this->binaryDataReader->readInt32Be() ^ $mask;
             $res .= sprintf('%09d', $value);
         }
 
         $res .= '.';
 
-        for ($i = 0; $i < $unCompFractional; $i++) {
+        for ($i = 0; $i < $unCompFractional; ++$i) {
             $value = $this->binaryDataReader->readInt32Be() ^ $mask;
             $res .= sprintf('%09d', $value);
         }
@@ -523,15 +527,16 @@ class RowEvent extends EventCommon
      * @param array $column
      * @return string|null
      * @throws BinaryDataReaderException
+     * @link https://dev.mysql.com/doc/internals/en/date-and-time-data-type-representation.html
      */
     protected function getDatetime2(array $column)
     {
         $data = $this->binaryDataReader->readIntBeBySize(5);
 
-        $year_month = $this->binaryDataReader->getBinarySlice($data, 1, 17, 40);
+        $yearMonth = $this->binaryDataReader->getBinarySlice($data, 1, 17, 40);
 
-        $year = (int)($year_month / 13);
-        $month = $year_month % 13;
+        $year = (int)($yearMonth / 13);
+        $month = $yearMonth % 13;
         $day = $this->binaryDataReader->getBinarySlice($data, 18, 5, 40);
         $hour = $this->binaryDataReader->getBinarySlice($data, 23, 5, 40);
         $minute = $this->binaryDataReader->getBinarySlice($data, 28, 6, 40);
@@ -551,13 +556,10 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * Read and add the fractional part of time
-     * For more details about new date format:
-     * http://dev.mysql.com/doc/internals/en/date-and-time-data-type-representation.html
-     *
      * @param array $column
-     * @return int|string
+     * @return string
      * @throws BinaryDataReaderException
+     * @link https://dev.mysql.com/doc/internals/en/date-and-time-data-type-representation.html
      */
     protected function getFSP(array $column)
     {
@@ -579,7 +581,7 @@ class RowEvent extends EventCommon
             }
         }
 
-        return $time;
+        return (string)$time;
     }
 
     /**
@@ -738,7 +740,6 @@ class RowEvent extends EventCommon
      */
     public function makeUpdateRowsDTO()
     {
-
         if (!$this->rowInit()) {
             return null;
         }
@@ -772,10 +773,11 @@ class RowEvent extends EventCommon
     {
         $value = $this->binaryDataReader->readUIntBySize($column['size']) - 1;
 
-        // check if given value exists in enums, if there not existing enum mysql sets to empty string.
+        // check if given value exists in enums, if there not existing enum mysql returns empty string.
         if (array_key_exists($value, $column['enum_values'])) {
-             return $column['enum_values'][$value];
+            return $column['enum_values'][$value];
         }
+
         return '';
     }
 }

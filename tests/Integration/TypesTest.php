@@ -587,13 +587,14 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeYear()
     {
-        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR)";
-        $insert_query = "INSERT INTO test VALUES(1984, 1984)";
+        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)";
+        $insert_query = "INSERT INTO test VALUES(1984, 1984, 0000)";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals(1984, $event->getValues()[0]['test']);
         self::assertEquals(1984, $event->getValues()[0]['test2']);
+        self::assertNull($event->getValues()[0]['test3']);
     }
 
     /**
@@ -607,6 +608,21 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals('Hello', $event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBe1024CharsLongVarChar()
+    {
+        $expected = str_repeat('-', 1024);
+
+        $create_query = "CREATE TABLE test (test VARCHAR(1024)) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('" . $expected . "')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals($expected, $event->getValues()[0]['test']);
     }
 
     /**

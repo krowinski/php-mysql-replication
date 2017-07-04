@@ -3,7 +3,7 @@
 namespace MySQLReplication\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\Config\ConfigException;
+use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Definitions\ConstFieldType;
 
 /**
@@ -21,8 +21,8 @@ class Columns
      * @param string $columnType
      * @param array $columnSchema
      * @param BinaryDataReader $binaryDataReader
-     * @throws ConfigException
      * @return array
+     * @throws \MySQLReplication\BinLog\BinLogException
      * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public static function parse($columnType, array $columnSchema, BinaryDataReader $binaryDataReader)
@@ -75,8 +75,8 @@ class Columns
     /**
      * @param BinaryDataReader $packet
      * @param array $columnSchema
-     * @throws ConfigException
      * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws \MySQLReplication\BinLog\BinLogException
      */
     protected static function getFieldSpecial(BinaryDataReader $packet, array $columnSchema)
     {
@@ -93,7 +93,7 @@ class Columns
 
     /**
      * @param array $columnSchema
-     * @throws ConfigException
+     * @throws \MySQLReplication\BinLog\BinLogException
      */
     protected static function getFieldSpecialValues(array $columnSchema)
     {
@@ -106,7 +106,7 @@ class Columns
                 ',', str_replace(['set(', ')', '\''], '', $columnSchema['COLUMN_TYPE'])
             );
         } else {
-            throw new ConfigException('Type not handled! - ' . self::$field['type']);
+            throw new BinLogException('Type not handled! - ' . self::$field['type']);
         }
     }
 }

@@ -14,6 +14,9 @@
 - Changed if datetime not recognised will return null (0000-00-00 00:00:00 is invalid date) 
 - Added 'custom' param to config if some custom params must be set in extended/implemented own classes
 - Added new tests
+- Changed Repository $schema to $database
+- Changed - YEAR = 0 will return null not 1900
+
 
 ## v2.2.0 (2017-03-10)
 - Removed foreign keys from events 

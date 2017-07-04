@@ -10,7 +10,7 @@ use MySQLReplication\Unit\BaseTest;
 /**
  * Class BinaryDataReaderServiceTest
  * @package Unit\BinaryDataReader
- * @covers \MySQLReplication\BinaryDataReader\BinaryDataReaderService
+ * @covers \MySQLReplication\BinaryDataReader\BinaryDataReader
  */
 class BinaryDataReaderServiceTest extends BaseTest
 {
