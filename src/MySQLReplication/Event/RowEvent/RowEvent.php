@@ -100,9 +100,8 @@ class RowEvent extends EventCommon
      * A end user of the lib should have no usage of this
      *
      * @return TableMapDTO
-     * @throws \MySQLReplication\BinLog\BinLogException
-     * @throws InvalidArgumentException
-     * @throws BinaryDataReaderException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function makeTableMapDTO()
     {

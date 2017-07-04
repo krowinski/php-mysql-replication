@@ -95,7 +95,7 @@ class Event
 
         if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType()) {
             $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO();
-            if ($event !== null) {
+            if (null !== $event) {
                 $this->eventDispatcher->dispatch(ConstEventsNames::TABLE_MAP, $event);
             }
         } else {

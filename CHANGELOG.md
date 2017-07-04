@@ -16,7 +16,7 @@
 - Added new tests
 - Changed Repository $schema to $database
 - Changed - YEAR = 0 will return null not 1900
-
+- Removed Exception from Columns class
 
 ## v2.2.0 (2017-03-10)
 - Removed foreign keys from events 
