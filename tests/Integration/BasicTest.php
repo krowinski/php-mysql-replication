@@ -122,7 +122,9 @@ class BasicTest extends BaseTest
     {
         $this->disconnect();
 
-        $this->configBuilder->withEventsOnly([ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]);
+        $this->configBuilder->withEventsOnly(
+            [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]
+        );
 
         $this->connect();
 
@@ -140,4 +142,63 @@ class BasicTest extends BaseTest
         self::assertInstanceOf(WriteRowsDTO::class, $event);
         self::assertEquals(['id' => 2], $event->getValues()[0]);
     }
+
+    /**
+     * @test
+     */
+    public function shouldFilterEvents()
+    {
+        $this->disconnect();
+
+        $this->configBuilder->withEventsOnly([ConstEventType::QUERY_EVENT]);
+
+        $this->connect();
+
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+
+        $this->connection->exec($createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))');
+
+        /** @var QueryDTO $event */
+        $event = $this->getEvent();
+        self::assertInstanceOf(QueryDTO::class, $event);
+        self::assertEquals($createTableExpected, $event->getQuery());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldFilterTables()
+    {
+        $expectedTable = 'test_2';
+        $expectedValue = 'foobar';
+
+        $this->disconnect();
+
+        $this->configBuilder
+            ->withEventsOnly(
+                [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]
+            )->withTablesOnly([$expectedTable]);
+
+        $this->connect();
+
+        $this->connection->exec('CREATE TABLE test_2 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
+        $this->connection->exec('CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
+        $this->connection->exec('CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
+
+
+        $this->connection->exec('INSERT INTO test_4 (data) VALUES (\'foo\')');
+        $this->connection->exec('INSERT INTO test_3 (data) VALUES (\'bar\')');
+        $this->connection->exec('INSERT INTO test_2 (data) VALUES (\''. $expectedValue .'\')');
+
+        /** @var WriteRowsDTO $event */
+        $event = $this->getEvent();
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+        self::assertEquals($expectedTable, $event->getTableMap()->getTable());
+        self::assertEquals($expectedValue, $event->getValues()[0]['data']);
+    }
+
+
+
+
 }
