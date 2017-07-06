@@ -10,6 +10,7 @@ use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Definitions\ConstEventType;
+use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
@@ -95,69 +96,86 @@ class Event
 
         if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType()) {
             $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO();
-            if (null !== $event) {
+            if (null !== $event && $this->isCorrectEvent($eventInfo->getType())) {
                 $this->eventDispatcher->dispatch(ConstEventsNames::TABLE_MAP, $event);
             }
-        } else {
-            if ([] !== $this->config->getEventsOnly() &&
-                !in_array($eventInfo->getType(), $this->config->getEventsOnly(), true)
-            ) {
-                return;
-            }
 
-            if (in_array($eventInfo->getType(), $this->config->getEventsIgnore(), true)) {
-                return;
-            }
-
-            if (in_array(
-                $eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
-                true
-            )) {
-                $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO();
-                if ($event !== null) {
-                    $this->eventDispatcher->dispatch(ConstEventsNames::UPDATE, $event);
-                }
-            } elseif (in_array(
-                $eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true
-            )) {
-                $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO();
-                if ($event !== null) {
-                    $this->eventDispatcher->dispatch(ConstEventsNames::WRITE, $event);
-                }
-            } elseif (in_array(
-                $eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2],
-                true
-            )) {
-                $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
-                if ($event !== null) {
-                    $this->eventDispatcher->dispatch(ConstEventsNames::DELETE, $event);
-                }
-            } elseif (ConstEventType::XID_EVENT === $eventInfo->getType()) {
-                $this->eventDispatcher->dispatch(
-                    ConstEventsNames::XID,
-                    (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO()
-                );
-            } elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
-                $this->eventDispatcher->dispatch(
-                    ConstEventsNames::ROTATE,
-                    (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO()
-                );
-            } elseif (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
-                $this->eventDispatcher->dispatch(
-                    ConstEventsNames::GTID,
-                    (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO()
-                );
-            } elseif (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
-                $this->eventDispatcher->dispatch(
-                    ConstEventsNames::QUERY,
-                    (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
-                );
-            } elseif (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
-                $this->eventDispatcher->dispatch(
-                    ConstEventsNames::MARIADB_GTID,
-                    (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO()
-                );
-            }
+            return;
         }
+
+        if (!$this->isCorrectEvent($eventInfo->getType())) {
+            return;
+        }
+
+        if (in_array(
+            $eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2],
+            true
+        )) {
+            $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO();
+            if ($event !== null) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::UPDATE, $event);
+            }
+        } elseif (in_array(
+            $eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true
+        )) {
+            $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO();
+            if ($event !== null) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::WRITE, $event);
+            }
+        } elseif (in_array(
+            $eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2],
+            true
+        )) {
+            $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
+            if ($event !== null) {
+                $this->eventDispatcher->dispatch(ConstEventsNames::DELETE, $event);
+            }
+        } elseif (ConstEventType::XID_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::XID,
+                (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO()
+            );
+        } elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::ROTATE,
+                (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO()
+            );
+        } elseif (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::GTID,
+                (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO()
+            );
+        } elseif (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::QUERY,
+                (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
+            );
+        } elseif (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::MARIADB_GTID,
+                (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO()
+            );
+        } elseif (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::FORMAT_DESCRIPTION, new FormatDescriptionEventDTO($eventInfo)
+            );
+        }
+    }
+
+    /**
+     * @param int $type
+     * @return bool
+     */
+    private function isCorrectEvent($type)
+    {
+        if ([] !== $this->config->getEventsOnly() && !in_array($type, $this->config->getEventsOnly(), true)) {
+            return false;
+        }
+
+        if (in_array($type, $this->config->getEventsIgnore(), true)) {
+            return false;
+        }
+
+        return true;
     }
 }

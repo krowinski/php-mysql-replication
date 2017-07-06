@@ -45,6 +45,6 @@ $binLogStream->registerSubscriber(new MyEventSubscribers());
 
 // start consuming events
 while (1) {
-    $binLogStream->binLogEvent();
+    $binLogStream->consume();
 }
 

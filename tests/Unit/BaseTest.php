@@ -1,6 +1,6 @@
 <?php
 
-namespace MySQLReplication\Unit;
+namespace MySQLReplication\Tests\Unit;
 
 /**
  * Class BaseTest

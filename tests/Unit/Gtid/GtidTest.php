@@ -1,9 +1,9 @@
 <?php
 
-namespace MySQLReplication\Unit\Gtid;
+namespace MySQLReplication\Tests\Unit\Gtid;
 
 use MySQLReplication\Gtid\Gtid;
-use MySQLReplication\Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
  * Class GtidTest

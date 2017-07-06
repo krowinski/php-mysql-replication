@@ -173,6 +173,7 @@ class ConfigBuilder
     }
 
     /**
+     * @see ConstEventType
      * @param array $eventsOnly
      * @return ConfigBuilder
      */
@@ -184,6 +185,7 @@ class ConfigBuilder
     }
 
     /**
+     * @see ConstEventType
      * @param array $eventsIgnore
      * @return ConfigBuilder
      */

@@ -17,6 +17,10 @@
 - Changed Repository $schema to $database
 - Changed - YEAR = 0 will return null not 1900
 - Removed Exception from Columns class
+- Added format description event
+- Changed inserts to not existing tables/columns will be returned as WriteEvent with empty Fields (see BasicTest::shouldGetWriteEventDropTable) 
+- Changed TABLE_MAP_EVENT will no longer appear after adding events to only/ignore configuration 
+- Fixed events with dropped columns will return a proper columns amount
 
 ## v2.2.0 (2017-03-10)
 - Removed foreign keys from events 

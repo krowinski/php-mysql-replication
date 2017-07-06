@@ -1,12 +1,12 @@
 <?php
 
 
-namespace MySQLReplication\Unit\Repository;
+namespace MySQLReplication\Tests\Unit\Repository;
 
 
 use Doctrine\DBAL\Connection;
 use MySQLReplication\Repository\MySQLRepository;
-use MySQLReplication\Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 class MySQLRepositoryTest extends BaseTest
 {

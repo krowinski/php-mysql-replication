@@ -227,13 +227,8 @@ class RowEvent extends EventCommon
 
         if ($this->cache->has($tableId)) {
             /** @var TableMap $tableMap */
-            $tableMap = $this->cache->get($tableId);
-            if ([] !== $tableMap->getFields()) {
-                $this->currentTableMap = $tableMap;
-
-                return true;
-            }
-            $this->cache->delete($tableId);
+            $this->currentTableMap = $this->cache->get($tableId);
+            return true;
         }
 
         return false;
@@ -248,6 +243,11 @@ class RowEvent extends EventCommon
      */
     protected function getValues()
     {
+        // if we don't get columns from information schema we don't know how to assign them
+        if ([] === $this->currentTableMap->getFields()) {
+            return [];
+        }
+
         $binaryData = $this->binaryDataReader->read(
             $this->getColumnsBinarySize($this->currentTableMap->getColumnsAmount())
         );
@@ -297,6 +297,7 @@ class RowEvent extends EventCommon
             if ($this->checkNull($null_bitmap, $nullBitmapIndex)) {
                 $values[$name] = null;
             } elseif ($column['type'] === ConstFieldType::IGNORE) {
+                $this->binaryDataReader->advance($column['length_size']);
                 $values[$name] = null;
             } elseif ($column['type'] === ConstFieldType::TINY) {
                 if ($column['unsigned']) {

@@ -95,6 +95,14 @@ class MySQLReplicationFactory
     }
 
     /**
+     * @param EventSubscribers $eventSubscribers
+     */
+    public function unregisterSubscriber(EventSubscribers $eventSubscribers)
+    {
+        $this->eventDispatcher->removeSubscriber($eventSubscribers);
+    }
+
+    /**
      * @return Connection
      */
     public function getDbConnection()
@@ -112,7 +120,7 @@ class MySQLReplicationFactory
      * @throws JsonBinaryDecoderException
      * @throws SocketException
      */
-    public function binLogEvent()
+    public function consume()
     {
         $this->event->consume();
     }

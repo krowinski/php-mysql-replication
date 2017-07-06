@@ -1,11 +1,11 @@
 <?php
 
 
-namespace MySQLReplication\Unit\BinaryDataReader;
+namespace MySQLReplication\Tests\Unit\BinaryDataReader;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderFactory;
-use MySQLReplication\Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
  * Class BinaryDataReaderServiceTest

@@ -3,7 +3,7 @@
 namespace BinaryDataReader\Unit;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
  * Class BinaryDataReaderTest

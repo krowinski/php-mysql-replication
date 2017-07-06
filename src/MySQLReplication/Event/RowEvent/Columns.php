@@ -51,7 +51,7 @@ class Columns
             self::$field['type_is_bool'] = true;
         } elseif (self::$field['type'] === ConstFieldType::VAR_STRING || self::$field['type'] === ConstFieldType::STRING) {
             self::getFieldSpecial($binaryDataReader, $columnSchema);
-        } elseif (self::$field['type'] === ConstFieldType::BLOB) {
+        } elseif (self::$field['type'] === ConstFieldType::BLOB || self::$field['type'] === ConstFieldType::IGNORE) {
             self::$field['length_size'] = $binaryDataReader->readUInt8();
         } elseif (self::$field['type'] === ConstFieldType::GEOMETRY) {
             self::$field['length_size'] = $binaryDataReader->readUInt8();

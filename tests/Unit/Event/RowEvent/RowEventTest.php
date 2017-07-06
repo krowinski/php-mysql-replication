@@ -1,7 +1,7 @@
 <?php
 
 
-namespace MySQLReplication\Unit\Event\RowEvent;
+namespace MySQLReplication\Tests\Unit\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
@@ -9,7 +9,7 @@ use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\RowEvent;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\RepositoryInterface;
-use MySQLReplication\Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 use Psr\SimpleCache\CacheInterface;
 
 /**

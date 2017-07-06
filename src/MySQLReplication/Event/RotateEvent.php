@@ -37,9 +37,9 @@ class RotateEvent extends EventCommon
     private function getSizeToRemoveByVersion()
     {
         if (BinLogServerInfo::isMariaDb()) {
-            return 8;
+            return 0;
         }
 
-        return 0;
+        return 8;
     }
 }
