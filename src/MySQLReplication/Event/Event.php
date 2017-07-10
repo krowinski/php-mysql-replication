@@ -36,30 +36,23 @@ class Event
      */
     private $rowEventService;
     /**
-     * @var Config
-     */
-    private $config;
-    /**
      * @var EventDispatcher
      */
     private $eventDispatcher;
 
     /**
      * BinLogPack constructor.
-     * @param Config $config
      * @param BinLogSocketConnect $socketConnect
      * @param BinaryDataReaderFactory $packageService
      * @param RowEventFactory $rowEventService
      * @param EventDispatcher $eventDispatcher
      */
     public function __construct(
-        Config $config,
         BinLogSocketConnect $socketConnect,
         BinaryDataReaderFactory $packageService,
         RowEventFactory $rowEventService,
         EventDispatcher $eventDispatcher
     ) {
-        $this->config = $config;
         $this->socketConnect = $socketConnect;
         $this->packageService = $packageService;
         $this->rowEventService = $rowEventService;
@@ -96,14 +89,14 @@ class Event
 
         if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType()) {
             $event = $this->rowEventService->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO();
-            if (null !== $event && $this->isCorrectEvent($eventInfo->getType())) {
+            if (null !== $event && Config::checkEvent($eventInfo->getType())) {
                 $this->eventDispatcher->dispatch(ConstEventsNames::TABLE_MAP, $event);
             }
 
             return;
         }
 
-        if (!$this->isCorrectEvent($eventInfo->getType())) {
+        if (!Config::checkEvent($eventInfo->getType())) {
             return;
         }
 
@@ -160,22 +153,5 @@ class Event
                 ConstEventsNames::FORMAT_DESCRIPTION, new FormatDescriptionEventDTO($eventInfo)
             );
         }
-    }
-
-    /**
-     * @param int $type
-     * @return bool
-     */
-    private function isCorrectEvent($type)
-    {
-        if ([] !== $this->config->getEventsOnly() && !in_array($type, $this->config->getEventsOnly(), true)) {
-            return false;
-        }
-
-        if (in_array($type, $this->config->getEventsIgnore(), true)) {
-            return false;
-        }
-
-        return true;
     }
 }

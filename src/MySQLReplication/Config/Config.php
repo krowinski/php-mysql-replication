@@ -11,67 +11,67 @@ class Config
     /**
      * @var string
      */
-    private $user;
+    private static $user;
     /**
      * @var string
      */
-    private $host;
+    private static $host;
     /**
      * @var int
      */
-    private $port;
+    private static $port;
     /**
      * @var string
      */
-    private $password;
+    private static $password;
     /**
      * @var string
      */
-    private $charset;
+    private static $charset;
     /**
      * @var string
      */
-    private $gtid;
+    private static $gtid;
     /**
      * @var int
      */
-    private $slaveId;
+    private static $slaveId;
     /**
      * @var string
      */
-    private $binLogFileName;
+    private static $binLogFileName;
     /**
      * @var int
      */
-    private $binLogPosition;
+    private static $binLogPosition;
     /**
      * @var array
      */
-    private $eventsOnly;
+    private static $eventsOnly;
     /**
      * @var array
      */
-    private $eventsIgnore;
+    private static $eventsIgnore;
     /**
      * @var array
      */
-    private $tablesOnly;
+    private static $tablesOnly;
     /**
      * @var array
      */
-    private $databasesOnly;
+    private static $databasesOnly;
     /**
      * @var string
      */
-    private $mariaDbGtid;
+    private static $mariaDbGtid;
     /**
      * @var int
      */
-    private $tableCacheSize;
+    private static $tableCacheSize;
     /**
      * @var array
      */
-    private $custom;
+    private static $custom;
 
     /**
      * Config constructor.
@@ -110,52 +110,52 @@ class Config
         $tableCacheSize,
         array $custom
     ) {
-        $this->user = $user;
-        $this->host = $host;
-        $this->port = $port;
-        $this->password = $password;
-        $this->charset = $charset;
-        $this->gtid = $gtid;
-        $this->slaveId = $slaveId;
-        $this->binLogFileName = $binLogFileName;
-        $this->binLogPosition = $binLogPosition;
-        $this->eventsOnly = $eventsOnly;
-        $this->eventsIgnore = $eventsIgnore;
-        $this->tablesOnly = $tablesOnly;
-        $this->databasesOnly = $databasesOnly;
-        $this->mariaDbGtid = $mariaGtid;
-        $this->tableCacheSize = $tableCacheSize;
-        $this->custom = $custom;
+        self::$user = $user;
+        self::$host = $host;
+        self::$port = $port;
+        self::$password = $password;
+        self::$charset = $charset;
+        self::$gtid = $gtid;
+        self::$slaveId = $slaveId;
+        self::$binLogFileName = $binLogFileName;
+        self::$binLogPosition = $binLogPosition;
+        self::$eventsOnly = $eventsOnly;
+        self::$eventsIgnore = $eventsIgnore;
+        self::$tablesOnly = $tablesOnly;
+        self::$databasesOnly = $databasesOnly;
+        self::$mariaDbGtid = $mariaGtid;
+        self::$tableCacheSize = $tableCacheSize;
+        self::$custom = $custom;
     }
 
     /**
      * @throws ConfigException
      */
-    public function validate()
+    public static function validate()
     {
-        if (!empty($this->user) && false === is_string($this->user)) {
+        if (!empty(self::$user) && false === is_string(self::$user)) {
             throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
         }
-        if (!empty($this->host)) {
-            $ip = gethostbyname($this->host);
+        if (!empty(self::$host)) {
+            $ip = gethostbyname(self::$host);
             if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty($this->port) && false === filter_var(
-                $this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+        if (!empty(self::$port) && false === filter_var(
+                self::$port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty($this->password) && false === is_string($this->password) && false === is_numeric($this->password)) {
+        if (!empty(self::$password) && false === is_string(self::$password) && false === is_numeric(self::$password)) {
             throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
         }
-        if (!empty($this->charset) && false === is_string($this->charset)) {
+        if (!empty(self::$charset) && false === is_string(self::$charset)) {
             throw new ConfigException(ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE);
         }
-        if (!empty($this->gtid) && false === is_string($this->gtid)) {
-            foreach (explode(',', $this->gtid) as $gtid) {
+        if (!empty(self::$gtid) && false === is_string(self::$gtid)) {
+            foreach (explode(',', self::$gtid) as $gtid) {
                 if (false === (bool)preg_match(
                         '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
                     )
@@ -164,31 +164,31 @@ class Config
                 }
             }
         }
-        if (!empty($this->slaveId) && false === filter_var(
-                $this->slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+        if (!empty(self::$slaveId) && false === filter_var(
+                self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
-        if (!empty($this->binLogFileName) && false === is_string($this->binLogFileName)) {
+        if (!empty(self::$binLogFileName) && false === is_string(self::$binLogFileName)) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE
             );
         }
-        if (!empty($this->binLogPosition) && false === filter_var(
-                $this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+        if (!empty(self::$binLogPosition) && false === filter_var(
+                self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
             );
         }
-        if (!empty($this->mariaDbGtid) && false === is_string($this->mariaDbGtid)) {
+        if (!empty(self::$mariaDbGtid) && false === is_string(self::$mariaDbGtid)) {
             throw new ConfigException(
                 ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE
             );
         }
-        if (false === filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+        if (false === filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
             );
@@ -198,128 +198,163 @@ class Config
     /**
      * @return array
      */
-    public function getCustom()
+    public static function getCustom()
     {
-        return $this->custom;
+        return self::$custom;
     }
 
     /**
      * @return string
      */
-    public function getUser()
+    public static function getUser()
     {
-        return $this->user;
+        return self::$user;
     }
 
     /**
      * @return string
      */
-    public function getHost()
+    public static function getHost()
     {
-        return $this->host;
+        return self::$host;
     }
 
     /**
      * @return int
      */
-    public function getPort()
+    public static function getPort()
     {
-        return $this->port;
+        return self::$port;
     }
 
     /**
      * @return string
      */
-    public function getPassword()
+    public static function getPassword()
     {
-        return $this->password;
+        return self::$password;
     }
 
     /**
      * @return string
      */
-    public function getCharset()
+    public static function getCharset()
     {
-        return $this->charset;
+        return self::$charset;
     }
 
     /**
      * @return string
      */
-    public function getGtid()
+    public static function getGtid()
     {
-        return $this->gtid;
+        return self::$gtid;
     }
 
     /**
      * @return string
      */
-    public function getMariaDbGtid()
+    public static function getMariaDbGtid()
     {
-        return $this->mariaDbGtid;
+        return self::$mariaDbGtid;
     }
 
     /**
      * @return int
      */
-    public function getSlaveId()
+    public static function getSlaveId()
     {
-        return $this->slaveId;
+        return self::$slaveId;
     }
 
     /**
      * @return string
      */
-    public function getBinLogFileName()
+    public static function getBinLogFileName()
     {
-        return $this->binLogFileName;
+        return self::$binLogFileName;
     }
 
     /**
      * @return int
      */
-    public function getBinLogPosition()
+    public static function getBinLogPosition()
     {
-        return $this->binLogPosition;
+        return self::$binLogPosition;
     }
 
     /**
      * @return array
      */
-    public function getEventsOnly()
+    public static function getEventsOnly()
     {
-        return $this->eventsOnly;
+        return self::$eventsOnly;
     }
 
     /**
      * @return array
      */
-    public function getEventsIgnore()
+    public static function getEventsIgnore()
     {
-        return $this->eventsIgnore;
+        return self::$eventsIgnore;
     }
 
     /**
      * @return array
      */
-    public function getTablesOnly()
+    public static function getTablesOnly()
     {
-        return $this->tablesOnly;
+        return self::$tablesOnly;
     }
 
     /**
      * @return array
      */
-    public function getDatabasesOnly()
+    public static function getDatabasesOnly()
     {
-        return $this->databasesOnly;
+        return self::$databasesOnly;
     }
 
     /**
      * @return int
      */
-    public function getTableCacheSize()
+    public static function getTableCacheSize()
     {
-        return $this->tableCacheSize;
+        return self::$tableCacheSize;
+    }
+
+    /**
+     * @param string $database
+     * @return bool
+     */
+    public static function checkDataBasesOnly($database)
+    {
+        return [] !== Config::getDatabasesOnly() && !in_array($database, Config::getDatabasesOnly(), true);
+    }
+
+    /**
+     * @param string $table
+     * @return bool
+     */
+    public static function checkTablesOnly($table)
+    {
+        return [] !== Config::getTablesOnly() && !in_array($table, Config::getTablesOnly(), true);
+    }
+
+    /**
+     * @param int $type
+     * @return bool
+     */
+    public static function checkEvent($type)
+    {
+        if ([] !== Config::getEventsOnly() && !in_array($type, Config::getEventsOnly(), true)) {
+            return false;
+        }
+
+        if (in_array($type, Config::getEventsIgnore(), true)) {
+            return false;
+        }
+
+        return true;
     }
 }

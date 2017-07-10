@@ -15,20 +15,7 @@ class ArrayCache implements CacheInterface
      * @var array
      */
     private static $tableMapCache = [];
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * ArrayCache constructor.
-     * @param Config $config
-     */
-    public function __construct(Config $config)
-    {
-        $this->config = $config;
-    }
-
+    
     /**
      * Fetches a value from the cache.
      *
@@ -62,10 +49,10 @@ class ArrayCache implements CacheInterface
     public function set($key, $value, $ttl = null)
     {
         // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) > $this->config->getTableCacheSize()) {
+        if (count(self::$tableMapCache) > Config::getTableCacheSize()) {
             self::$tableMapCache = array_slice(
                 self::$tableMapCache,
-                ceil($this->config->getTableCacheSize() / 2),
+                ceil(Config::getTableCacheSize() / 2),
                 null,
                 true
             );

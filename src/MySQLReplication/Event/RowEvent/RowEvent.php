@@ -53,10 +53,6 @@ class RowEvent extends EventCommon
      */
     private $repository;
     /**
-     * @var Config
-     */
-    private $config;
-    /**
      * @var TableMap
      */
     private $currentTableMap;
@@ -71,7 +67,6 @@ class RowEvent extends EventCommon
 
     /**
      * RowEvent constructor.
-     * @param Config $config
      * @param RepositoryInterface $repository
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
@@ -79,7 +74,6 @@ class RowEvent extends EventCommon
      * @param CacheInterface $cache
      */
     public function __construct(
-        Config $config,
         RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
         EventInfo $eventInfo,
@@ -89,7 +83,6 @@ class RowEvent extends EventCommon
         parent::__construct($eventInfo, $binaryDataReader);
 
         $this->repository = $repository;
-        $this->config = $config;
         $this->jsonBinaryDecoderFactory = $jsonBinaryDecoderFactory;
         $this->cache = $cache;
     }
@@ -111,10 +104,7 @@ class RowEvent extends EventCommon
         $data['schema_length'] = $this->binaryDataReader->readUInt8();
         $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
 
-        if ([] !== $this->config->getDatabasesOnly() && !in_array(
-                $data['schema_name'], $this->config->getDatabasesOnly(), true
-            )
-        ) {
+        if (Config::checkDataBasesOnly($data['schema_name'])) {
             return null;
         }
 
@@ -122,10 +112,7 @@ class RowEvent extends EventCommon
         $data['table_length'] = $this->binaryDataReader->readUInt8();
         $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
 
-        if ([] !== $this->config->getTablesOnly() && !in_array(
-                $data['table_name'], $this->config->getTablesOnly(), true
-            )
-        ) {
+        if (Config::checkTablesOnly($data['table_name'])) {
             return null;
         }
 

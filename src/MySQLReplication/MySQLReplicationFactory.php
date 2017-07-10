@@ -45,7 +45,6 @@ class MySQLReplicationFactory
     private $event;
 
     /**
-     * @param Config $config
      * @throws MySQLReplicationException
      * @throws DBALException
      * @throws ConfigException
@@ -53,33 +52,31 @@ class MySQLReplicationFactory
      * @throws \MySQLReplication\Gtid\GtidException
      * @throws \MySQLReplication\Socket\SocketException
      */
-    public function __construct(Config $config)
+    public function __construct()
     {
-        $config->validate();
+        Config::validate();
 
         $this->connection = DriverManager::getConnection(
             [
-                'user' => $config->getUser(),
-                'password' => $config->getPassword(),
-                'host' => $config->getHost(),
-                'port' => $config->getPort(),
+                'user' => Config::getUser(),
+                'password' => Config::getPassword(),
+                'host' => Config::getHost(),
+                'port' => Config::getPort(),
                 'driver' => 'pdo_mysql',
-                'charset' => $config->getCharset()
+                'charset' => Config::getCharset()
             ]
         );
         $repository = new MySQLRepository($this->connection);
 
         $rowEventService = new RowEventFactory(
-            $config,
             $repository,
             new JsonBinaryDecoderFactory(),
-            new ArrayCache($config)
+            new ArrayCache()
         );
         $this->eventDispatcher = new EventDispatcher();
 
         $this->event = new Event(
-            $config,
-            new BinLogSocketConnect($config, $repository, new Socket()),
+            new BinLogSocketConnect($repository, new Socket()),
             new BinaryDataReaderFactory(),
             $rowEventService,
             $this->eventDispatcher

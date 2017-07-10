@@ -4,7 +4,6 @@
 namespace MySQLReplication\Tests\Unit\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\Config\Config;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\RowEvent;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
@@ -35,10 +34,6 @@ class RowEventTest extends BaseTest
      */
     private $repository;
     /**
-     * @var Config|\PHPUnit_Framework_MockObject_MockObject
-     */
-    private $config;
-    /**
      * @var JsonBinaryDecoderFactory
      */
     private $jsonBinaryDecoderFactory;
@@ -51,7 +46,6 @@ class RowEventTest extends BaseTest
     {
         parent::setUp();
 
-        $this->config = $this->getMockBuilder(Config::class)->disableOriginalConstructor()->getMock();
         $this->repository = $this->getMockBuilder(RepositoryInterface::class)->disableOriginalConstructor()->getMock();
         $this->binaryDataReader = $this->getMockBuilder(BinaryDataReader::class)->disableOriginalConstructor()->getMock(
         );
@@ -62,7 +56,6 @@ class RowEventTest extends BaseTest
         $this->cache = $this->getMockBuilder(CacheInterface::class)->disableOriginalConstructor()->getMock();
 
         $this->rowEvent = new RowEvent(
-            $this->config,
             $this->repository,
             $this->binaryDataReader,
             $this->eventInfo,

@@ -26,10 +26,6 @@ class BinLogSocketConnect
      */
     private $repository;
     /**
-     * @var Config
-     */
-    private $config;
-    /**
      * http://dev.mysql.com/doc/internals/en/auth-phase-fast-path.html 00 FE
      * @var array
      */
@@ -45,7 +41,6 @@ class BinLogSocketConnect
     private $binaryDataMaxLength = 16777215;
 
     /**
-     * @param Config $config
      * @param RepositoryInterface $repository
      * @param SocketInterface $socket
      * @throws BinLogException
@@ -53,15 +48,13 @@ class BinLogSocketConnect
      * @throws \MySQLReplication\Socket\SocketException
      */
     public function __construct(
-        Config $config,
         RepositoryInterface $repository,
         SocketInterface $socket
     ) {
         $this->repository = $repository;
-        $this->config = $config;
         $this->socket = $socket;
 
-        $this->socket->connectToStream($this->config->getHost(), $this->config->getPort());
+        $this->socket->connectToStream(Config::getHost(), Config::getPort());
         BinLogServerInfo::parsePackage($this->getResponse(false), $this->repository->getVersion());
         $this->authenticate();
         $this->getBinlogStream();
@@ -129,9 +122,9 @@ class BinLogSocketConnect
         for ($i = 0; $i < 23; $i++) {
             $data .= chr(0);
         }
-        $result = sha1($this->config->getPassword(), true) ^ sha1(BinLogServerInfo::getSalt() . sha1(sha1($this->config->getPassword(), true), true), true);
+        $result = sha1(Config::getPassword(), true) ^ sha1(BinLogServerInfo::getSalt() . sha1(sha1(Config::getPassword(), true), true), true);
 
-        $data = $data . $this->config->getUser() . chr(0) . chr(strlen($result)) . $result;
+        $data = $data . Config::getUser() . chr(0) . chr(strlen($result)) . $result;
         $str = pack('L', strlen($data));
         $s = $str[0] . $str[1] . $str[2];
         $data = $s . chr(1) . $data;
@@ -154,7 +147,7 @@ class BinLogSocketConnect
 
         $this->registerSlave();
 
-        if ('' !== $this->config->getGtid()) {
+        if ('' !== Config::getGtid()) {
             $this->setBinLogDumpGtid();
         } else {
             $this->setBinLogDump();
@@ -181,19 +174,19 @@ class BinLogSocketConnect
     {
         $host = gethostname();
         $hostLength = strlen($host);
-        $userLength = strlen($this->config->getUser());
-        $passLength = strlen($this->config->getPassword());
+        $userLength = strlen(Config::getUser());
+        $passLength = strlen(Config::getPassword());
 
         $data = pack('l', 18 + $hostLength + $userLength + $passLength);
         $data .= chr(ConstCommand::COM_REGISTER_SLAVE);
-        $data .= pack('V', $this->config->getSlaveId());
+        $data .= pack('V', Config::getSlaveId());
         $data .= pack('C', $hostLength);
         $data .= $host;
         $data .= pack('C', $userLength);
-        $data .= $this->config->getUser();
+        $data .= Config::getUser();
         $data .= pack('C', $passLength);
-        $data .= $this->config->getPassword();
-        $data .= pack('v', $this->config->getPort());
+        $data .= Config::getPassword();
+        $data .= pack('v', Config::getPort());
         $data .= pack('V', 0);
         $data .= pack('V', 0);
 
@@ -209,11 +202,11 @@ class BinLogSocketConnect
      */
     private function setBinLogDumpGtid()
     {
-        $collection = GtidFactory::makeCollectionFromString($this->config->getGtid());
+        $collection = GtidFactory::makeCollectionFromString(Config::getGtid());
 
         $data = pack('l', 26 + $collection->getEncodedLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
         $data .= pack('S', 0);
-        $data .= pack('I', $this->config->getSlaveId());
+        $data .= pack('I', Config::getSlaveId());
         $data .= pack('I', 3);
         $data .= chr(0);
         $data .= chr(0);
@@ -233,15 +226,15 @@ class BinLogSocketConnect
      */
     private function setBinLogDump()
     {
-        if ('' !== $this->config->getMariaDbGtid()) {
+        if ('' !== Config::getMariaDbGtid()) {
             $this->execute('SET @mariadb_slave_capability = 4');
-            $this->execute('SET @slave_connect_state = \'' . $this->config->getMariaDbGtid() . '\'');
+            $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
             $this->execute('SET @slave_gtid_strict_mode = 0');
             $this->execute('SET @slave_gtid_ignore_duplicates = 0');
         }
 
-        $binFilePos = $this->config->getBinLogPosition();
-        $binFileName = $this->config->getBinLogFileName();
+        $binFilePos = Config::getBinLogPosition();
+        $binFileName = Config::getBinLogFileName();
         if (0 === $binFilePos || '' === $binFileName) {
             $master = $this->repository->getMasterStatus();
             $binFilePos = $master['Position'];
@@ -251,7 +244,7 @@ class BinLogSocketConnect
         $data = pack('i', strlen($binFileName) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
         $data .= pack('I', $binFilePos);
         $data .= pack('v', 0);
-        $data .= pack('I', $this->config->getSlaveId());
+        $data .= pack('I', Config::getSlaveId());
         $data .= $binFileName;
 
         $this->socket->writeToSocket($data);

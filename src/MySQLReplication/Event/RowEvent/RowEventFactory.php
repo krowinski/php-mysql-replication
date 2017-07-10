@@ -4,7 +4,6 @@ namespace MySQLReplication\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Event\EventInfo;
-use MySQLReplication\Config\Config;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\RepositoryInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -22,20 +21,16 @@ class RowEventFactory
 
     /**
      * RowEventService constructor.
-     * @param Config $config
      * @param RepositoryInterface $repository
      * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      * @param CacheInterface $cache
      */
     public function __construct(
-        Config $config,
         RepositoryInterface $repository,
         JsonBinaryDecoderFactory $jsonBinaryDecoderFactory,
         CacheInterface $cache
-    )
-    {
+    ) {
         $this->rowEventBuilder = new RowEventBuilder(
-            $config,
             $repository,
             $jsonBinaryDecoderFactory,
             $cache
