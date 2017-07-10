@@ -16,11 +16,6 @@ interface RepositoryInterface
     public function getFields($database, $table);
 
     /**
-     * @return mixed
-     */
-    public function getConnection();
-
-    /**
      * @return bool
      */
     public function isCheckSum();

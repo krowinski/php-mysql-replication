@@ -94,15 +94,6 @@ class MySQLRepositoryTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetConnection()
-    {
-        $this->connection->method('ping')->willReturn(false);
-        self::assertInstanceOf(Connection::class, $this->mySQLRepositoryTest->getConnection());
-    }
-
-    /**
-     * @test
-     */
     public function shouldDestroy()
     {
         $this->mySQLRepositoryTest = null;

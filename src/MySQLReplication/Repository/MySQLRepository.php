@@ -58,7 +58,7 @@ class MySQLRepository implements RepositoryInterface
     /**
      * @return Connection
      */
-    public function getConnection()
+    private function getConnection()
     {
         if (false === $this->connection->ping()) {
             $this->connection->close();
