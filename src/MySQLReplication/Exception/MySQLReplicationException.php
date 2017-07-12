@@ -45,4 +45,6 @@ class MySQLReplicationException extends \Exception
     const MARIADBGTID_ERROR_CODE = 410;
     const TABLE_CACHE_SIZE_ERROR_MESSAGE = 'Table cache must be integer';
     const TABLE_CACHE_SIZE_ERROR_CODE = 411;
+    const HEARTBEAT_PERIOD_ERROR_MESSAGE = 'Heartbeat period must be integer min:1 max:4294967';
+    const HEARTBEAT_PERIOD_ERROR_CODE = 412;
 }

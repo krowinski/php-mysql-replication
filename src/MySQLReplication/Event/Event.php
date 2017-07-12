@@ -11,6 +11,7 @@ use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
+use MySQLReplication\Event\DTO\HeartbeatDTO;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
@@ -151,6 +152,10 @@ class Event
         } elseif (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
             $this->eventDispatcher->dispatch(
                 ConstEventsNames::FORMAT_DESCRIPTION, new FormatDescriptionEventDTO($eventInfo)
+            );
+        } elseif (ConstEventType::HEARTBEAT_LOG_EVENT === $eventInfo->getType()) {
+            $this->eventDispatcher->dispatch(
+                ConstEventsNames::HEARTBEAT, new HeartbeatDTO($eventInfo)
             );
         }
     }

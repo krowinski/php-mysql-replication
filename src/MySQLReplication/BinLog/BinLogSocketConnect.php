@@ -122,7 +122,9 @@ class BinLogSocketConnect
         for ($i = 0; $i < 23; $i++) {
             $data .= chr(0);
         }
-        $result = sha1(Config::getPassword(), true) ^ sha1(BinLogServerInfo::getSalt() . sha1(sha1(Config::getPassword(), true), true), true);
+        $result = sha1(Config::getPassword(), true) ^ sha1(
+                BinLogServerInfo::getSalt() . sha1(sha1(Config::getPassword(), true), true), true
+            );
 
         $data = $data . Config::getUser() . chr(0) . chr(strlen($result)) . $result;
         $str = pack('L', strlen($data));
@@ -142,12 +144,22 @@ class BinLogSocketConnect
     {
         $this->checkSum = $this->repository->isCheckSum();
         if ($this->checkSum) {
-            $this->execute('SET @master_binlog_checksum=@@global.binlog_checksum');
+            $this->execute('SET @master_binlog_checksum = @@global.binlog_checksum');
+        }
+
+        if (0 !== Config::getHeartbeatPeriod()) {
+            // master_heartbeat_period is nanoseconds
+            $this->execute('SET @master_heartbeat_period = ' . Config::getHeartbeatPeriod() * 1000000000);
         }
 
         $this->registerSlave();
 
-        if ('' !== Config::getGtid()) {
+        if ('' !== Config::getMariaDbGtid()) {
+            $this->execute('SET @mariadb_slave_capability = 4');
+            $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
+            $this->execute('SET @slave_gtid_strict_mode = 0');
+            $this->execute('SET @slave_gtid_ignore_duplicates = 0');
+        } else if ('' !== Config::getGtid()) {
             $this->setBinLogDumpGtid();
         } else {
             $this->setBinLogDump();
@@ -226,13 +238,6 @@ class BinLogSocketConnect
      */
     private function setBinLogDump()
     {
-        if ('' !== Config::getMariaDbGtid()) {
-            $this->execute('SET @mariadb_slave_capability = 4');
-            $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
-            $this->execute('SET @slave_gtid_strict_mode = 0');
-            $this->execute('SET @slave_gtid_ignore_duplicates = 0');
-        }
-
         $binFilePos = Config::getBinLogPosition();
         $binFileName = Config::getBinLogFileName();
         if (0 === $binFilePos || '' === $binFileName) {

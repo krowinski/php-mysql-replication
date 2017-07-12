@@ -5,7 +5,7 @@ namespace MySQLReplication\Definitions;
 /**
  * Class ConstEventType
  * @package MySQLReplication\Definitions
- * @see https://dev.mysql.com/doc/internals/en/binlog-event-type.html
+ * @see https://dev.mysql.com/doc/internals/en/event-classes-and-types.html
  */
 class ConstEventType
 {

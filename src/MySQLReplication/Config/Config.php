@@ -72,6 +72,10 @@ class Config
      * @var array
      */
     private static $custom;
+    /**
+     * @var int
+     */
+    private static $heartbeatPeriod;
 
     /**
      * Config constructor.
@@ -91,6 +95,7 @@ class Config
      * @param array $databasesOnly
      * @param int $tableCacheSize
      * @param array $custom
+     * @param int $heartbeatPeriod
      */
     public function __construct(
         $user,
@@ -108,7 +113,8 @@ class Config
         array $tablesOnly,
         array $databasesOnly,
         $tableCacheSize,
-        array $custom
+        array $custom,
+        $heartbeatPeriod
     ) {
         self::$user = $user;
         self::$host = $host;
@@ -126,6 +132,7 @@ class Config
         self::$mariaDbGtid = $mariaGtid;
         self::$tableCacheSize = $tableCacheSize;
         self::$custom = $custom;
+        self::$heartbeatPeriod = $heartbeatPeriod;
     }
 
     /**
@@ -133,49 +140,49 @@ class Config
      */
     public static function validate()
     {
-        if (!empty(self::$user) && false === is_string(self::$user)) {
+        if (!empty(self::$user) && !is_string(self::$user)) {
             throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
         }
         if (!empty(self::$host)) {
             $ip = gethostbyname(self::$host);
-            if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
+            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty(self::$port) && false === filter_var(
+        if (!empty(self::$port) && !filter_var(
                 self::$port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty(self::$password) && false === is_string(self::$password) && false === is_numeric(self::$password)) {
+        if (!empty(self::$password) && !is_string(self::$password) && !is_numeric(self::$password)) {
             throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
         }
-        if (!empty(self::$charset) && false === is_string(self::$charset)) {
+        if (!empty(self::$charset) && !is_string(self::$charset)) {
             throw new ConfigException(ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE);
         }
-        if (!empty(self::$gtid) && false === is_string(self::$gtid)) {
+        if (!empty(self::$gtid) && !is_string(self::$gtid)) {
             foreach (explode(',', self::$gtid) as $gtid) {
-                if (false === (bool)preg_match(
-                        '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
-                    )
+                if (!(bool)preg_match(
+                    '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
+                )
                 ) {
                     throw new ConfigException(ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE);
                 }
             }
         }
-        if (!empty(self::$slaveId) && false === filter_var(
+        if (!empty(self::$slaveId) && !filter_var(
                 self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
-        if (!empty(self::$binLogFileName) && false === is_string(self::$binLogFileName)) {
+        if (!empty(self::$binLogFileName) && !is_string(self::$binLogFileName)) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE
             );
         }
-        if (!empty(self::$binLogPosition) && false === filter_var(
+        if (!empty(self::$binLogPosition) && !filter_var(
                 self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
@@ -183,14 +190,22 @@ class Config
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
             );
         }
-        if (!empty(self::$mariaDbGtid) && false === is_string(self::$mariaDbGtid)) {
+        if (!empty(self::$mariaDbGtid) && !is_string(self::$mariaDbGtid)) {
             throw new ConfigException(
                 ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE
             );
         }
-        if (false === filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+        if (!filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
+            );
+        }
+        if (0 !== self::$heartbeatPeriod && !filter_var(
+                self::$heartbeatPeriod, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 4294967]]
+            )
+        ) {
+            throw new ConfigException(
+                ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE
             );
         }
     }
@@ -356,5 +371,13 @@ class Config
         }
 
         return true;
+    }
+
+    /**
+     * @return int
+     */
+    public static function getHeartbeatPeriod()
+    {
+        return self::$heartbeatPeriod;
     }
 }

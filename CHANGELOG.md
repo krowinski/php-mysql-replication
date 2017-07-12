@@ -23,6 +23,7 @@
 - Fixed events with dropped columns will return a proper columns amount
 - Changed configuration to static calls
 - Removed absolute method getConnection from repository
+- Added Heartbeat period and event support 
 
 ## v2.2.0 (2017-03-10)
 - Removed foreign keys from events 
