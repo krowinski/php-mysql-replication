@@ -53,13 +53,13 @@ class MariaDbGtidLogDTO extends EventDTO
     public function __toString()
     {
         return PHP_EOL .
-        '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
-        'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-        'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-        'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Flag: ' . var_export($this->flag, true) . PHP_EOL .
-        'Domain Id: ' . $this->domainId . PHP_EOL .
-        'Sequence Number: ' . $this->sequenceNumber . PHP_EOL;
+            '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
+            'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
+            'Flag: ' . var_export($this->flag, true) . PHP_EOL .
+            'Domain Id: ' . $this->domainId . PHP_EOL .
+            'Sequence Number: ' . $this->sequenceNumber . PHP_EOL;
     }
 
     /**

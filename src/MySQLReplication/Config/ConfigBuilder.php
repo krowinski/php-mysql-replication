@@ -63,11 +63,19 @@ class ConfigBuilder
     /**
      * @var string
      */
-    private $mariaDbGtid;
+    private $mariaDbGtid = '';
     /**
      * @var int
      */
     private $tableCacheSize = 128;
+    /**
+     * @var array
+     */
+    private $custom = [];
+    /**
+     * @var int
+     */
+    private $heartbeatPeriod = 0;
 
     /**
      * @param string $user
@@ -169,6 +177,7 @@ class ConfigBuilder
     }
 
     /**
+     * @see ConstEventType
      * @param array $eventsOnly
      * @return ConfigBuilder
      */
@@ -180,6 +189,7 @@ class ConfigBuilder
     }
 
     /**
+     * @see ConstEventType
      * @param array $eventsIgnore
      * @return ConfigBuilder
      */
@@ -225,10 +235,36 @@ class ConfigBuilder
 
     /**
      * @param int $tableCacheSize
+     * @return $this
      */
     public function withTableCacheSize($tableCacheSize)
     {
         $this->tableCacheSize = $tableCacheSize;
+
+        return $this;
+    }
+
+    /**
+     * @param array $custom
+     * @return $this
+     */
+    public function withCustom(array $custom)
+    {
+        $this->custom = $custom;
+
+        return $this;
+    }
+
+    /**
+     * @see https://dev.mysql.com/doc/refman/5.6/en/change-master-to.html
+     * @param int $heartbeatPeriod
+     * @return $this
+     */
+    public function withHeartbeatPeriod($heartbeatPeriod)
+    {
+        $this->heartbeatPeriod = $heartbeatPeriod;
+
+        return $this;
     }
 
     /**
@@ -251,7 +287,9 @@ class ConfigBuilder
             $this->eventsIgnore,
             $this->tablesOnly,
             $this->databasesOnly,
-            $this->tableCacheSize
+            $this->tableCacheSize,
+            $this->custom,
+            $this->heartbeatPeriod
         );
     }
 }

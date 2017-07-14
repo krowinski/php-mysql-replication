@@ -41,14 +41,14 @@ class TableMapDTO extends EventDTO
     public function __toString()
     {
         return PHP_EOL .
-        '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
-        'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-        'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-        'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Table: ' . $this->tableMap->getTable() . PHP_EOL .
-        'Database: ' . $this->tableMap->getDatabase() . PHP_EOL .
-        'Table Id: ' . $this->tableMap->getTableId() . PHP_EOL .
-        'Columns amount: ' . $this->tableMap->getColumnsAmount() . PHP_EOL;
+            '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
+            'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
+            'Table: ' . $this->tableMap->getTable() . PHP_EOL .
+            'Database: ' . $this->tableMap->getDatabase() . PHP_EOL .
+            'Table Id: ' . $this->tableMap->getTableId() . PHP_EOL .
+            'Columns amount: ' . $this->tableMap->getColumnsAmount() . PHP_EOL;
     }
 
     /**

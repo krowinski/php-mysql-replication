@@ -12,14 +12,14 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 class JsonBinaryDecoderFactory
 {
     /**
-     * @param string $jsonBinaryData
+     * @param string $data
      * @return JsonBinaryDecoderService
      */
-    public function makeJsonBinaryDecoder($jsonBinaryData)
+    public function makeJsonBinaryDecoder($data)
     {
-        return (new JsonBinaryDecoderService(
-            new BinaryDataReader($jsonBinaryData),
-            new JsonBinaryDecoderFormatter())
+        return new JsonBinaryDecoderService(
+            new BinaryDataReader($data),
+            new JsonBinaryDecoderFormatter()
         );
     }
 }

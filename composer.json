@@ -2,33 +2,43 @@
   "name": "krowinski/php-mysql-replication",
   "description": "Pure PHP Implementation of MySQL replication protocol. This allow you to receive event like insert, update, delete with their data and raw SQL queries.",
   "keywords": [
+    "php",
+    "mysql-replication",
+    "php-library",
     "mysql",
+    "mysql-binlog",
+    "mysql-replication-protocol",
     "replication",
-    "binlog",
-    "php"
+    "binlog"
   ],
   "type": "library",
   "require": {
     "php": ">=5.5.9",
+    "ext-sockets": "*",
     "doctrine/dbal": "^2.5",
     "doctrine/collections": "^1.3",
-    "ext-sockets": "*",
-    "symfony/event-dispatcher": ">=2.8 <=3.1",
-    "symfony/dependency-injection": ">=2.8 <=3.1"
+    "symfony/event-dispatcher": "^2.8|^3.1",
+    "symfony/dependency-injection": "^2.8|^3.1",
+    "psr/simple-cache": "^1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": ">=4.8 <=5.6"
+    "phpunit/phpunit": "^4.8|^5.7"
   },
   "license": "MIT",
   "authors": [
     {
-      "name": "KR",
+      "name": "Kacper Rowiński",
       "email": "kacper.rowinski@gmail.com"
     }
   ],
   "autoload": {
     "psr-4": {
       "MySQLReplication\\": "src/MySQLReplication/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MySQLReplication\\Tests\\": "tests/"
     }
   },
   "minimum-stability": "stable"

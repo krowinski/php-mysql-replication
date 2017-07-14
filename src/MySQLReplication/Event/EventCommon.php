@@ -27,8 +27,7 @@ abstract class EventCommon
     public function __construct(
         EventInfo $eventInfo,
         BinaryDataReader $binaryDataReader
-    )
-    {
+    ) {
         $this->eventInfo = $eventInfo;
         $this->binaryDataReader = $binaryDataReader;
     }

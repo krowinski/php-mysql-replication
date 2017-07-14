@@ -17,7 +17,7 @@ class Gtid
     /**
      * @var string
      */
-    private $sid = '';
+    private $sid;
 
     /**
      * Gtid constructor.
@@ -26,14 +26,15 @@ class Gtid
      */
     public function __construct($gtid)
     {
-        if (false === (bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches))
-        {
+        if (false === (bool)preg_match(
+                '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
+            )
+        ) {
             throw new GtidException(GtidException::INCORRECT_GTID_MESSAGE, GtidException::INCORRECT_GTID_CODE);
         }
 
         $this->sid = $matches[1];
-        foreach (array_filter(explode(':', $matches[2])) as $k)
-        {
+        foreach (array_filter(explode(':', $matches[2])) as $k) {
             $this->intervals[] = explode('-', $k);
         }
         $this->sid = str_replace('-', '', $this->sid);
@@ -47,15 +48,11 @@ class Gtid
         $buffer = pack('H*', $this->sid);
         $buffer .= BinaryDataReader::pack64bit(count($this->intervals));
 
-        foreach ($this->intervals as $interval)
-        {
-            if (count($interval) !== 1)
-            {
+        foreach ($this->intervals as $interval) {
+            if (count($interval) !== 1) {
                 $buffer .= BinaryDataReader::pack64bit($interval[0]);
                 $buffer .= BinaryDataReader::pack64bit($interval[1]);
-            }
-            else
-            {
+            } else {
                 $buffer .= BinaryDataReader::pack64bit($interval[0]);
                 $buffer .= BinaryDataReader::pack64bit($interval[0] + 1);
             }

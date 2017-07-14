@@ -5,21 +5,24 @@ namespace MySQLReplication;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
-use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
-use MySQLReplication\BinLog\BinLogAuth;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderFactory;
+use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\BinLog\BinLogSocketConnect;
-use MySQLReplication\BinLog\Exception\BinLogException;
-use MySQLReplication\BinLog\BinLogSocketConnectInterface;
+use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Config\Exception\ConfigException;
+use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Event\Event;
+use MySQLReplication\Event\EventException;
 use MySQLReplication\Event\EventSubscribers;
-use MySQLReplication\Event\RowEvent\RowEventService;
+use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
-use MySQLReplication\Gtid\GtidService;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\MySQLRepository;
-use MySQLReplication\Repository\RepositoryInterface;
+use MySQLReplication\Socket\Socket;
+use MySQLReplication\Socket\SocketException;
+use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
@@ -29,91 +32,53 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 class MySQLReplicationFactory
 {
     /**
-     * @var EventDispatcher
-     */
-    private $eventDispatcher;
-    /**
-     * @var RepositoryInterface
-     */
-    private $repository;
-    /**
-     * @var BinLogSocketConnectInterface
-     */
-    private $socketConnect;
-    /**
-     * @var Event
-     */
-    private $event;
-    /**
-     * @var BinLogAuth
-     */
-    private $binLogAuth;
-    /**
      * @var Connection
      */
     private $connection;
     /**
-     * @var BinaryDataReaderService
+     * @var EventDispatcher
      */
-    private $binaryDataReaderService;
+    private $eventDispatcher;
     /**
-     * @var GtidService
+     * @var Event
      */
-    private $gtiService;
-    /**
-     * @var RowEventService
-     */
-    private $rowEventService;
-    /**
-     * @var JsonBinaryDecoderFactory
-     */
-    private $jsonBinaryDecoderFactory;
+    private $event;
 
     /**
-     * @param Config $config
      * @throws MySQLReplicationException
      * @throws DBALException
      * @throws ConfigException
      * @throws BinLogException
+     * @throws \MySQLReplication\Gtid\GtidException
+     * @throws \MySQLReplication\Socket\SocketException
      */
-    public function __construct(Config $config)
+    public function __construct()
     {
-        $config->validate();
+        Config::validate();
 
-        $this->connection = DriverManager::getConnection([
-            'user' => $config->getUser(),
-            'password' => $config->getPassword(),
-            'host' => $config->getHost(),
-            'port' => $config->getPort(),
-            'driver' => 'pdo_mysql',
-            'charset' => $config->getCharset()
-        ]);
-        $this->repository = new MySQLRepository($this->connection);
-        $this->gtiService = new GtidService();
-        $this->binLogAuth = new BinLogAuth();
-
-        $this->socketConnect = new BinLogSocketConnect(
-            $config,
-            $this->repository,
-            $this->binLogAuth,
-            $this->gtiService
+        $this->connection = DriverManager::getConnection(
+            [
+                'user' => Config::getUser(),
+                'password' => Config::getPassword(),
+                'host' => Config::getHost(),
+                'port' => Config::getPort(),
+                'driver' => 'pdo_mysql',
+                'charset' => Config::getCharset()
+            ]
         );
-        $this->socketConnect->connectToStream();
+        $repository = new MySQLRepository($this->connection);
 
-        $this->jsonBinaryDecoderFactory = new JsonBinaryDecoderFactory();
-        $this->rowEventService = new RowEventService(
-            $config,
-            $this->repository,
-            $this->jsonBinaryDecoderFactory
+        $rowEventService = new RowEventFactory(
+            $repository,
+            new JsonBinaryDecoderFactory(),
+            new ArrayCache()
         );
-        $this->binaryDataReaderService = new BinaryDataReaderService();
         $this->eventDispatcher = new EventDispatcher();
 
         $this->event = new Event(
-            $config,
-            $this->socketConnect,
-            $this->binaryDataReaderService,
-            $this->rowEventService,
+            new BinLogSocketConnect($repository, new Socket()),
+            new BinaryDataReaderFactory(),
+            $rowEventService,
             $this->eventDispatcher
         );
     }
@@ -127,6 +92,14 @@ class MySQLReplicationFactory
     }
 
     /**
+     * @param EventSubscribers $eventSubscribers
+     */
+    public function unregisterSubscriber(EventSubscribers $eventSubscribers)
+    {
+        $this->eventDispatcher->removeSubscriber($eventSubscribers);
+    }
+
+    /**
      * @return Connection
      */
     public function getDbConnection()
@@ -136,8 +109,15 @@ class MySQLReplicationFactory
 
     /**
      * @throws MySQLReplicationException
+     * @throws InvalidArgumentException
+     * @throws BinLogException
+     * @throws BinaryDataReaderException
+     * @throws ConfigException
+     * @throws EventException
+     * @throws JsonBinaryDecoderException
+     * @throws SocketException
      */
-    public function binLogEvent()
+    public function consume()
     {
         $this->event->consume();
     }

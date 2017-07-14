@@ -74,14 +74,14 @@ abstract class RowsDTO extends EventDTO
     public function __toString()
     {
         return PHP_EOL .
-        '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
-        'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-        'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-        'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-        'Table: ' . $this->tableMap->getTable() . PHP_EOL .
-        'Affected columns: ' . $this->tableMap->getColumnsAmount() . PHP_EOL .
-        'Changed rows: ' . $this->changedRows . PHP_EOL .
-        'Values: ' . print_r($this->values, true) . PHP_EOL;
+            '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
+            'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
+            'Table: ' . $this->tableMap->getTable() . PHP_EOL .
+            'Affected columns: ' . $this->tableMap->getColumnsAmount() . PHP_EOL .
+            'Changed rows: ' . $this->changedRows . PHP_EOL .
+            'Values: ' . print_r($this->values, true) . PHP_EOL;
     }
 
     /**

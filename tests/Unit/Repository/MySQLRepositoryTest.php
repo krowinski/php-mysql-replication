@@ -1,12 +1,12 @@
 <?php
 
 
-namespace Unit\Repository;
+namespace MySQLReplication\Tests\Unit\Repository;
 
 
 use Doctrine\DBAL\Connection;
 use MySQLReplication\Repository\MySQLRepository;
-use Unit\BaseTest;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 class MySQLRepositoryTest extends BaseTest
 {
@@ -89,15 +89,6 @@ class MySQLRepositoryTest extends BaseTest
         $this->connection->method('fetchAssoc')->willReturn($expected);
 
         self::assertEquals($expected,$this->mySQLRepositoryTest->getMasterStatus());
-    }
-
-    /**
-     * @test
-     */
-    public function shouldGetConnection()
-    {
-        $this->connection->method('ping')->willReturn(false);
-        self::assertInstanceOf(Connection::class, $this->mySQLRepositoryTest->getConnection());
     }
 
     /**

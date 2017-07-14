@@ -18,8 +18,7 @@ class GtidCollection extends ArrayCollection
     {
         $l = 8;
         /** @var Gtid $gtid */
-        foreach ($this->toArray() as $gtid)
-        {
+        foreach ($this->toArray() as $gtid) {
             $l += $gtid->getEncodedLength();
         }
 
@@ -33,8 +32,7 @@ class GtidCollection extends ArrayCollection
     {
         $s = BinaryDataReader::pack64bit($this->count());
         /** @var Gtid $gtid */
-        foreach ($this->toArray() as $gtid)
-        {
+        foreach ($this->toArray() as $gtid) {
             $s .= $gtid->getEncoded();
         }
 

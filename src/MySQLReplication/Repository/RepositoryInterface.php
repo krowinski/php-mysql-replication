@@ -1,23 +1,19 @@
 <?php
+
 namespace MySQLReplication\Repository;
 
 /**
- * Class MySQLRepository
+ * Interface RepositoryInterface
  * @package MySQLReplication\Repository
  */
 interface RepositoryInterface
 {
     /**
-     * @param string $schema
+     * @param string $database
      * @param string $table
      * @return array
      */
-    public function getFields($schema, $table);
-
-    /**
-     * @return mixed
-     */
-    public function getConnection();
+    public function getFields($database, $table);
 
     /**
      * @return bool

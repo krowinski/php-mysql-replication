@@ -15,6 +15,10 @@ class MySQLRepository implements RepositoryInterface
      */
     private $connection;
 
+    /**
+     * MySQLRepository constructor.
+     * @param Connection $connection
+     */
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
@@ -26,11 +30,11 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * @param string $schema
+     * @param string $database
      * @param string $table
      * @return array
      */
-    public function getFields($schema, $table)
+    public function getFields($database, $table)
     {
         $sql = '
              SELECT
@@ -48,16 +52,15 @@ class MySQLRepository implements RepositoryInterface
                     `TABLE_NAME` = ?
        ';
 
-        return $this->getConnection()->fetchAll($sql, [$schema, $table]);
+        return $this->getConnection()->fetchAll($sql, [$database, $table]);
     }
 
     /**
      * @return Connection
      */
-    public function getConnection()
+    private function getConnection()
     {
-        if (false === $this->connection->ping())
-        {
+        if (false === $this->connection->ping()) {
             $this->connection->close();
             $this->connection->connect();
         }
@@ -82,13 +85,12 @@ class MySQLRepository implements RepositoryInterface
     {
         $r = '';
         $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
-        if (is_array($versions) && 0 !== count($versions))
-        {
-            foreach ($versions as $version)
-            {
+        if (is_array($versions) && 0 !== count($versions)) {
+            foreach ($versions as $version) {
                 $r .= $version['Value'];
             }
         }
+
         return $r;
     }
 

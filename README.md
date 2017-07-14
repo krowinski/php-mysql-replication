@@ -22,6 +22,8 @@ or standalone
 
 ```sh
 git clone https://github.com/krowinski/php-mysql-replication.git
+
+composer install -o
 ```
 
 MySQL server settings
@@ -51,7 +53,8 @@ GRANT SELECT ON `dbName`.* TO 'user'@'host';
 Configuration
 =========
 
-You can pass this array keys to ConfigService->makeConfigFromArray([]) or use ConfigBuilder to generate config.
+Use ConfigBuilder or ConfigFactory to create configuration.
+Available options:
 
 'user' - your mysql user (mandatory)
 
@@ -81,8 +84,11 @@ You can pass this array keys to ConfigService->makeConfigFromArray([]) or use Co
 
 'databasesOnly' - array to only listen on given databases (default all databases) 
  
-'tableCacheSize' - some data are collected from information schema, this data is cached. This variable set cache for tables bigger takes more memory. (default 128 objects) 
+'tableCacheSize' - some data are collected from information schema, this data is cached.
 
+'custom' - if some params must be set in extended/implemented own classes
+
+'heartbeatPeriod' - sets the interval in seconds between replication heartbeats. Whenever the master's binary log is updated with an event, the waiting period for the next heartbeat is reset. interval is a decimal value having the range 0 to 4294967 seconds and a resolution in milliseconds; the smallest nonzero value is 0.001. Heartbeats are sent by the master only if there are no unsent events in the binary log file for a period longer than interval.
 
 Examples
 =========
@@ -110,73 +116,79 @@ UPDATE test4 SET data = "World", data2="Hello" WHERE id = 1;
 DELETE FROM test4 WHERE id = 1;
 ```
 
-Output will be similar to this:
+Output will be similar to this (depends on configuration for example GTID off/on):
 
+    === Event format description ===
+    Date: 2017-07-06T13:31:11+00:00
+    Log position: 0
+    Event size: 116
+    Memory usage 2.4 MB
+    
     === Event gtid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021014
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803092
     Event size: 48
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160837
-    Memory usage 2.36 MB
+    GTID NEXT: 3403c535-624f-11e7-9940-0800275713ee:13675
+    Memory usage 2.42 MB
     
     === Event query ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021159
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803237
     Event size: 145
     Database: php_mysql_replication
     Execution time: 0
     Query: CREATE DATABASE php_mysql_replication
-    Memory usage 2.36 MB
+    Memory usage 2.45 MB
     
     === Event gtid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021207
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803285
     Event size: 48
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160838
-    Memory usage 2.36 MB
+    GTID NEXT: 3403c535-624f-11e7-9940-0800275713ee:13676
+    Memory usage 2.45 MB
     
     === Event query ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021422
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803500
     Event size: 215
     Database: php_mysql_replication
     Execution time: 0
     Query: CREATE TABLE test4 (id int NOT NULL AUTO_INCREMENT, data VARCHAR(255), data2 VARCHAR(255), PRIMARY KEY(id))
-    Memory usage 2.36 MB
+    Memory usage 2.45 MB
     
     === Event gtid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021470
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803548
     Event size: 48
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160839
-    Memory usage 2.36 MB
+    GTID NEXT: 3403c535-624f-11e7-9940-0800275713ee:13677
+    Memory usage 2.45 MB
     
     === Event query ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021559
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803637
     Event size: 89
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
-    Memory usage 2.36 MB
+    Memory usage 2.45 MB
     
     === Event tableMap ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021630
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803708
     Event size: 71
     Table: test4
     Database: php_mysql_replication
-    Table Id: 1135
+    Table Id: 866
     Columns amount: 3
-    Memory usage 2.36 MB
+    Memory usage 2.71 MB
     
     === Event write ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021682
-    Event size: 52
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803762
+    Event size: 54
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -191,46 +203,46 @@ Output will be similar to this:
     
     )
     
-    Memory usage 2.37 MB
+    Memory usage 2.74 MB
     
     === Event xid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021713
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803793
     Event size: 31
-    Transaction ID: 252191
-    Memory usage 2.37 MB
+    Transaction ID: 662802
+    Memory usage 2.75 MB
     
     === Event gtid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021761
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803841
     Event size: 48
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160840
-    Memory usage 2.37 MB
+    GTID NEXT: 3403c535-624f-11e7-9940-0800275713ee:13678
+    Memory usage 2.75 MB
     
     === Event query ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021850
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57803930
     Event size: 89
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
-    Memory usage 2.37 MB
+    Memory usage 2.76 MB
     
     === Event tableMap ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021921
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804001
     Event size: 71
     Table: test4
     Database: php_mysql_replication
-    Table Id: 1135
+    Table Id: 866
     Columns amount: 3
-    Memory usage 2.37 MB
+    Memory usage 2.75 MB
     
     === Event update ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4021991
-    Event size: 70
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804075
+    Event size: 74
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -256,46 +268,46 @@ Output will be similar to this:
     
     )
     
-    Memory usage 2.37 MB
+    Memory usage 2.76 MB
     
     === Event xid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022022
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804106
     Event size: 31
-    Transaction ID: 252196
-    Memory usage 2.37 MB
+    Transaction ID: 662803
+    Memory usage 2.76 MB
     
     === Event gtid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022070
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804154
     Event size: 48
     Commit: true
-    GTID NEXT: 9b1c8d18-2a76-11e5-a26b-000c2976f3f3:160841
-    Memory usage 2.37 MB
+    GTID NEXT: 3403c535-624f-11e7-9940-0800275713ee:13679
+    Memory usage 2.76 MB
     
     === Event query ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022159
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804243
     Event size: 89
     Database: php_mysql_replication
     Execution time: 0
     Query: BEGIN
-    Memory usage 2.37 MB
+    Memory usage 2.76 MB
     
     === Event tableMap ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022230
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804314
     Event size: 71
     Table: test4
     Database: php_mysql_replication
-    Table Id: 1135
+    Table Id: 866
     Columns amount: 3
-    Memory usage 2.37 MB
+    Memory usage 2.76 MB
     
     === Event delete ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022282
-    Event size: 52
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804368
+    Event size: 54
     Table: test4
     Affected columns: 3
     Changed rows: 1
@@ -310,43 +322,45 @@ Output will be similar to this:
     
     )
     
-    Memory usage 2.38 MB
+    Memory usage 2.77 MB
     
     === Event xid ===
-    Date: 2016-03-13T21:46:31+00:00
-    Log position: 4022313
+    Date: 2017-07-06T15:23:44+00:00
+    Log position: 57804399
     Event size: 31
-    Transaction ID: 252199
-    Memory usage 2.38 MB
+    Transaction ID: 662804
+    Memory usage 2.77 MB
+
 
 
 Benchmarks
 =========
 Tested on VM
 
-Debian 8.3
-PHP 5.6.17
-MySQL 5.6.29-76.2-log Percona Server
+    Debian 8.7
+    PHP 5.6.30
+    Percona 5.6.35
 
-```
+```sh
 inxi
 ```
-    CPU~Dual core Intel Core i5-2500K (-MCP-) clocked at 3701 Mhz Kernel~3.16.0-4-amd64 x86_64 Up~2 days Mem~1170.9/3952.4MB HDD~41.9GB(15.2% used) Procs~119 Client~Shell inxi~2.1.28
+
+    CPU(s)~4 Single core Intel Core i5-2500Ks (-SMP-) clocked at 5901 Mhz Kernel~3.16.0-4-amd64 x86_64 Up~1 day Mem~1340.3/1996.9MB HDD~41.9GB(27.7% used) Procs~122 Client~Shell inxi~2.1.28
 
 ```sh
 php example/benchmark.php
 ```
     Start insert data
-    6531 event by seconds (1000 total)
-    6665 event by seconds (2000 total)
-    6674 event by seconds (3000 total)
-    6535 event by seconds (4000 total)
-    6555 event by seconds (5000 total)
-    6615 event by seconds (6000 total)
-    6619 event by seconds (7000 total)
-    6660 event by seconds (8000 total)
-    6666 event by seconds (9000 total)
-    6701 event by seconds (10000 total)
-    6696 event by seconds (11000 total)
-    6704 event by seconds (12000 total)
+    7442 event by seconds (1000 total)
+    7679 event by seconds (2000 total)
+    7914 event by seconds (3000 total)
+    7904 event by seconds (4000 total)
+    7965 event by seconds (5000 total)
+    8006 event by seconds (6000 total)
+    8048 event by seconds (7000 total)
+    8038 event by seconds (8000 total)
+    8040 event by seconds (9000 total)
+    8055 event by seconds (10000 total)
+    8058 event by seconds (11000 total)
+    8071 event by seconds (12000 total)
 

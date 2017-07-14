@@ -2,7 +2,7 @@
 
 namespace MySQLReplication\Event;
 
-use MySQLReplication\BinaryDataReader\Exception\BinaryDataReaderException;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Event\DTO\GTIDLogDTO;
 
 /**
@@ -24,7 +24,10 @@ class GtidEvent extends EventCommon
         return new GTIDLogDTO(
             $this->eventInfo,
             $commit_flag,
-            vsprintf('%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s', str_split($sid)) . ':' . $gno
+            vsprintf(
+                '%s%s%s%s%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s-%s%s%s%s%s%s%s%s%s%s%s%s',
+                str_split($sid)
+            ) . ':' . $gno
         );
     }
 }

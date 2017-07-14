@@ -1,132 +1,13 @@
 <?php
 
-namespace Integration;
-
-use MySQLReplication\Config\ConfigService;
-use MySQLReplication\Event\DTO\EventDTO;
-use MySQLReplication\Event\EventSubscribers;
-use MySQLReplication\MySQLReplicationFactory;
-
-/**
- * Class BenchmarkEventSubscribers
- * @package example
- */
-class MyEventSubscribers extends EventSubscribers
-{
-    /**
-     * @var TypesTest
-     */
-    private $typesTest;
-
-    public function __construct(TypesTest $typesTest)
-    {
-        $this->typesTest = $typesTest;
-    }
-
-    /**
-     * @param EventDTO $event (your own handler more in EventSubscribers class )
-     */
-    public function allEvents(EventDTO $event)
-    {
-        $this->typesTest->setEvent($event);
-    }
-}
+namespace MySQLReplication\Tests\Integration;
 
 /**
  * Class TypesTest
  * @package Tests\Integration
  */
-class TypesTest extends \PHPUnit_Framework_TestCase
+class TypesTest extends BaseTest
 {
-    /**
-     * @var string
-     */
-    private $database = 'mysqlreplication_test';
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $conn;
-    /**
-     * @var \MySQLReplication\MySQLReplicationFactory
-     */
-    private $binLogStream;
-    /**
-     * @var EventDTO
-     */
-    private $currentEvent;
-
-    protected function setUp()
-    {
-        parent::setUp();
-
-        $config = (new ConfigService())->makeConfigFromArray([
-            'user' => 'root',
-            'ip' => '127.0.0.1',
-            'password' => 'root'
-        ]);
-        $this->binLogStream = new MySQLReplicationFactory($config);
-        $this->binLogStream->registerSubscriber(new MyEventSubscribers($this));
-
-        $this->conn = $this->binLogStream->getDbConnection();
-
-        $this->conn->exec('SET GLOBAL time_zone = "UTC"');
-        $this->conn->exec('DROP DATABASE IF EXISTS ' . $this->database);
-        $this->conn->exec('CREATE DATABASE ' . $this->database);
-        $this->conn->exec('USE ' . $this->database);
-        $this->conn->exec('SET SESSION sql_mode = \'\';');
-    }
-
-    /**
-     * @param EventDTO $eventDTO
-     * @return EventDTO
-     */
-    public function setEvent(EventDTO $eventDTO)
-    {
-        $this->currentEvent = $eventDTO;
-    }
-
-    /**
-     * @return EventDTO
-     */
-    public function getEvent()
-    {
-        $this->binLogStream->binLogEvent();
-        return $this->currentEvent;
-    }
-
-    protected function tearDown()
-    {
-        parent::tearDown();
-
-        $this->binLogStream = null;
-        $this->conn = null;
-    }
-
-    /**
-     * @param $create_query
-     * @param $insert_query
-     * @return \MySQLReplication\Event\DTO\DeleteRowsDTO|\MySQLReplication\Event\DTO\EventDTO|\MySQLReplication\Event\DTO\GTIDLogDTO|\MySQLReplication\Event\DTO\QueryDTO|\MySQLReplication\Event\DTO\RotateDTO|\MySQLReplication\Event\DTO\TableMapDTO|\MySQLReplication\Event\DTO\UpdateRowsDTO|\MySQLReplication\Event\DTO\WriteRowsDTO|\MySQLReplication\Event\DTO\XidDTO
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function createAndInsertValue($create_query, $insert_query)
-    {
-        $this->conn->exec($create_query);
-        $this->conn->exec($insert_query);
-
-        self::assertEquals(null, $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\GTIDLogDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\QueryDTO', $this->getEvent());
-        self::assertInstanceOf('MySQLReplication\Event\DTO\TableMapDTO', $this->getEvent());
-
-        return $this->getEvent();
-    }
-
     /**
      * @test
      */
@@ -571,15 +452,29 @@ class TypesTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldReturnNullOnZeroDateDateTime()
+    {
+        $create_query = "CREATE TABLE test (test DATETIME NOT NULL);";
+        $insert_query = "INSERT INTO test VALUES('0000-00-00 00:00:00')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
     public function shouldBeYear()
     {
-        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR)";
-        $insert_query = "INSERT INTO test VALUES(1984, 1984)";
+        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)";
+        $insert_query = "INSERT INTO test VALUES(1984, 1984, 0000)";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals(1984, $event->getValues()[0]['test']);
         self::assertEquals(1984, $event->getValues()[0]['test2']);
+        self::assertNull($event->getValues()[0]['test3']);
     }
 
     /**
@@ -598,9 +493,24 @@ class TypesTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function shouldBe1024CharsLongVarChar()
+    {
+        $expected = str_repeat('-', 1024);
+
+        $create_query = "CREATE TABLE test (test VARCHAR(1024)) CHARACTER SET latin1 COLLATE latin1_bin;";
+        $insert_query = "INSERT INTO test VALUES('" . $expected . "')";
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals($expected, $event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
     public function shouldBeBit()
     {
-        $create_query =  "CREATE TABLE test (
+        $create_query = "CREATE TABLE test (
             test BIT(6),
             test2 BIT(16),
             test3 BIT(12),
@@ -621,7 +531,9 @@ class TypesTest extends \PHPUnit_Framework_TestCase
         self::assertEquals('1000101010111000', $event->getValues()[0]['test2']);
         self::assertEquals('100010101101', $event->getValues()[0]['test3']);
         self::assertEquals('101100111', $event->getValues()[0]['test4']);
-        self::assertEquals('1101011010110100100111100011010100010100101110111011101011011010', $event->getValues()[0]['test5']);
+        self::assertEquals(
+            '1101011010110100100111100011010100010100101110111011101011011010', $event->getValues()[0]['test5']
+        );
     }
 
     /**
@@ -738,7 +650,9 @@ class TypesTest extends \PHPUnit_Framework_TestCase
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('000000000101000000000000000000f03f000000000000f03f', bin2hex($event->getValues()[0]['test']));
+        self::assertEquals(
+            '000000000101000000000000000000f03f000000000000f03f', bin2hex($event->getValues()[0]['test'])
+        );
     }
 
     /**
@@ -785,7 +699,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeEncodedLatin1()
     {
-        $this->conn->exec("SET CHARSET latin1");
+        $this->connection->exec("SET CHARSET latin1");
 
         $string = "\00e9";
 
@@ -802,7 +716,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeEncodedUTF8()
     {
-        $this->conn->exec("SET CHARSET utf8");
+        $this->connection->exec("SET CHARSET utf8");
 
         $string = "\20ac";
 
@@ -819,8 +733,7 @@ class TypesTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBeJson()
     {
-        if (false === strpos($this->conn->fetchColumn('SELECT VERSION()'), '5.7'))
-        {
+        if (false === strpos($this->connection->fetchColumn('SELECT VERSION()'), '5.7')) {
             $this->markTestIncomplete('Only for mysql 5.7');
         }
 

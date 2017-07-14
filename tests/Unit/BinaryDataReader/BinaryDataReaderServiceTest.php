@@ -1,16 +1,16 @@
 <?php
 
 
-namespace Unit\BinaryDataReader;
+namespace MySQLReplication\Tests\Unit\BinaryDataReader;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\BinaryDataReader\BinaryDataReaderService;
-use Unit\BaseTest;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderFactory;
+use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
  * Class BinaryDataReaderServiceTest
  * @package Unit\BinaryDataReader
- * @covers MySQLReplication\BinaryDataReader\BinaryDataReaderService
+ * @covers \MySQLReplication\BinaryDataReader\BinaryDataReader
  */
 class BinaryDataReaderServiceTest extends BaseTest
 {
@@ -19,7 +19,7 @@ class BinaryDataReaderServiceTest extends BaseTest
      */
     public function shouldMakePackageFromBinaryData()
     {
-        $service = (new BinaryDataReaderService())->makePackageFromBinaryData('foo');
+        $service = (new BinaryDataReaderFactory())->makePackageFromBinaryData('foo');
         self::assertInstanceOf(BinaryDataReader::class, $service);
     }
 }
