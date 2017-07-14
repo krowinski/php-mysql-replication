@@ -23,7 +23,7 @@ or standalone
 ```sh
 git clone https://github.com/krowinski/php-mysql-replication.git
 
-composer install
+composer install -o
 ```
 
 MySQL server settings
@@ -84,7 +84,7 @@ Available options:
 
 'databasesOnly' - array to only listen on given databases (default all databases) 
  
-'tableCacheSize' - some data are collected from information schema, this data is cached. This variable set cache for tables bigger takes more memory. (default 128 objects) 
+'tableCacheSize' - some data are collected from information schema, this data is cached.
 
 'custom' - if some params must be set in extended/implemented own classes
 
@@ -337,29 +337,30 @@ Benchmarks
 =========
 Tested on VM
 
-Debian 8.3
-PHP 5.6.17
-MySQL 5.6.29-76.2-log Percona Server
+    Debian 8.7
+    PHP 5.6.30
+    Percona 5.6.35
 
-```
+```sh
 inxi
 ```
-    CPU~Dual core Intel Core i5-2500K (-MCP-) clocked at 3701 Mhz Kernel~3.16.0-4-amd64 x86_64 Up~2 days Mem~1170.9/3952.4MB HDD~41.9GB(15.2% used) Procs~119 Client~Shell inxi~2.1.28
+
+    CPU(s)~4 Single core Intel Core i5-2500Ks (-SMP-) clocked at 5901 Mhz Kernel~3.16.0-4-amd64 x86_64 Up~1 day Mem~1340.3/1996.9MB HDD~41.9GB(27.7% used) Procs~122 Client~Shell inxi~2.1.28
 
 ```sh
 php example/benchmark.php
 ```
     Start insert data
-    6531 event by seconds (1000 total)
-    6665 event by seconds (2000 total)
-    6674 event by seconds (3000 total)
-    6535 event by seconds (4000 total)
-    6555 event by seconds (5000 total)
-    6615 event by seconds (6000 total)
-    6619 event by seconds (7000 total)
-    6660 event by seconds (8000 total)
-    6666 event by seconds (9000 total)
-    6701 event by seconds (10000 total)
-    6696 event by seconds (11000 total)
-    6704 event by seconds (12000 total)
+    7442 event by seconds (1000 total)
+    7679 event by seconds (2000 total)
+    7914 event by seconds (3000 total)
+    7904 event by seconds (4000 total)
+    7965 event by seconds (5000 total)
+    8006 event by seconds (6000 total)
+    8048 event by seconds (7000 total)
+    8038 event by seconds (8000 total)
+    8040 event by seconds (9000 total)
+    8055 event by seconds (10000 total)
+    8058 event by seconds (11000 total)
+    8071 event by seconds (12000 total)
 
