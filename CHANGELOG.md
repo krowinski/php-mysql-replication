@@ -2,7 +2,7 @@
 
 # Release Notes
 
-## v3.0.0 (2017-07-??)
+## v3.0.0 (2017-07-14)
 - Added Cache interfaces for table info
 - Changed examples to use ConfigBuilder
 - Changed BinLogSocketConnect to separate sockets handling to another class + added interface for socket class
