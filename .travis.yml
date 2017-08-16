@@ -23,7 +23,8 @@ before_script:
   - "sudo apt-get remove mysql* -y"
   - "if [ $DB = 'mysql57' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mysql56' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.6 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
-
+  - "sudo mysql_upgrade"
+  
   # Config
   - "echo '[mysqld]'            | sudo tee /etc/mysql/conf.d/replication.cnf"
   - "echo 'log-bin=mysql-bin'   | sudo tee -a /etc/mysql/conf.d/replication.cnf"
