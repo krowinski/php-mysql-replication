@@ -9,8 +9,6 @@ php:
 env:
   - DB=mysql57
   - DB=mysql56
-  global:
-    - setup=basic
 
 cache: 
   apt: true
@@ -48,8 +46,6 @@ before_script:
   - echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
 install:
-  - if [[ $setup = 'basic' ]]; then travis_retry composer install --no-interaction --prefer-source; fi
-  - if [[ $setup = 'stable' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-stable; fi
-  - if [[ $setup = 'lowest' ]]; then travis_retry composer update --prefer-source --no-interaction --prefer-lowest --prefer-stable; fi
+  travis_retry composer install --no-interaction --prefer-source;
 
 script: vendor/bin/phpunit
