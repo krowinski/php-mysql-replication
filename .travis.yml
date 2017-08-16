@@ -9,6 +9,8 @@ php:
 env:
   - DB=mysql57
   - DB=mysql56
+  global:
+    - setup=basic
 
 cache: 
   apt: true
