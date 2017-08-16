@@ -240,7 +240,7 @@ class BinLogSocketConnect
     {
         $binFilePos = Config::getBinLogPosition();
         $binFileName = Config::getBinLogFileName();
-        if (0 === $binFilePos || '' === $binFileName) {
+        if (0 === $binFilePos && '' === $binFileName) {
             $master = $this->repository->getMasterStatus();
             $binFilePos = $master['Position'];
             $binFileName = $master['File'];

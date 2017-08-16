@@ -37,9 +37,9 @@ class MySQLReplicationException extends \Exception
     const GTID_ERROR_CODE = 406;
     const SLAVE_ID_ERROR_MESSAGE = 'Incorrect slave id type';
     const SLAVE_ID_ERROR_CODE = 407;
-    const BIN_LOG_FILE_NAME_ERROR_MESSAGE = 'Incorrect binlog name type';
+    const BIN_LOG_FILE_NAME_ERROR_MESSAGE = 'Incorrect binlog name';
     const BIN_LOG_FILE_NAME_ERROR_CODE = 408;
-    const BIN_LOG_FILE_POSITION_ERROR_MESSAGE = 'Incorrect binlog position type';
+    const BIN_LOG_FILE_POSITION_ERROR_MESSAGE = 'Incorrect binlog position';
     const BIN_LOG_FILE_POSITION_ERROR_CODE = 409;
     const MARIADBGTID_ERROR_MESSAGE = 'Maria gtid must be string';
     const MARIADBGTID_ERROR_CODE = 410;

@@ -186,7 +186,6 @@ class BasicTest extends BaseTest
         $this->connection->exec('CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
         $this->connection->exec('CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
 
-
         $this->connection->exec('INSERT INTO test_4 (data) VALUES (\'foo\')');
         $this->connection->exec('INSERT INTO test_3 (data) VALUES (\'bar\')');
         $this->connection->exec('INSERT INTO test_2 (data) VALUES (\''. $expectedValue .'\')');
@@ -197,8 +196,4 @@ class BasicTest extends BaseTest
         self::assertEquals($expectedTable, $event->getTableMap()->getTable());
         self::assertEquals($expectedValue, $event->getValues()[0]['data']);
     }
-
-
-
-
 }

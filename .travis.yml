@@ -1,24 +1,22 @@
+dist: trusty
+
 language: php
 
 php:
   - 5.5
   - 5.6
   - 7.0
-  
+env:
+  - DB=mysql57
+  - DB=mysql56
+
 cache: 
   apt: true
   bundler: true
   directories:
     - $HOME/.composer/cache
 
-dist: trusty
 sudo: required
-addons:
-  apt:
-    packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
 
 before_script:
   - "sudo /etc/init.d/mysql stop || true" 
@@ -46,10 +44,6 @@ before_script:
   - "mysql_tzinfo_to_sql /usr/share/zoneinfo/ | mysql -u root mysql"
   
   - echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
-
-env:
-  global:
-    - setup=basic
 
 install:
   - if [[ $setup = 'basic' ]]; then travis_retry composer install --no-interaction --prefer-source; fi
