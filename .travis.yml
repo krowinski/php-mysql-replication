@@ -16,7 +16,7 @@ cache:
   directories:
     - $HOME/.composer/cache
 
-: required
+sudo: required
 
 before_script:
   - "sudo su"
