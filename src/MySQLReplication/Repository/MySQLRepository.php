@@ -75,13 +75,7 @@ class MySQLRepository implements RepositoryInterface
     {
         $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
-		if (!isset($res['Value'])) {
-			return false;
-		}
-
-		$check_sum = $res['Value'];
-
-		return (!empty($check_sum) && strtolower($check_sum) !== 'none');
+        return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
 
     /**

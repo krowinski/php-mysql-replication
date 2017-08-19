@@ -2,6 +2,14 @@
 
 # Release Notes
 
+## v3.0.1 (2017-08-16)
+- Fixed in config filter_var validation if 0 given
+- Changed if bin log and bin log file not given then use master otherwise given data will be send to master
+- Fixed isCheckSum mysql returns string NONE not an empty array and mariaDbGtid fix  (tx to @kobi97)
+- Added travis mysql 5.6 and 5.7 env 
+- Removed mariaDB support for query event 
+- Fixed clear table map cache after rotate event
+
 ## v3.0.0 (2017-07-14)
 - Added Cache interfaces for table info
 - Changed examples to use ConfigBuilder

@@ -145,11 +145,11 @@ class Config
         }
         if (!empty(self::$host)) {
             $ip = gethostbyname(self::$host);
-            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty(self::$port) && !filter_var(
+        if (!empty(self::$port) && false === filter_var(
                 self::$port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )
         ) {
@@ -171,9 +171,7 @@ class Config
                 }
             }
         }
-        if (!empty(self::$slaveId) && !filter_var(
-                self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
-            )
+        if (!empty(self::$slaveId) && false === filter_var(self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])
         ) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
@@ -182,25 +180,23 @@ class Config
                 ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE
             );
         }
-        if (!empty(self::$binLogPosition) && !filter_var(
-                self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
-            )
-        ) {
+        if (false === filter_var(self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
             );
         }
+
         if (!empty(self::$mariaDbGtid) && !is_string(self::$mariaDbGtid)) {
             throw new ConfigException(
                 ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE
             );
         }
-        if (!filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+        if (false === filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
             );
         }
-        if (0 !== self::$heartbeatPeriod && !filter_var(
+        if (0 !== self::$heartbeatPeriod && false === filter_var(
                 self::$heartbeatPeriod, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 4294967]]
             )
         ) {

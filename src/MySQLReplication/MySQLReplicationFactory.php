@@ -67,11 +67,12 @@ class MySQLReplicationFactory
             ]
         );
         $repository = new MySQLRepository($this->connection);
+        $cache = new ArrayCache();
 
         $rowEventService = new RowEventFactory(
             $repository,
             new JsonBinaryDecoderFactory(),
-            new ArrayCache()
+            $cache
         );
         $this->eventDispatcher = new EventDispatcher();
 
@@ -79,7 +80,8 @@ class MySQLReplicationFactory
             new BinLogSocketConnect($repository, new Socket()),
             new BinaryDataReaderFactory(),
             $rowEventService,
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            $cache
         );
     }
 

@@ -15,6 +15,7 @@ use MySQLReplication\Event\DTO\HeartbeatDTO;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
+use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -40,6 +41,10 @@ class Event
      * @var EventDispatcher
      */
     private $eventDispatcher;
+    /**
+     * @var CacheInterface
+     */
+    private $cache;
 
     /**
      * BinLogPack constructor.
@@ -47,17 +52,20 @@ class Event
      * @param BinaryDataReaderFactory $packageService
      * @param RowEventFactory $rowEventService
      * @param EventDispatcher $eventDispatcher
+     * @param CacheInterface $cache
      */
     public function __construct(
         BinLogSocketConnect $socketConnect,
         BinaryDataReaderFactory $packageService,
         RowEventFactory $rowEventService,
-        EventDispatcher $eventDispatcher
+        EventDispatcher $eventDispatcher,
+        CacheInterface $cache
     ) {
         $this->socketConnect = $socketConnect;
         $this->packageService = $packageService;
         $this->rowEventService = $rowEventService;
         $this->eventDispatcher = $eventDispatcher;
+        $this->cache = $cache;
     }
 
     /**
@@ -130,6 +138,8 @@ class Event
                 (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO()
             );
         } elseif (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
+            $this->cache->clear();
+
             $this->eventDispatcher->dispatch(
                 ConstEventsNames::ROTATE,
                 (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO()

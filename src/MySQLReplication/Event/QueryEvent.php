@@ -27,9 +27,7 @@ class QueryEvent extends EventCommon
         $this->binaryDataReader->advance($statusVarsLength);
         $schema = $this->binaryDataReader->read($schemaLength);
         $this->binaryDataReader->advance(1);
-        $query = $this->binaryDataReader->read(
-            $this->eventInfo->getSize() - $this->getSizeToRemoveByVersion() - $statusVarsLength - $schemaLength - 1
-        );
+        $query = $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader() - 13 - $statusVarsLength - $schemaLength - 1);
 
         return new QueryDTO(
             $this->eventInfo,
@@ -37,17 +35,5 @@ class QueryEvent extends EventCommon
             $executionTime,
             $query
         );
-    }
-
-    /**
-     * @return int
-     */
-    private function getSizeToRemoveByVersion()
-    {
-        if (BinLogServerInfo::isMariaDb()) {
-            return 13;
-        }
-
-        return 36;
     }
 }
