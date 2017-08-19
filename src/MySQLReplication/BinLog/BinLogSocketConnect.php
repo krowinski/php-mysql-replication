@@ -159,7 +159,8 @@ class BinLogSocketConnect
             $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
             $this->execute('SET @slave_gtid_strict_mode = 0');
             $this->execute('SET @slave_gtid_ignore_duplicates = 0');
-        } else if ('' !== Config::getGtid()) {
+        }
+        if ('' !== Config::getGtid()) {
             $this->setBinLogDumpGtid();
         } else {
             $this->setBinLogDump();
