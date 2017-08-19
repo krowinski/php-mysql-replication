@@ -53,8 +53,13 @@ class MySQLRepositoryTest extends BaseTest
     {
         self::assertFalse($this->mySQLRepositoryTest->isCheckSum());
 
-        $this->connection->method('fetchAssoc')->willReturn(['Value' => 'CRC32']);
+        $this->connection->method('fetchAssoc')->willReturnOnConsecutiveCalls(
+            ['Value' => 'CRC32'],
+            ['Value' => 'NONE']
+        );
+
         self::assertTrue($this->mySQLRepositoryTest->isCheckSum());
+        self::assertFalse($this->mySQLRepositoryTest->isCheckSum());
     }
 
     /**
