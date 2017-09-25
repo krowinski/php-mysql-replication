@@ -18,7 +18,7 @@ $binLogStream = new MySQLReplicationFactory(
     (new ConfigBuilder())
         ->withUser('root')
         ->withHost('127.0.0.1')
-        ->withPassword('root')
+        ->withPassword('MhxzKhl')
         ->build()
 );
 
