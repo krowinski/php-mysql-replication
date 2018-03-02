@@ -490,15 +490,7 @@ class RowEvent extends EventCommon
             return null;
         }
 
-        $date = $value / 1000000;
-        $year = (int)($date / 10000);
-        $month = (int)(($date % 10000) / 100);
-        $day = (int)($date % 100);
-        if ($year === 0 || $month === 0 || $day === 0) {
-            return null;
-        }
-
-        return (new \DateTime())->setDate($year, $month, $day)->format('Y-m-d');
+        return \DateTime::createFromFormat('YmdHis', $value)->format('Y-m-d H:i:s');
     }
 
     /**
