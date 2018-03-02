@@ -47,4 +47,7 @@ class MySQLReplicationException extends \Exception
     const TABLE_CACHE_SIZE_ERROR_CODE = 411;
     const HEARTBEAT_PERIOD_ERROR_MESSAGE = 'Heartbeat period must be integer min:1 max:4294967';
     const HEARTBEAT_PERIOD_ERROR_CODE = 412;
+
+    const BINLOG_NOT_ENABLED = 'MySQL binary logging is not enabled.';
+    const BINLOG_NOT_ENABLED_CODE = 413;
 }

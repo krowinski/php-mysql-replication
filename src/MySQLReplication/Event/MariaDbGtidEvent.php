@@ -20,6 +20,8 @@ class MariaDbGtidEvent extends EventCommon
         $domainId = $this->binaryDataReader->readUInt32();
         $flag = $this->binaryDataReader->readUInt8();
 
+        $this->eventInfo->getBinLogCurrent()->setMariaDbGtid($sequenceNumber);
+
         return new MariaDbGtidLogDTO(
             $this->eventInfo,
             $flag,

@@ -123,4 +123,21 @@ class MySQLReplicationFactory
     {
         $this->event->consume();
     }
+
+    /**
+     * @throws MySQLReplicationException
+     * @throws InvalidArgumentException
+     * @throws BinLogException
+     * @throws BinaryDataReaderException
+     * @throws ConfigException
+     * @throws EventException
+     * @throws JsonBinaryDecoderException
+     * @throws SocketException
+     */
+    public function run()
+    {
+        while (1) {
+            $this->consume();
+        }
+    }
 }

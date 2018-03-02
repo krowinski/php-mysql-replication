@@ -47,7 +47,4 @@ class MyEventSubscribers extends EventSubscribers
 $binLogStream->registerSubscriber(new MyEventSubscribers());
 
 // start consuming events
-while (1) {
-    $binLogStream->consume();
-}
-
+$binLogStream->run();

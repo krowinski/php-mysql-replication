@@ -155,9 +155,7 @@ class Benchmark
      */
     private function consume()
     {
-        while (1) {
-            $this->binLogStream->consume();
-        }
+        $this->binLogStream->run();
     }
 
     /**

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: fazi
- * Date: 25.08.2016
- * Time: 21:10
- */
 
 namespace MySQLReplication\Event\DTO;
 
