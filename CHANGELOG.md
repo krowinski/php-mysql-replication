@@ -7,7 +7,7 @@
 - Changed Event class broke into smaller methods to be cleaner
 - Added some unit test
 - Added BinLogCurrent to keep current binlogFile, binlog position and gtid also added example how to resume script based on this data
-- 
+- Moved to php 5.6 sorry.. the future is now ;)
 
 ## v3.0.1 (2017-08-16)
 - Fixed in config filter_var validation if 0 given
