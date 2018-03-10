@@ -78,7 +78,6 @@ class BinaryDataReader
      * Push again data in data buffer. It's use when you want
      * to extract a bit from a value a let the rest of the code normally
      * read the data
-     *
      * @param string $data
      */
     public function unread($data)
@@ -92,7 +91,6 @@ class BinaryDataReader
      * Length coded numbers can be anywhere from 1 to 9 bytes depending
      * on the value of the first byte.
      * From PyMYSQL source code
-     *
      * @return int|string
      * @throws BinaryDataReaderException
      */
@@ -104,11 +102,14 @@ class BinaryDataReader
         }
         if ($c < self::UNSIGNED_CHAR_COLUMN) {
             return $c;
-        } elseif ($c === self::UNSIGNED_SHORT_COLUMN) {
+        }
+        if ($c === self::UNSIGNED_SHORT_COLUMN) {
             return $this->readUInt16();
-        } elseif ($c === self::UNSIGNED_INT24_COLUMN) {
+        }
+        if ($c === self::UNSIGNED_INT24_COLUMN) {
             return $this->readUInt24();
-        } elseif ($c === self::UNSIGNED_INT64_COLUMN) {
+        }
+        if ($c === self::UNSIGNED_INT64_COLUMN) {
             return $this->readUInt64();
         }
 
@@ -194,7 +195,6 @@ class BinaryDataReader
 
     /**
      * Read a little endian integer values based on byte number
-     *
      * @param int $size
      * @return mixed
      * @throws BinaryDataReaderException
@@ -203,19 +203,26 @@ class BinaryDataReader
     {
         if ($size === self::UNSIGNED_CHAR_LENGTH) {
             return $this->readUInt8();
-        } elseif ($size === self::UNSIGNED_SHORT_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_SHORT_LENGTH) {
             return $this->readUInt16();
-        } elseif ($size === self::UNSIGNED_INT24_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT24_LENGTH) {
             return $this->readUInt24();
-        } elseif ($size === self::UNSIGNED_INT32_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT32_LENGTH) {
             return $this->readUInt32();
-        } elseif ($size === self::UNSIGNED_INT40_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT40_LENGTH) {
             return $this->readUInt40();
-        } elseif ($size === self::UNSIGNED_INT48_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT48_LENGTH) {
             return $this->readUInt48();
-        } elseif ($size === self::UNSIGNED_INT56_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT56_LENGTH) {
             return $this->readUInt56();
-        } elseif ($size === self::UNSIGNED_INT64_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT64_LENGTH) {
             return $this->readUInt64();
         }
 
@@ -278,7 +285,6 @@ class BinaryDataReader
 
     /**
      * Read a big endian integer values based on byte number
-     *
      * @param int $size
      * @return int
      * @throws BinaryDataReaderException
@@ -287,13 +293,17 @@ class BinaryDataReader
     {
         if ($size === self::UNSIGNED_CHAR_LENGTH) {
             return $this->readInt8();
-        } elseif ($size === self::UNSIGNED_SHORT_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_SHORT_LENGTH) {
             return $this->readInt16Be();
-        } elseif ($size === self::UNSIGNED_INT24_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT24_LENGTH) {
             return $this->readInt24Be();
-        } elseif ($size === self::UNSIGNED_INT32_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT32_LENGTH) {
             return $this->readInt32Be();
-        } elseif ($size === self::UNSIGNED_INT40_LENGTH) {
+        }
+        if ($size === self::UNSIGNED_INT40_LENGTH) {
             return $this->readInt40Be();
         }
 
@@ -421,7 +431,6 @@ class BinaryDataReader
 
     /**
      * Read a part of binary data and extract a number
-     *
      * @param int $binary
      * @param int $start
      * @param int $size

@@ -9,8 +9,11 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Application Test Suite">
-            <directory>./tests/</directory>
+        <testsuite name="Integration Suite">
+            <directory>./tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Unit Suite">
+            <directory>./tests/Unit</directory>
         </testsuite>
     </testsuites>
     <filter>

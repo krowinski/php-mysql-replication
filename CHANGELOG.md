@@ -2,6 +2,13 @@
 
 # Release Notes
 
+## v4.0.0 (2018-03-10)
+- Removed unused (probably?) classes ConfigService, BinaryDataReaderService
+- Changed Event class broke into smaller methods to be cleaner
+- Added some unit test
+- Added BinLogCurrent to keep current binlogFile, binlog position and gtid also added example how to resume script based on this data
+- 
+
 ## v3.0.1 (2017-08-16)
 - Fixed in config filter_var validation if 0 given
 - Changed if bin log and bin log file not given then use master otherwise given data will be send to master

@@ -8,7 +8,6 @@ use MySQLReplication\Tests\Unit\BaseTest;
 /**
  * Class BinaryDataReaderTest
  * @package BinaryDataReader\Unit
- * @covers \MySQLReplication\BinaryDataReader\BinaryDataReader
  */
 class BinaryDataReaderTest extends BaseTest
 {
@@ -240,5 +239,13 @@ class BinaryDataReaderTest extends BaseTest
     {
         $expected = '9223372036854775807';
         self::assertSame($expected, $this->getBinaryRead(BinaryDataReader::pack64bit($expected))->readInt64());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldGetBinaryDataLength()
+    {
+        self::assertSame(3, $this->getBinaryRead('foo')->getBinaryDataLength());
     }
 }

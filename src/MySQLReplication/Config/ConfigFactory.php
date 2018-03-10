@@ -3,7 +3,7 @@
 namespace MySQLReplication\Config;
 
 /**
- * Class ConfigService
+ * Class ConfigFactory
  * @package MySQLReplication\Config
  */
 class ConfigFactory
@@ -12,7 +12,7 @@ class ConfigFactory
      * @param array $config
      * @return Config
      */
-    public function makeConfigFromArray(array $config)
+    public static function makeConfigFromArray(array $config)
     {
         $configBuilder = new ConfigBuilder();
         foreach ($config as $k => $v)
@@ -80,6 +80,10 @@ class ConfigFactory
             if ('custom' === $k)
             {
                 $configBuilder->withCustom($v);
+            }
+            if ('heartbeatPeriod' === $k)
+            {
+                $configBuilder->withHeartbeatPeriod($v);
             }
         }
 

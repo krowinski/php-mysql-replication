@@ -37,6 +37,10 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
      * @var ConfigBuilder
      */
     protected $configBuilder;
+    /**
+     * @var TestEventSubscribers
+     */
+    private $testEventSubscribers;
 
     /**
      * @param EventDTO $eventDTO
@@ -67,7 +71,8 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     public function connect()
     {
         $this->mySQLReplicationFactory = new MySQLReplicationFactory($this->configBuilder->build());
-        $this->mySQLReplicationFactory->registerSubscriber(new TestEventSubscribers($this));
+        $this->testEventSubscribers = new TestEventSubscribers($this);
+        $this->mySQLReplicationFactory->registerSubscriber($this->testEventSubscribers);
 
         $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
@@ -80,6 +85,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
 
     protected function disconnect()
     {
+        $this->mySQLReplicationFactory->unregisterSubscriber($this->testEventSubscribers);
         $this->mySQLReplicationFactory = null;
         $this->connection = null;
     }
@@ -108,15 +114,15 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param string $create_query
-     * @param string $insert_query
+     * @param string $createQuery
+     * @param string $insertQuery
      * @return \MySQLReplication\Event\DTO\DeleteRowsDTO|\MySQLReplication\Event\DTO\EventDTO|\MySQLReplication\Event\DTO\GTIDLogDTO|\MySQLReplication\Event\DTO\QueryDTO|\MySQLReplication\Event\DTO\RotateDTO|\MySQLReplication\Event\DTO\TableMapDTO|\MySQLReplication\Event\DTO\UpdateRowsDTO|\MySQLReplication\Event\DTO\WriteRowsDTO|\MySQLReplication\Event\DTO\XidDTO
      * @throws \Doctrine\DBAL\DBALException
      */
-    protected function createAndInsertValue($create_query, $insert_query)
+    protected function createAndInsertValue($createQuery, $insertQuery)
     {
-        $this->connection->exec($create_query);
-        $this->connection->exec($insert_query);
+        $this->connection->exec($createQuery);
+        $this->connection->exec($insertQuery);
 
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
