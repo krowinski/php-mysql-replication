@@ -18,14 +18,6 @@ class HeartbeatDTO extends EventDTO
     /**
      * @return string
      */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @return string
-     */
     public function __toString()
     {
         return PHP_EOL .
@@ -33,6 +25,14 @@ class HeartbeatDTO extends EventDTO
             'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
             'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
             'Event size: ' . $this->eventInfo->getSize() . PHP_EOL;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**

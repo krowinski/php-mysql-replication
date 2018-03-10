@@ -74,6 +74,7 @@ class BinLogBootstrap
      */
     public static function save(BinLogCurrent $binLogCurrent)
     {
+
         echo 'saving file:' . $binLogCurrent->getBinFileName() . ', position:' . $binLogCurrent->getBinLogPosition() . ' bin log position' . PHP_EOL;
 
         // can be redis/nosql/file - something fast!
