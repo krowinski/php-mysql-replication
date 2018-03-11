@@ -6,7 +6,7 @@ namespace MySQLReplication\Config;
  * Class Config
  * @package MySQLReplication\Config
  */
-class Config
+class Config implements \JsonSerializable
 {
     /**
      * @var string
@@ -375,5 +375,17 @@ class Config
     public static function getHeartbeatPeriod()
     {
         return self::$heartbeatPeriod;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return get_class_vars(self::class);
     }
 }

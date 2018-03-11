@@ -1,4 +1,5 @@
 <?php
+
 namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinLog\Exception\BinLogException;

@@ -3,6 +3,7 @@
 namespace MySQLReplication\Tests\Unit\Gtid;
 
 use MySQLReplication\Gtid\Gtid;
+use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
@@ -39,12 +40,13 @@ class GtidTest extends BaseTest
 
     /**
      * @test
-     * @expectedException \MySQLReplication\Gtid\GtidException
-     * @expectedExceptionMessage MySQLReplication\Gtid\GtidException::INCORRECT_GTID_MESSAGE
-     * @expectedExceptionCode MySQLReplication\Gtid\GtidException::INCORRECT_GTID_CODE
      */
     public function shouldThrowErrorOnIncrrectGtid()
     {
+        $this->expectException(GtidException::class);
+        $this->expectExceptionMessage(GtidException::INCORRECT_GTID_MESSAGE);
+        $this->expectExceptionCode(GtidException::INCORRECT_GTID_CODE);
+
         $this->getGtid('not gtid');
     }
 }

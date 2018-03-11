@@ -6,6 +6,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Definitions\ConstCapabilityFlags;
 use MySQLReplication\Definitions\ConstCommand;
+use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Gtid\GtidFactory;
 use MySQLReplication\Repository\RepositoryInterface;
@@ -39,6 +40,10 @@ class BinLogSocketConnect
      * @var int
      */
     private $binaryDataMaxLength = 16777215;
+    /**
+     * @var BinLogCurrent
+     */
+    private $binLogCurrent;
 
     /**
      * @param RepositoryInterface $repository
@@ -53,19 +58,12 @@ class BinLogSocketConnect
     ) {
         $this->repository = $repository;
         $this->socket = $socket;
+        $this->binLogCurrent = new BinLogCurrent();
 
         $this->socket->connectToStream(Config::getHost(), Config::getPort());
         BinLogServerInfo::parsePackage($this->getResponse(false), $this->repository->getVersion());
         $this->authenticate();
         $this->getBinlogStream();
-    }
-
-    /**
-     * @return bool
-     */
-    public function getCheckSum()
-    {
-        return $this->checkSum;
     }
 
     /**
@@ -148,17 +146,14 @@ class BinLogSocketConnect
         }
 
         if (0 !== Config::getHeartbeatPeriod()) {
-            // master_heartbeat_period is nanoseconds
+            // master_heartbeat_period is in nanoseconds
             $this->execute('SET @master_heartbeat_period = ' . Config::getHeartbeatPeriod() * 1000000000);
         }
 
         $this->registerSlave();
 
         if ('' !== Config::getMariaDbGtid()) {
-            $this->execute('SET @mariadb_slave_capability = 4');
-            $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
-            $this->execute('SET @slave_gtid_strict_mode = 0');
-            $this->execute('SET @slave_gtid_ignore_duplicates = 0');
+            $this->setBinLogDumpMariaGtid();
         }
         if ('' !== Config::getGtid()) {
             $this->setBinLogDumpGtid();
@@ -208,6 +203,20 @@ class BinLogSocketConnect
     }
 
     /**
+     * @throws \MySQLReplication\Socket\SocketException
+     * @throws \MySQLReplication\BinLog\BinLogException
+     */
+    private function setBinLogDumpMariaGtid()
+    {
+        $this->execute('SET @mariadb_slave_capability = 4');
+        $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
+        $this->execute('SET @slave_gtid_strict_mode = 0');
+        $this->execute('SET @slave_gtid_ignore_duplicates = 0');
+
+        $this->binLogCurrent->setMariaDbGtid(Config::getMariaDbGtid());
+    }
+
+    /**
      * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump-gtid.html
      * @throws BinLogException
      * @throws GtidException
@@ -230,6 +239,8 @@ class BinLogSocketConnect
 
         $this->socket->writeToSocket($data);
         $this->getResponse();
+
+        $this->binLogCurrent->setGtid(Config::getGtid());
     }
 
     /**
@@ -243,6 +254,12 @@ class BinLogSocketConnect
         $binFileName = Config::getBinLogFileName();
         if (0 === $binFilePos && '' === $binFileName) {
             $master = $this->repository->getMasterStatus();
+            if ([] === $master) {
+                throw new BinLogException(
+                    MySQLReplicationException::BINLOG_NOT_ENABLED,
+                    MySQLReplicationException::BINLOG_NOT_ENABLED_CODE
+                );
+            }
             $binFilePos = $master['Position'];
             $binFileName = $master['File'];
         }
@@ -255,5 +272,24 @@ class BinLogSocketConnect
 
         $this->socket->writeToSocket($data);
         $this->getResponse();
+
+        $this->binLogCurrent->setBinLogPosition($binFilePos);
+        $this->binLogCurrent->setBinFileName($binFileName);
+    }
+
+    /**
+     * @return BinLogCurrent
+     */
+    public function getBinLogCurrent()
+    {
+        return $this->binLogCurrent;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getCheckSum()
+    {
+        return $this->checkSum;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace MySQLReplication\Event;
 
+use MySQLReplication\BinLog\BinLogCurrent;
+
 /**
  * Class EventInfo
  * @package MySQLReplication\BinLog
@@ -44,6 +46,10 @@ class EventInfo implements \JsonSerializable
      * @var string
      */
     private $dateTime;
+    /**
+     * @var BinLogCurrent
+     */
+    private $binLogCurrent;
 
     /**
      * EventInfo constructor.
@@ -54,6 +60,7 @@ class EventInfo implements \JsonSerializable
      * @param int $pos
      * @param string $flag
      * @param bool $checkSum
+     * @param BinLogCurrent $binLogCurrent
      */
     public function __construct(
         $timestamp,
@@ -62,7 +69,8 @@ class EventInfo implements \JsonSerializable
         $size,
         $pos,
         $flag,
-        $checkSum
+        $checkSum,
+        BinLogCurrent $binLogCurrent
     ) {
         $this->timestamp = $timestamp;
         $this->type = $type;
@@ -71,6 +79,19 @@ class EventInfo implements \JsonSerializable
         $this->pos = $pos;
         $this->flag = $flag;
         $this->checkSum = $checkSum;
+        $this->binLogCurrent = $binLogCurrent;
+
+        if ($pos > 0) {
+            $this->binLogCurrent->setBinLogPosition($pos);
+        }
+    }
+
+    /**
+     * @return BinLogCurrent
+     */
+    public function getBinLogCurrent()
+    {
+        return $this->binLogCurrent;
     }
 
     /**

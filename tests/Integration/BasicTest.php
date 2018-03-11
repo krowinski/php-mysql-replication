@@ -110,6 +110,7 @@ class BasicTest extends BaseTest
             $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
 
+        /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
         self::assertEquals($createExpected, $event->getQuery());

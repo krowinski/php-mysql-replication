@@ -9,8 +9,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
 /**
  * Class BinaryDataReaderBuilderTest
- * @package Unit\BinaryDataReader
- * @covers \MySQLReplication\BinaryDataReader\BinaryDataReaderBuilder
+ * @package MySQLReplication\Tests\Unit\BinaryDataReader
  */
 class BinaryDataReaderBuilderTest extends BaseTest
 {

@@ -3,7 +3,6 @@
 namespace MySQLReplication\Event;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
-use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Event\DTO\QueryDTO;
 
 /**
