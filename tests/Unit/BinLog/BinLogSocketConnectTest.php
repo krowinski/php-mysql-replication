@@ -34,6 +34,8 @@ class BinLogSocketConnectTest extends BaseTest
 
     public function setUp()
     {
+        return;
+
         parent::setUp();
 
 
