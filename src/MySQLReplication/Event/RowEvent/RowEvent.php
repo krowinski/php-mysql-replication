@@ -31,22 +31,262 @@ class RowEvent extends EventCommon
      * @var array
      */
     private static $bitCountInByte = [
-        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2,
+        3,
+        1,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        4,
+        1,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        1,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        1,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        4,
+        5,
+        5,
+        6,
+        5,
+        6,
+        6,
+        7,
+        1,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        4,
+        5,
+        5,
+        6,
+        5,
+        6,
+        6,
+        7,
+        2,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        5,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        4,
+        5,
+        5,
+        6,
+        5,
+        6,
+        6,
+        7,
+        3,
+        4,
+        4,
+        5,
+        4,
+        5,
+        5,
+        6,
+        4,
+        5,
+        5,
+        6,
+        5,
+        6,
+        6,
+        7,
+        4,
+        5,
+        5,
+        6,
+        5,
+        6,
+        6,
+        7,
+        5,
+        6,
+        6,
+        7,
+        6,
+        7,
+        7,
+        8,
     ];
     /**
      * @var RepositoryInterface
@@ -57,10 +297,6 @@ class RowEvent extends EventCommon
      */
     private $currentTableMap;
     /**
-     * @var JsonBinaryDecoderFactory
-     */
-    private $jsonBinaryDecoderFactory;
-    /**
      * @var CacheInterface
      */
     private $cache;
@@ -70,20 +306,17 @@ class RowEvent extends EventCommon
      * @param RepositoryInterface $repository
      * @param BinaryDataReader $binaryDataReader
      * @param EventInfo $eventInfo
-     * @param JsonBinaryDecoderFactory $jsonBinaryDecoderFactory
      * @param CacheInterface $cache
      */
     public function __construct(
         RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
         EventInfo $eventInfo,
-        JsonBinaryDecoderFactory $jsonBinaryDecoderFactory,
         CacheInterface $cache
     ) {
         parent::__construct($eventInfo, $binaryDataReader);
 
         $this->repository = $repository;
-        $this->jsonBinaryDecoderFactory = $jsonBinaryDecoderFactory;
         $this->cache = $cache;
     }
 
@@ -94,7 +327,7 @@ class RowEvent extends EventCommon
      *
      * @return TableMapDTO
      * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
     public function makeTableMapDTO()
     {
@@ -215,6 +448,7 @@ class RowEvent extends EventCommon
         if ($this->cache->has($tableId)) {
             /** @var TableMap $tableMap */
             $this->currentTableMap = $this->cache->get($tableId);
+
             return true;
         }
 
@@ -260,7 +494,6 @@ class RowEvent extends EventCommon
      * @param int $colsBitmap
      * @return array
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -283,76 +516,76 @@ class RowEvent extends EventCommon
 
             if ($this->checkNull($null_bitmap, $nullBitmapIndex)) {
                 $values[$name] = null;
-            } elseif ($column['type'] === ConstFieldType::IGNORE) {
+            } else if ($column['type'] === ConstFieldType::IGNORE) {
                 $this->binaryDataReader->advance($column['length_size']);
                 $values[$name] = null;
-            } elseif ($column['type'] === ConstFieldType::TINY) {
+            } else if ($column['type'] === ConstFieldType::TINY) {
                 if ($column['unsigned']) {
                     $values[$name] = $this->binaryDataReader->readUInt8();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt8();
                 }
-            } elseif ($column['type'] === ConstFieldType::SHORT) {
+            } else if ($column['type'] === ConstFieldType::SHORT) {
                 if ($column['unsigned']) {
                     $values[$name] = $this->binaryDataReader->readUInt16();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt16();
                 }
-            } elseif ($column['type'] === ConstFieldType::LONG) {
+            } else if ($column['type'] === ConstFieldType::LONG) {
                 if ($column['unsigned']) {
                     $values[$name] = $this->binaryDataReader->readUInt32();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt32();
                 }
-            } elseif ($column['type'] === ConstFieldType::LONGLONG) {
+            } else if ($column['type'] === ConstFieldType::LONGLONG) {
                 if ($column['unsigned']) {
                     $values[$name] = $this->binaryDataReader->readUInt64();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt64();
                 }
-            } elseif ($column['type'] === ConstFieldType::INT24) {
+            } else if ($column['type'] === ConstFieldType::INT24) {
                 if ($column['unsigned']) {
                     $values[$name] = $this->binaryDataReader->readUInt24();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt24();
                 }
-            } elseif ($column['type'] === ConstFieldType::FLOAT) {
+            } else if ($column['type'] === ConstFieldType::FLOAT) {
                 // http://dev.mysql.com/doc/refman/5.7/en/floating-point-types.html FLOAT(7,4)
                 $values[$name] = round($this->binaryDataReader->readFloat(), 4);
-            } elseif ($column['type'] === ConstFieldType::DOUBLE) {
+            } else if ($column['type'] === ConstFieldType::DOUBLE) {
                 $values[$name] = $this->binaryDataReader->readDouble();
-            } elseif ($column['type'] === ConstFieldType::VARCHAR || $column['type'] === ConstFieldType::STRING) {
+            } else if ($column['type'] === ConstFieldType::VARCHAR || $column['type'] === ConstFieldType::STRING) {
                 $values[$name] = $column['max_length'] > 255 ? $this->getString(2) : $this->getString(1);
-            } elseif ($column['type'] === ConstFieldType::NEWDECIMAL) {
+            } else if ($column['type'] === ConstFieldType::NEWDECIMAL) {
                 $values[$name] = $this->getDecimal($column);
-            } elseif ($column['type'] === ConstFieldType::BLOB) {
+            } else if ($column['type'] === ConstFieldType::BLOB) {
                 $values[$name] = $this->getString($column['length_size']);
-            } elseif ($column['type'] === ConstFieldType::DATETIME) {
+            } else if ($column['type'] === ConstFieldType::DATETIME) {
                 $values[$name] = $this->getDatetime();
-            } elseif ($column['type'] === ConstFieldType::DATETIME2) {
+            } else if ($column['type'] === ConstFieldType::DATETIME2) {
                 $values[$name] = $this->getDatetime2($column);
-            } elseif ($column['type'] === ConstFieldType::TIMESTAMP) {
+            } else if ($column['type'] === ConstFieldType::TIMESTAMP) {
                 $values[$name] = date('c', $this->binaryDataReader->readUInt32());
-            } elseif ($column['type'] === ConstFieldType::TIME2) {
+            } else if ($column['type'] === ConstFieldType::TIME2) {
                 $values[$name] = $this->getTime2($column);
-            } elseif ($column['type'] === ConstFieldType::TIMESTAMP2) {
+            } else if ($column['type'] === ConstFieldType::TIMESTAMP2) {
                 $values[$name] = $this->getTimestamp2($column);
-            } elseif ($column['type'] === ConstFieldType::DATE) {
+            } else if ($column['type'] === ConstFieldType::DATE) {
                 $values[$name] = $this->getDate();
-            } elseif ($column['type'] === ConstFieldType::YEAR) {
+            } else if ($column['type'] === ConstFieldType::YEAR) {
                 // https://dev.mysql.com/doc/refman/5.7/en/year.html
                 $year = $this->binaryDataReader->readUInt8();
                 $values[$name] = 0 === $year ? null : 1900 + $year;
-            } elseif ($column['type'] === ConstFieldType::ENUM) {
+            } else if ($column['type'] === ConstFieldType::ENUM) {
                 $values[$name] = $this->getEnum($column);
-            } elseif ($column['type'] === ConstFieldType::SET) {
+            } else if ($column['type'] === ConstFieldType::SET) {
                 $values[$name] = $this->getSet($column);
-            } elseif ($column['type'] === ConstFieldType::BIT) {
+            } else if ($column['type'] === ConstFieldType::BIT) {
                 $values[$name] = $this->getBit($column);
-            } elseif ($column['type'] === ConstFieldType::GEOMETRY) {
+            } else if ($column['type'] === ConstFieldType::GEOMETRY) {
                 $values[$name] = $this->getString($column['length_size']);
-            } elseif ($column['type'] === ConstFieldType::JSON) {
-                $values[$name] = $this->jsonBinaryDecoderFactory->makeJsonBinaryDecoder(
+            } else if ($column['type'] === ConstFieldType::JSON) {
+                $values[$name] = JsonBinaryDecoderFactory::makeJsonBinaryDecoder(
                     $this->getString($column['length_size'])
                 )->parseToString();
             } else {
@@ -480,7 +713,6 @@ class RowEvent extends EventCommon
 
     /**
      * @return null|string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     protected function getDatetime()
     {
@@ -546,9 +778,9 @@ class RowEvent extends EventCommon
         $time = '';
         if ($column['fsp'] === 1 || $column['fsp'] === 2) {
             $read = 1;
-        } elseif ($column['fsp'] === 3 || $column['fsp'] === 4) {
+        } else if ($column['fsp'] === 3 || $column['fsp'] === 4) {
             $read = 2;
-        } elseif ($column ['fsp'] === 5 || $column['fsp'] === 6) {
+        } else if ($column ['fsp'] === 5 || $column['fsp'] === 6) {
             $read = 3;
         }
         if ($read > 0) {
@@ -591,7 +823,6 @@ class RowEvent extends EventCommon
     /**
      * @param array $column
      * @return bool|string
-     * @throws EventException
      * @throws BinaryDataReaderException
      */
     protected function getTimestamp2(array $column)
@@ -607,7 +838,6 @@ class RowEvent extends EventCommon
 
     /**
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     protected function getDate()
     {
@@ -629,7 +859,6 @@ class RowEvent extends EventCommon
     /**
      * @param array $column
      * @return array
-     * @throws EventException
      * @throws BinaryDataReaderException
      */
     protected function getSet(array $column)
@@ -638,7 +867,7 @@ class RowEvent extends EventCommon
         $bit_mask = $this->binaryDataReader->readUIntBySize($column['size']);
         $sets = [];
         foreach ((array)$column['set_values'] as $k => $item) {
-            if ($bit_mask & pow(2, $k)) {
+            if ($bit_mask & (2 ** $k)) {
                 $sets[] = $item;
             }
         }
@@ -650,7 +879,6 @@ class RowEvent extends EventCommon
      * Read MySQL BIT type
      * @param array $column
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     protected function getBit(array $column)
     {
@@ -713,7 +941,6 @@ class RowEvent extends EventCommon
      * @return UpdateRowsDTO
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -746,7 +973,7 @@ class RowEvent extends EventCommon
     /**
      * @param array $column
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
     protected function getEnum(array $column)
     {

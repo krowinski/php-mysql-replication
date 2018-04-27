@@ -15,7 +15,7 @@ class JsonBinaryDecoderFactory
      * @param string $data
      * @return JsonBinaryDecoderService
      */
-    public function makeJsonBinaryDecoder($data)
+    public static function makeJsonBinaryDecoder($data)
     {
         return new JsonBinaryDecoderService(
             new BinaryDataReader($data),

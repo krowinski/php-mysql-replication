@@ -54,7 +54,6 @@ class BinaryDataReader
     /**
      * @param int $length
      * @return string
-     * @throws BinaryDataReaderException
      */
     public function read($length)
     {
@@ -67,7 +66,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt16()
     {
@@ -118,7 +116,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt16()
     {
@@ -127,7 +124,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt24()
     {
@@ -138,7 +134,6 @@ class BinaryDataReader
 
     /**
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt64()
     {
@@ -158,7 +153,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt24()
     {
@@ -174,7 +168,6 @@ class BinaryDataReader
 
     /**
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt64()
     {
@@ -231,7 +224,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt8()
     {
@@ -240,7 +232,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt32()
     {
@@ -249,7 +240,6 @@ class BinaryDataReader
 
     /**
      * @return mixed
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt40()
     {
@@ -261,7 +251,6 @@ class BinaryDataReader
 
     /**
      * @return mixed
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt48()
     {
@@ -272,7 +261,6 @@ class BinaryDataReader
 
     /**
      * @return mixed
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readUInt56()
     {
@@ -312,7 +300,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt8()
     {
@@ -321,7 +308,6 @@ class BinaryDataReader
 
     /**
      * @return mixed
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt16Be()
     {
@@ -330,7 +316,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt24Be()
     {
@@ -345,7 +330,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt32Be()
     {
@@ -354,7 +338,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt40Be()
     {
@@ -366,7 +349,6 @@ class BinaryDataReader
 
     /**
      * @return int
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readInt32()
     {
@@ -375,7 +357,6 @@ class BinaryDataReader
 
     /**
      * @return float
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readFloat()
     {
@@ -384,7 +365,6 @@ class BinaryDataReader
 
     /**
      * @return double
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readDouble()
     {
@@ -393,7 +373,6 @@ class BinaryDataReader
 
     /**
      * @return string
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function readTableId()
     {

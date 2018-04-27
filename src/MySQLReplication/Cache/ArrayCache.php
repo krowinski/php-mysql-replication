@@ -15,7 +15,7 @@ class ArrayCache implements CacheInterface
      * @var array
      */
     private static $tableMapCache = [];
-    
+
     /**
      * Fetches a value from the cache.
      *
@@ -33,51 +33,23 @@ class ArrayCache implements CacheInterface
     }
 
     /**
-     * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
+     * Determines whether an item is present in the cache.
      *
-     * @param string $key The key of the item to store.
-     * @param mixed $value The value of the item to store, must be serializable.
-     * @param null|int|\DateInterval $ttl Optional. The TTL value of this item. If no value is sent and
-     *                                     the driver supports TTL then the library may set a default value
-     *                                     for it or let the driver take care of that.
+     * NOTE: It is recommended that has() is only to be used for cache warming type purposes
+     * and not to be used within your live applications operations for get/set, as this method
+     * is subject to a race condition where your has() will return true and immediately after,
+     * another script can remove it making the state of your app out of date.
      *
-     * @return bool True on success and false on failure.
+     * @param string $key The cache item key.
      *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if the $key string is not a legal value.
-     */
-    public function set($key, $value, $ttl = null)
-    {
-        // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) > Config::getTableCacheSize()) {
-            self::$tableMapCache = array_slice(
-                self::$tableMapCache,
-                ceil(Config::getTableCacheSize() / 2),
-                null,
-                true
-            );
-        }
-
-        self::$tableMapCache[$key] = $value;
-
-        return true;
-    }
-
-    /**
-     * Delete an item from the cache by its unique key.
-     *
-     * @param string $key The unique cache key of the item to delete.
-     *
-     * @return bool True if the item was successfully removed. False if there was an error.
+     * @return bool
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
      */
-    public function delete($key)
+    public function has($key)
     {
-        unset(self::$tableMapCache[$key]);
-
-        return true;
+        return isset(self::$tableMapCache[$key]);
     }
 
     /**
@@ -140,6 +112,37 @@ class ArrayCache implements CacheInterface
     }
 
     /**
+     * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
+     *
+     * @param string $key The key of the item to store.
+     * @param mixed $value The value of the item to store, must be serializable.
+     * @param null|int|\DateInterval $ttl Optional. The TTL value of this item. If no value is sent and
+     *                                     the driver supports TTL then the library may set a default value
+     *                                     for it or let the driver take care of that.
+     *
+     * @return bool True on success and false on failure.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function set($key, $value, $ttl = null)
+    {
+        // automatically clear table cache to save memory
+        if (count(self::$tableMapCache) > Config::getTableCacheSize()) {
+            self::$tableMapCache = array_slice(
+                self::$tableMapCache,
+                ceil(Config::getTableCacheSize() / 2),
+                null,
+                true
+            );
+        }
+
+        self::$tableMapCache[$key] = $value;
+
+        return true;
+    }
+
+    /**
      * Deletes multiple cache items in a single operation.
      *
      * @param iterable $keys A list of string-based keys to be deleted.
@@ -160,22 +163,19 @@ class ArrayCache implements CacheInterface
     }
 
     /**
-     * Determines whether an item is present in the cache.
+     * Delete an item from the cache by its unique key.
      *
-     * NOTE: It is recommended that has() is only to be used for cache warming type purposes
-     * and not to be used within your live applications operations for get/set, as this method
-     * is subject to a race condition where your has() will return true and immediately after,
-     * another script can remove it making the state of your app out of date.
+     * @param string $key The unique cache key of the item to delete.
      *
-     * @param string $key The cache item key.
-     *
-     * @return bool
+     * @return bool True if the item was successfully removed. False if there was an error.
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
      */
-    public function has($key)
+    public function delete($key)
     {
-        return isset(self::$tableMapCache[$key]);
+        unset(self::$tableMapCache[$key]);
+
+        return true;
     }
 }

@@ -776,37 +776,43 @@ class TypesTest extends BaseTest
             (29, CAST('[]' AS CHAR CHARACTER SET 'ascii')),
             -- (30, CAST(x'cafe' AS JSON)),
             -- (31, CAST(x'cafebabe' AS JSON)),
-            (100, CONCAT('{\"', REPEAT('a', 64 * 1024 - 1), '\":123}'))
+            -- (100, CONCAT('{\"', REPEAT('a', 64 * 1024 - 1), '\":123}')),
+            (101, '{\"bool\": true}'),
+            (102, '{\"bool\": false}'),
+            (103, '{\"null\": null}')
         ";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         $results = $event->getValues();
 
-        self::assertEquals($results[0]['j'], null);
-        self::assertEquals($results[1]['j'], '{"a":2}');
-        self::assertEquals($results[2]['j'], '[1,2]');
-        self::assertEquals($results[3]['j'], '{"a":"b","c":"d","ab":"abc","bc":["x","y"]}');
-        self::assertEquals($results[4]['j'], '["here",["I","am"],"!!!"]');
-        self::assertEquals($results[5]['j'], '"scalar string"');
-        self::assertEquals($results[6]['j'], 'true');
-        self::assertEquals($results[7]['j'], 'false');
-        self::assertEquals($results[8]['j'], '"null"');
-        self::assertEquals($results[9]['j'], '"-1"');
-        self::assertEquals($results[10]['j'], '"1"');
-        self::assertEquals($results[11]['j'], '"32767"');
-        self::assertEquals($results[12]['j'], '"32768"');
-        self::assertEquals($results[13]['j'], '"-32768"');
-        self::assertEquals($results[14]['j'], '"-32769"');
-        self::assertEquals($results[15]['j'], '"2147483647"');
-        self::assertEquals($results[16]['j'], '"2147483648"');
-        self::assertEquals($results[17]['j'], '"-2147483648"');
-        self::assertEquals($results[18]['j'], '"-2147483649"');
-        self::assertEquals($results[19]['j'], '"18446744073709551615"');
-        self::assertEquals($results[20]['j'], '"1.844674407371E+19"');
-        self::assertEquals($results[21]['j'], '"3.14"');
-        self::assertEquals($results[22]['j'], '{}');
-        self::assertEquals($results[23]['j'], '[]');
-        self::assertEquals($results[24]['j'], '[]');
+        self::assertEquals(null, $results[0]['j']);
+        self::assertEquals('{"a":2}', $results[1]['j']);
+        self::assertEquals('[1,2]', $results[2]['j']);
+        self::assertEquals('{"a":"b","c":"d","ab":"abc","bc":["x","y"]}', $results[3]['j']);
+        self::assertEquals('["here",["I","am"],"!!!"]', $results[4]['j']);
+        self::assertEquals('"scalar string"', $results[5]['j']);
+        self::assertEquals('true', $results[6]['j']);
+        self::assertEquals('false', $results[7]['j']);
+        self::assertEquals('"null"', $results[8]['j']);
+        self::assertEquals('"-1"', $results[9]['j']);
+        self::assertEquals('"1"', $results[10]['j']);
+        self::assertEquals('"32767"', $results[11]['j']);
+        self::assertEquals('"32768"', $results[12]['j']);
+        self::assertEquals('"-32768"', $results[13]['j']);
+        self::assertEquals('"-32769"', $results[14]['j']);
+        self::assertEquals('"2147483647"', $results[15]['j']);
+        self::assertEquals('"2147483648"', $results[16]['j']);
+        self::assertEquals('"-2147483648"', $results[17]['j']);
+        self::assertEquals('"-2147483649"', $results[18]['j']);
+        self::assertEquals('"18446744073709551615"', $results[19]['j']);
+        self::assertEquals('"1.844674407371E+19"', $results[20]['j']);
+        self::assertEquals('"3.14"', $results[21]['j']);
+        self::assertEquals('{}', $results[22]['j']);
+        self::assertEquals('[]', $results[23]['j']);
+        self::assertEquals('[]', $results[24]['j']);
+        self::assertEquals('{"bool":true}', $results[25]['j']);
+        self::assertEquals('{"bool":false}', $results[26]['j']);
+        self::assertEquals('{"null":null}', $results[27]['j']);
     }
 }

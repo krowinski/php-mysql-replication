@@ -4,8 +4,6 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Definitions\ConstCapabilityFlags;
-use MySQLReplication\Definitions\ConstCommand;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Gtid\GtidFactory;
@@ -18,6 +16,10 @@ use MySQLReplication\Socket\SocketInterface;
  */
 class BinLogSocketConnect
 {
+    const COM_BINLOG_DUMP = 0x12;
+    const COM_REGISTER_SLAVE = 0x15;
+    const COM_BINLOG_DUMP_GTID = 0x1e;
+
     /**
      * @var bool
      */
@@ -114,7 +116,7 @@ class BinLogSocketConnect
      */
     private function authenticate()
     {
-        $data = pack('L', ConstCapabilityFlags::getCapabilities());
+        $data = pack('L', self::getCapabilities());
         $data .= pack('L', $this->binaryDataMaxLength);
         $data .= chr(33);
         for ($i = 0; $i < 23; $i++) {
@@ -131,6 +133,38 @@ class BinLogSocketConnect
 
         $this->socket->writeToSocket($data);
         $this->getResponse();
+    }
+
+    /**
+     * http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-protocol::capabilityflags
+     * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
+     * @return int
+     */
+    private static function getCapabilities()
+    {
+        /*
+            Left only as information
+            $foundRows = 1 << 1;
+            $connectWithDb = 1 << 3;
+            $compress = 1 << 5;
+            $odbc = 1 << 6;
+            $localFiles = 1 << 7;
+            $ignoreSpace = 1 << 8;
+            $multiStatements = 1 << 16;
+            $multiResults = 1 << 17;
+            $interactive = 1 << 10;
+            $ssl = 1 << 11;
+            $ignoreSigPipe = 1 << 12;
+        */
+
+        $noSchema = 1 << 4;
+        $longPassword = 1;
+        $longFlag = 1 << 2;
+        $transactions = 1 << 13;
+        $secureConnection = 1 << 15;
+        $protocol41 = 1 << 9;
+
+        return ($longPassword | $longFlag | $transactions | $protocol41 | $secureConnection | $noSchema);
     }
 
     /**
@@ -186,7 +220,7 @@ class BinLogSocketConnect
         $passLength = strlen(Config::getPassword());
 
         $data = pack('l', 18 + $hostLength + $userLength + $passLength);
-        $data .= chr(ConstCommand::COM_REGISTER_SLAVE);
+        $data .= chr(self::COM_REGISTER_SLAVE);
         $data .= pack('V', Config::getSlaveId());
         $data .= pack('C', $hostLength);
         $data .= $host;
@@ -226,7 +260,7 @@ class BinLogSocketConnect
     {
         $collection = GtidFactory::makeCollectionFromString(Config::getGtid());
 
-        $data = pack('l', 26 + $collection->getEncodedLength()) . chr(ConstCommand::COM_BINLOG_DUMP_GTID);
+        $data = pack('l', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
         $data .= pack('S', 0);
         $data .= pack('I', Config::getSlaveId());
         $data .= pack('I', 3);
@@ -264,7 +298,7 @@ class BinLogSocketConnect
             $binFileName = $master['File'];
         }
 
-        $data = pack('i', strlen($binFileName) + 11) . chr(ConstCommand::COM_BINLOG_DUMP);
+        $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
         $data .= pack('I', $binFilePos);
         $data .= pack('v', 0);
         $data .= pack('I', Config::getSlaveId());

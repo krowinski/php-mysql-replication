@@ -2,8 +2,6 @@
 
 namespace MySQLReplication\Event;
 
-use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
-use MySQLReplication\BinLog\BinLogCurrent;
 use MySQLReplication\Event\DTO\GTIDLogDTO;
 
 /**
@@ -14,7 +12,6 @@ class GtidEvent extends EventCommon
 {
     /**
      * @return GTIDLogDTO
-     * @throws BinaryDataReaderException
      */
     public function makeGTIDLogDTO()
     {

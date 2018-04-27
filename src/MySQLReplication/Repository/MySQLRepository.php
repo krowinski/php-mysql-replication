@@ -3,6 +3,7 @@
 namespace MySQLReplication\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 
 /**
  * Class MySQLRepository
@@ -70,6 +71,7 @@ class MySQLRepository implements RepositoryInterface
 
     /**
      * @return bool
+     * @throws DBALException
      */
     public function isCheckSum()
     {
@@ -102,6 +104,7 @@ class MySQLRepository implements RepositoryInterface
      * Executed_Gtid_Set
      *
      * @return array
+     * @throws DBALException
      */
     public function getMasterStatus()
     {

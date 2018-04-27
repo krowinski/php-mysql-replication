@@ -2,8 +2,6 @@
 
 namespace MySQLReplication\Event;
 
-use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
-use MySQLReplication\BinLog\BinLogCurrent;
 use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Event\DTO\RotateDTO;
 
@@ -15,13 +13,14 @@ use MySQLReplication\Event\DTO\RotateDTO;
 class RotateEvent extends EventCommon
 {
     /**
-     * @throws BinaryDataReaderException
      * @return RotateDTO
      */
     public function makeRotateEventDTO()
     {
         $binFilePos = $this->binaryDataReader->readUInt64();
-        $binFileName = $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader() - $this->getSizeToRemoveByVersion());
+        $binFileName = $this->binaryDataReader->read(
+            $this->eventInfo->getSizeNoHeader() - $this->getSizeToRemoveByVersion()
+        );
 
         $this->eventInfo->getBinLogCurrent()->setBinLogPosition($binFilePos);
         $this->eventInfo->getBinLogCurrent()->setBinFileName($binFileName);

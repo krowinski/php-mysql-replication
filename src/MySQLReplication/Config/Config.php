@@ -340,7 +340,7 @@ class Config implements \JsonSerializable
      */
     public static function checkDataBasesOnly($database)
     {
-        return [] !== Config::getDatabasesOnly() && !in_array($database, Config::getDatabasesOnly(), true);
+        return [] !== self::getDatabasesOnly() && !in_array($database, self::getDatabasesOnly(), true);
     }
 
     /**
@@ -349,7 +349,7 @@ class Config implements \JsonSerializable
      */
     public static function checkTablesOnly($table)
     {
-        return [] !== Config::getTablesOnly() && !in_array($table, Config::getTablesOnly(), true);
+        return [] !== self::getTablesOnly() && !in_array($table, self::getTablesOnly(), true);
     }
 
     /**
@@ -358,11 +358,11 @@ class Config implements \JsonSerializable
      */
     public static function checkEvent($type)
     {
-        if ([] !== Config::getEventsOnly() && !in_array($type, Config::getEventsOnly(), true)) {
+        if ([] !== self::getEventsOnly() && !in_array($type, self::getEventsOnly(), true)) {
             return false;
         }
 
-        if (in_array($type, Config::getEventsIgnore(), true)) {
+        if (in_array($type, self::getEventsIgnore(), true)) {
             return false;
         }
 

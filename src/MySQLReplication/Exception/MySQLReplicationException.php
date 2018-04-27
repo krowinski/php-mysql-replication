@@ -50,4 +50,9 @@ class MySQLReplicationException extends \Exception
 
     const BINLOG_NOT_ENABLED = 'MySQL binary logging is not enabled.';
     const BINLOG_NOT_ENABLED_CODE = 413;
+
+    const DISCONNECTED_MESSAGE = 'Disconnected by remote side';
+    const UNABLE_TO_WRITE_SOCKET = 'Unable to write to socket: ';
+    const UNABLE_TO_CREATE_SOCKET = 'Unable to create socket: ';
+
 }

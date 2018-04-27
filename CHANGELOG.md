@@ -2,6 +2,16 @@
 
 # Release Notes
 
+## v5.0.0 (2018-04-27)
+- Removed unused classes from code and merged some classes to one class
+- Added ability in MySQLReplicationFactory to provide implementations interfaces in constructor. This will give ability to replace default classes to your own
+- Added Config to MySQLReplicationFactory constructor (#35)
+- Changed register subscriber to accept interface of EventSubscriberInterface over EventSubscribers class (#36)
+- Changed moved exception messages to main exception class 
+- Changed psr-2 "elseif " replaced to "else if"
+- Fixed 5.7 json column deserialization for null value + tests
+- Changed minor refactoring in classes 
+                                                         
 ## v4.0.0 (2018-03-10)
 - Removed unused (probably?) classes ConfigService, BinaryDataReaderService
 - Changed Event class broke into smaller methods to be cleaner

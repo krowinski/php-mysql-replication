@@ -15,7 +15,7 @@ class JsonBinaryDecoderFormatter
     public $jsonString = '';
 
     /**
-     * @param $bool
+     * @param bool $bool
      */
     public function formatValueBool($bool)
     {
@@ -73,7 +73,7 @@ class JsonBinaryDecoderFormatter
 
     public function formatValueNull()
     {
-        $this->formatValue('null');
+        $this->jsonString .= 'null';
     }
 
     /**

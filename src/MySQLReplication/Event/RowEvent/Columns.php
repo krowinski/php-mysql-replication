@@ -21,9 +21,12 @@ class Columns
      * @param array $columnSchema
      * @param BinaryDataReader $binaryDataReader
      * @return array
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
-    public static function parse($columnType, array $columnSchema, BinaryDataReader $binaryDataReader)
+    public static function parse(
+        $columnType,
+        array $columnSchema,
+        BinaryDataReader $binaryDataReader
+    )
     {
         self::$field = [];
         self::$field['type'] = $columnType;
@@ -37,30 +40,30 @@ class Columns
 
         if (self::$field['type'] === ConstFieldType::VARCHAR) {
             self::$field['max_length'] = $binaryDataReader->readInt16();
-        } elseif (self::$field['type'] === ConstFieldType::DOUBLE) {
+        } else if (self::$field['type'] === ConstFieldType::DOUBLE) {
             self::$field['size'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::FLOAT) {
+        } else if (self::$field['type'] === ConstFieldType::FLOAT) {
             self::$field['size'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::TIMESTAMP2) {
+        } else if (self::$field['type'] === ConstFieldType::TIMESTAMP2) {
             self::$field['fsp'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::DATETIME2) {
+        } else if (self::$field['type'] === ConstFieldType::DATETIME2) {
             self::$field['fsp'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::TIME2) {
+        } else if (self::$field['type'] === ConstFieldType::TIME2) {
             self::$field['fsp'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::TINY && $columnSchema['COLUMN_TYPE'] === 'tinyint(1)') {
+        } else if (self::$field['type'] === ConstFieldType::TINY && $columnSchema['COLUMN_TYPE'] === 'tinyint(1)') {
             self::$field['type_is_bool'] = true;
-        } elseif (self::$field['type'] === ConstFieldType::VAR_STRING || self::$field['type'] === ConstFieldType::STRING) {
+        } else if (self::$field['type'] === ConstFieldType::VAR_STRING || self::$field['type'] === ConstFieldType::STRING) {
             self::getFieldSpecial($binaryDataReader, $columnSchema);
-        } elseif (self::$field['type'] === ConstFieldType::BLOB || self::$field['type'] === ConstFieldType::IGNORE) {
+        } else if (self::$field['type'] === ConstFieldType::BLOB || self::$field['type'] === ConstFieldType::IGNORE) {
             self::$field['length_size'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::GEOMETRY) {
+        } else if (self::$field['type'] === ConstFieldType::GEOMETRY) {
             self::$field['length_size'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::JSON) {
+        } else if (self::$field['type'] === ConstFieldType::JSON) {
             self::$field['length_size'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::NEWDECIMAL) {
+        } else if (self::$field['type'] === ConstFieldType::NEWDECIMAL) {
             self::$field['precision'] = $binaryDataReader->readUInt8();
             self::$field['decimals'] = $binaryDataReader->readUInt8();
-        } elseif (self::$field['type'] === ConstFieldType::BIT) {
+        } else if (self::$field['type'] === ConstFieldType::BIT) {
             $bits = $binaryDataReader->readUInt8();
             $bytes = $binaryDataReader->readUInt8();
             self::$field['bits'] = ($bytes * 8) + $bits;
@@ -73,7 +76,6 @@ class Columns
     /**
      * @param BinaryDataReader $packet
      * @param array $columnSchema
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     protected static function getFieldSpecial(BinaryDataReader $packet, array $columnSchema)
     {

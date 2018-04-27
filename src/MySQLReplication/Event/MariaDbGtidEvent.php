@@ -12,7 +12,6 @@ class MariaDbGtidEvent extends EventCommon
 {
     /**
      * @return MariaDbGtidLogDTO
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
      */
     public function makeMariaDbGTIDLogDTO()
     {

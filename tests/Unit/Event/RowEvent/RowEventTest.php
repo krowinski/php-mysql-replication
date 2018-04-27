@@ -6,7 +6,6 @@ namespace MySQLReplication\Tests\Unit\Event\RowEvent;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\RowEvent;
-use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
 use MySQLReplication\Repository\RepositoryInterface;
 use MySQLReplication\Tests\Unit\BaseTest;
 use Psr\SimpleCache\CacheInterface;
@@ -34,10 +33,6 @@ class RowEventTest extends BaseTest
      */
     private $repository;
     /**
-     * @var JsonBinaryDecoderFactory
-     */
-    private $jsonBinaryDecoderFactory;
-    /**
      * @var CacheInterface
      */
     private $cache;
@@ -50,16 +45,12 @@ class RowEventTest extends BaseTest
         $this->binaryDataReader = $this->getMockBuilder(BinaryDataReader::class)->disableOriginalConstructor()->getMock(
         );
         $this->eventInfo = $this->getMockBuilder(EventInfo::class)->disableOriginalConstructor()->getMock();
-        $this->jsonBinaryDecoderFactory = $this->getMockBuilder(
-            JsonBinaryDecoderFactory::class
-        )->disableOriginalConstructor()->getMock();
         $this->cache = $this->getMockBuilder(CacheInterface::class)->disableOriginalConstructor()->getMock();
 
         $this->rowEvent = new RowEvent(
             $this->repository,
             $this->binaryDataReader,
             $this->eventInfo,
-            $this->jsonBinaryDecoderFactory,
             $this->cache
         );
     }

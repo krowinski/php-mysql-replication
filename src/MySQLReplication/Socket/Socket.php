@@ -48,10 +48,7 @@ class Socket implements SocketInterface
         socket_set_option($this->socket, SOL_SOCKET, SO_KEEPALIVE, 1);
 
         if (!socket_connect($this->socket, $host, $port)) {
-            throw new SocketException(
-                $this->getSocketErrorMessage(),
-                $this->getSocketErrorCode()
-            );
+            throw new SocketException($this->getSocketErrorMessage(), $this->getSocketErrorCode());
         }
     }
 
@@ -83,7 +80,7 @@ class Socket implements SocketInterface
             return $buf;
         }
 
-        // http://php.net/manual/pl/function.socket-recv.php#47182
+        // http://php.net/manual/en/function.socket-recv.php#47182
         if (0 === $received) {
             throw new SocketException(
                 SocketException::SOCKET_DISCONNECTED_MESSAGE,
@@ -91,7 +88,7 @@ class Socket implements SocketInterface
             );
         }
 
-        throw new SocketException(socket_strerror($this->getSocketErrorCode()), $this->getSocketErrorCode());
+        throw new SocketException($this->getSocketErrorMessage(), $this->getSocketErrorCode());
     }
 
     /**

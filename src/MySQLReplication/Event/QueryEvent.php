@@ -2,7 +2,6 @@
 
 namespace MySQLReplication\Event;
 
-use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Event\DTO\QueryDTO;
 
 /**
@@ -14,7 +13,6 @@ class QueryEvent extends EventCommon
 {
     /**
      * @return QueryDTO
-     * @throws BinaryDataReaderException
      */
     public function makeQueryDTO()
     {

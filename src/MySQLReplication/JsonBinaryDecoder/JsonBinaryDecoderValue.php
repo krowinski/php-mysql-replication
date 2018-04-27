@@ -44,7 +44,7 @@ class JsonBinaryDecoderValue
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isIsResolved()
     {
