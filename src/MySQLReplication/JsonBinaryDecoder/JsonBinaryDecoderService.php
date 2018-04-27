@@ -271,7 +271,7 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param string $type
+     * @param int $type
      * @throws JsonBinaryDecoderException
      */
     private function parseScalar($type)

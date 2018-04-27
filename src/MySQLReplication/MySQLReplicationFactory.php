@@ -66,7 +66,7 @@ class MySQLReplicationFactory
         EventDispatcherInterface $eventDispatcher = null,
         SocketInterface $socket = null
     ) {
-        Config::validate();
+        $config::validate();
 
         if (null === $repository) {
             $this->connection = DriverManager::getConnection(
