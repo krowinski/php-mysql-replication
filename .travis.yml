@@ -6,9 +6,11 @@ php:
   - 5.6
   - 7.0
   - 7.1
+  - 7.2
 env:
   - DB=mysql57
   - DB=mysql56
+  - DB=mariadb
 
 cache: 
   apt: true
@@ -23,6 +25,7 @@ before_script:
   - "sudo apt-get remove mysql* -y"
   - "if [ $DB = 'mysql57' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mysql56' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.6 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
+  - "if [ $DB = 'mariadb' ]; then echo debhttp://mirror.jmu.edu/pub/mariadb/repo/10.2/ubuntu trusty main | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mariadb-server -y --allow-unauthenticated; fi"
   - "sudo mysql_upgrade"
 
   # Config
@@ -49,6 +52,7 @@ before_script:
   
   - if [ $DB = 'mysql56' ]; then echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
   - if [ $DB = 'mysql57' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
+  - if [ $DB = 'mariadb' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
 
 install:
   travis_retry composer install --no-interaction --prefer-source;

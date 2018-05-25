@@ -5,12 +5,14 @@ namespace MySQLReplication\Event;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\BinLog\BinLogSocketConnect;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
 use MySQLReplication\Event\DTO\HeartbeatDTO;
+use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
@@ -25,6 +27,8 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
  */
 class Event
 {
+    const MARIADB_DUMMY_QUERY = '# Dum';
+
     /**
      * @var BinLogSocketConnect
      */
@@ -111,7 +115,9 @@ class Event
         } else if (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
             $eventDTO = (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
         } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
-            $eventDTO = (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO();
+            $eventDTO = $this->filterDummyMariaDbEvents(
+                (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
+            );
         } else if (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
             $eventDTO = (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO();
         } else if (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
@@ -139,6 +145,19 @@ class Event
             $this->binLogSocketConnect->getCheckSum(),
             $this->binLogSocketConnect->getBinLogCurrent()
         );
+    }
+
+    /**
+     * @param QueryDTO $queryDTO
+     * @return QueryDTO|null
+     */
+    private function filterDummyMariaDbEvents(QueryDTO $queryDTO)
+    {
+        if (BinLogServerInfo::isMariaDb() && false !== strpos($queryDTO->getQuery(), self::MARIADB_DUMMY_QUERY)) {
+            return null;
+        }
+
+        return $queryDTO;
     }
 
     /**
