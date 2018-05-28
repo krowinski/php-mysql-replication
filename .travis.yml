@@ -24,6 +24,7 @@ before_script:
   - "sudo /etc/init.d/mysql stop || true"
   - "sudo apt-get remove mysql* -y --purge"
   - "sudo rm -rf /var/lib/mysql"
+  - "sudo rm -rf /etc/mysql"
   - "if [ $DB = 'mysql57' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mysql56' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.6 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mariadb' ]; then echo deb http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.3/ubuntu trusty main | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mariadb-server-10.3 -y --allow-unauthenticated; fi"
@@ -35,14 +36,10 @@ before_script:
   - "echo 'server-id=1'         | sudo tee -a /etc/mysql/conf.d/replication.cnf"
   - "echo 'binlog-format = row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
 
-  # Enable GTID
-  - "echo '[mysqld]'                       | sudo tee /etc/mysql/conf.d/gtid.cnf"
-  - "echo 'gtid_mode=ON'                   | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
-  - "echo 'enforce_gtid_consistency'       | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
-  - "echo 'binlog_format=ROW'              | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
-  - "echo 'log_slave_updates'              | sudo tee -a /etc/mysql/conf.d/gtid.cnf"
+  # Enable GTID (only for mysql 5.*)
+  - "if [ $DB != 'mariadb' ]; then echo '[mysqld]' | sudo tee /etc/mysql/conf.d/gtid.cnf; echo 'gtid_mode=ON' | sudo tee -a /etc/mysql/conf.d/gtid.cnf; echo 'enforce_gtid_consistency' | sudo tee -a /etc/mysql/conf.d/gtid.cnf; echo 'binlog_format=ROW' | sudo tee -a /etc/mysql/conf.d/gtid.cnf;  echo 'log_slave_updates' | sudo tee -a /etc/mysql/conf.d/gtid.cnf; fi"
 
-  # Start mysql (avoid errors to have logs)
+  # Start mysql (avoid errors to have logs)/var/lib/mysql
   - "sudo /etc/init.d/mysql restart || true"
   - "sudo tail -1000 /var/log/syslog"
 
