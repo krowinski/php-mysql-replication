@@ -46,7 +46,7 @@ before_script:
   
   - if [ $DB = 'mysql56' ]; then echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
   - if [ $DB = 'mysql57' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
-  - if [ $DB = 'mariadb' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
+  - if [ $DB = 'mariadb' ]; then echo "SET PASSWORD FOR 'root'@'%' = PASSWORD('root');\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
 
 install:
   travis_retry composer install --no-interaction --prefer-source;
