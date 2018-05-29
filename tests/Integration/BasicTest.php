@@ -2,6 +2,9 @@
 
 namespace MySQLReplication\Tests\Integration;
 
+use Doctrine\DBAL\DBALException;
+use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
@@ -9,6 +12,10 @@ use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
+use MySQLReplication\Exception\MySQLReplicationException;
+use MySQLReplication\Gtid\GtidException;
+use MySQLReplication\Socket\SocketException;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * Class BasicTest
@@ -18,6 +25,9 @@ class BasicTest extends BaseTest
 {
     /**
      * @test
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
      */
     public function shouldGetDeleteEvent()
     {
@@ -41,6 +51,9 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
      */
     public function shouldGetUpdateEvent()
     {
@@ -66,13 +79,15 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
      */
     public function shouldGetWriteEventDropTable()
     {
         $this->connection->exec($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
         $this->connection->exec('INSERT INTO `test` VALUES (1)');
         $this->connection->exec($dropExpected = 'DROP TABLE `test`');
-
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
@@ -103,6 +118,9 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
      */
     public function shouldGetQueryEventCreateTable()
     {
@@ -118,6 +136,13 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws BinLogException
+     * @throws ConfigException
+     * @throws DBALException
+     * @throws GtidException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
+     * @throws SocketException
      */
     public function shouldDropColumn()
     {
@@ -146,6 +171,13 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws BinLogException
+     * @throws ConfigException
+     * @throws DBALException
+     * @throws GtidException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
+     * @throws SocketException
      */
     public function shouldFilterEvents()
     {
@@ -168,6 +200,13 @@ class BasicTest extends BaseTest
 
     /**
      * @test
+     * @throws DBALException
+     * @throws BinLogException
+     * @throws ConfigException
+     * @throws MySQLReplicationException
+     * @throws GtidException
+     * @throws SocketException
+     * @throws InvalidArgumentException
      */
     public function shouldFilterTables()
     {
@@ -196,5 +235,37 @@ class BasicTest extends BaseTest
         self::assertInstanceOf(WriteRowsDTO::class, $event);
         self::assertEquals($expectedTable, $event->getTableMap()->getTable());
         self::assertEquals($expectedValue, $event->getValues()[0]['data']);
+    }
+
+    /**
+     * @test
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws MySQLReplicationException
+     */
+    public function shouldTruncateTable()
+    {
+        $this->disconnect();
+
+        $this->configBuilder->withEventsOnly(
+            [ConstEventType::QUERY_EVENT]
+        );
+
+        $this->connect();
+
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+
+        $this->connection->exec('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))');
+        $this->connection->exec('INSERT INTO test_truncate_column VALUES (1, \'A value\')');
+        $this->connection->exec('TRUNCATE TABLE test_truncate_column');
+
+        /** @var QueryDTO $event */
+        $event = $this->getEvent();
+        self::assertSame('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))', $event->getQuery());
+        $event = $this->getEvent();
+        self::assertSame('BEGIN', $event->getQuery());
+        $event = $this->getEvent();
+        self::assertSame('TRUNCATE TABLE test_truncate_column', $event->getQuery());
     }
 }
