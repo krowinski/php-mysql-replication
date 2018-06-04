@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
@@ -46,7 +47,7 @@ class RowEventBuilder
     /**
      * @param BinaryDataReader $package
      */
-    public function withPackage(BinaryDataReader $package)
+    public function withPackage(BinaryDataReader $package): void
     {
         $this->package = $package;
     }
@@ -54,7 +55,7 @@ class RowEventBuilder
     /**
      * @return RowEvent
      */
-    public function build()
+    public function build(): RowEvent
     {
         return new RowEvent(
             $this->repository,
@@ -67,7 +68,7 @@ class RowEventBuilder
     /**
      * @param EventInfo $eventInfo
      */
-    public function withEventInfo(EventInfo $eventInfo)
+    public function withEventInfo(EventInfo $eventInfo): void
     {
         $this->eventInfo = $eventInfo;
     }

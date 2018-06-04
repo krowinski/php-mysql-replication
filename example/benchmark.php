@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace example;
 
@@ -9,6 +10,7 @@ include __DIR__ . '/../vendor/autoload.php';
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Config\ConfigException;
@@ -16,7 +18,10 @@ use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\Exception\MySQLReplicationException;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
 use MySQLReplication\MySQLReplicationFactory;
+use MySQLReplication\Socket\SocketException;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * Class BenchmarkEventSubscribers
@@ -41,7 +46,7 @@ class BenchmarkEventSubscribers extends EventSubscribers
     /**
      * @param UpdateRowsDTO $event
      */
-    public function onUpdate(UpdateRowsDTO $event)
+    public function onUpdate(UpdateRowsDTO $event): void
     {
         ++$this->counter;
         if (0 === ($this->counter % 1000)) {
@@ -60,6 +65,10 @@ class Benchmark
      * @var string
      */
     private $database = 'mysqlreplication_test';
+    /**
+     * @var MySQLReplicationFactory
+     */
+    private $binLogStream;
 
     /**
      * Benchmark constructor.
@@ -68,7 +77,7 @@ class Benchmark
      * @throws BinLogException
      * @throws MySQLReplicationException
      * @throws \MySQLReplication\Gtid\GtidException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
     public function __construct()
     {
@@ -87,6 +96,7 @@ class Benchmark
                 ->withUser('root')
                 ->withPassword('root')
                 ->withHost('127.0.0.1')
+                ->withPort(3333)
                 ->withEventsOnly([ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2])
                 ->withSlaveId(9999)
                 ->withDatabasesOnly([$this->database])
@@ -101,14 +111,14 @@ class Benchmark
      * @return Connection
      * @throws DBALException
      */
-    private function getConnection()
+    private function getConnection(): Connection
     {
         return DriverManager::getConnection(
             [
                 'user' => 'root',
                 'password' => 'root',
                 'host' => '127.0.0.1',
-                'port' => 3306,
+                'port' => 3333,
                 'driver' => 'pdo_mysql',
                 'dbname' => $this->database
             ]
@@ -117,24 +127,24 @@ class Benchmark
 
     /**
      * @throws \Exception
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \MySQLReplication\BinLog\BinLogException
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
-     * @throws \MySQLReplication\Config\ConfigException
-     * @throws \MySQLReplication\Event\EventException
-     * @throws \MySQLReplication\Exception\MySQLReplicationException
-     * @throws \MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws InvalidArgumentException
+     * @throws BinLogException
+     * @throws BinaryDataReaderException
+     * @throws MySQLReplicationException
+     * @throws JsonBinaryDecoderException
+     * @throws SocketException
      * @throws \InvalidArgumentException
      * @throws \Exception
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function run()
+    public function run(): void
     {
         $pid = pcntl_fork();
         if ($pid === -1) {
             throw new \InvalidArgumentException('Could not fork');
-        } else if ($pid) {
+        }
+
+        if ($pid) {
             $this->consume();
             pcntl_wait($status);
         } else {
@@ -144,16 +154,14 @@ class Benchmark
 
     /**
      * @throws \Exception
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \MySQLReplication\BinLog\BinLogException
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
-     * @throws \MySQLReplication\Config\ConfigException
-     * @throws \MySQLReplication\Event\EventException
-     * @throws \MySQLReplication\Exception\MySQLReplicationException
-     * @throws \MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws InvalidArgumentException
+     * @throws BinLogException
+     * @throws BinaryDataReaderException
+     * @throws MySQLReplicationException
+     * @throws JsonBinaryDecoderException
+     * @throws SocketException
      */
-    private function consume()
+    private function consume(): void
     {
         $this->binLogStream->run();
     }

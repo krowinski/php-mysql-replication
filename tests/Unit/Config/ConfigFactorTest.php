@@ -14,7 +14,7 @@ class ConfigFactorTest extends BaseTest
     /**
      * @test
      */
-    public function shouldMakeConfigFromArray()
+    public function shouldMakeConfigFromArray(): void
     {
          $expected = [
             'user' => 'foo',

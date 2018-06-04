@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
@@ -35,7 +36,7 @@ class RowEventFactory
      * @param EventInfo $eventInfo
      * @return RowEvent
      */
-    public function makeRowEvent(BinaryDataReader $package, EventInfo $eventInfo)
+    public function makeRowEvent(BinaryDataReader $package, EventInfo $eventInfo): RowEvent
     {
         $this->rowEventBuilder->withPackage($package);
         $this->rowEventBuilder->withEventInfo($eventInfo);

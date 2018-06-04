@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
 
@@ -8,6 +9,7 @@ use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Gtid\GtidFactory;
 use MySQLReplication\Repository\RepositoryInterface;
+use MySQLReplication\Socket\SocketException;
 use MySQLReplication\Socket\SocketInterface;
 
 /**
@@ -16,9 +18,9 @@ use MySQLReplication\Socket\SocketInterface;
  */
 class BinLogSocketConnect
 {
-    const COM_BINLOG_DUMP = 0x12;
-    const COM_REGISTER_SLAVE = 0x15;
-    const COM_BINLOG_DUMP_GTID = 0x1e;
+    private const COM_BINLOG_DUMP = 0x12;
+    private const COM_REGISTER_SLAVE = 0x15;
+    private const COM_BINLOG_DUMP_GTID = 0x1e;
 
     /**
      * @var bool
@@ -52,7 +54,7 @@ class BinLogSocketConnect
      * @param SocketInterface $socket
      * @throws BinLogException
      * @throws \MySQLReplication\Gtid\GtidException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
     public function __construct(
         RepositoryInterface $repository,
@@ -71,16 +73,16 @@ class BinLogSocketConnect
     /**
      * @param bool $checkResponse
      * @return string
-     * @throws \MySQLReplication\BinLog\BinLogException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws BinLogException
+     * @throws SocketException
      */
-    public function getResponse($checkResponse = true)
+    public function getResponse(bool $checkResponse = true): string
     {
         $header = $this->socket->readFromSocket(4);
         if ('' === $header) {
             return '';
         }
-        $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
+        $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . \chr(0))[1];
 
         $result = $this->socket->readFromSocket($dataLength);
         if (true === $checkResponse) {
@@ -94,13 +96,13 @@ class BinLogSocketConnect
      * @param string $data
      * @throws BinLogException
      */
-    private function isWriteSuccessful($data)
+    private function isWriteSuccessful(string $data): void
     {
-        $head = ord($data[0]);
-        if (!in_array($head, $this->packageOkHeader, true)) {
+        $head = \ord($data[0]);
+        if (!\in_array($head, $this->packageOkHeader, true)) {
             $errorCode = unpack('v', $data[1] . $data[2])[1];
             $errorMessage = '';
-            $packetLength = strlen($data);
+            $packetLength = \strlen($data);
             for ($i = 9; $i < $packetLength; ++$i) {
                 $errorMessage .= $data[$i];
             }
@@ -111,25 +113,25 @@ class BinLogSocketConnect
 
     /**
      * @throws BinLogException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      * @link http://dev.mysql.com/doc/internals/en/secure-password-authentication.html#packet-Authentication::Native41
      */
-    private function authenticate()
+    private function authenticate(): void
     {
         $data = pack('L', self::getCapabilities());
         $data .= pack('L', $this->binaryDataMaxLength);
-        $data .= chr(33);
+        $data .= \chr(33);
         for ($i = 0; $i < 23; $i++) {
-            $data .= chr(0);
+            $data .= \chr(0);
         }
         $result = sha1(Config::getPassword(), true) ^ sha1(
                 BinLogServerInfo::getSalt() . sha1(sha1(Config::getPassword(), true), true), true
             );
 
-        $data = $data . Config::getUser() . chr(0) . chr(strlen($result)) . $result;
-        $str = pack('L', strlen($data));
+        $data = $data . Config::getUser() . \chr(0) . \chr(\strlen($result)) . $result;
+        $str = pack('L', \strlen($data));
         $s = $str[0] . $str[1] . $str[2];
-        $data = $s . chr(1) . $data;
+        $data = $s . \chr(1) . $data;
 
         $this->socket->writeToSocket($data);
         $this->getResponse();
@@ -140,7 +142,7 @@ class BinLogSocketConnect
      * https://github.com/siddontang/mixer/blob/master/doc/protocol.txt
      * @return int
      */
-    private static function getCapabilities()
+    private static function getCapabilities(): int
     {
         /*
             Left only as information
@@ -170,9 +172,9 @@ class BinLogSocketConnect
     /**
      * @throws BinLogException
      * @throws GtidException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
-    private function getBinlogStream()
+    private function getBinlogStream(): void
     {
         $this->checkSum = $this->repository->isCheckSum();
         if ($this->checkSum) {
@@ -199,28 +201,28 @@ class BinLogSocketConnect
     /**
      * @param string $sql
      * @throws BinLogException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
-    private function execute($sql)
+    private function execute(string $sql): void
     {
-        $this->socket->writeToSocket(pack('LC', strlen($sql) + 1, 0x03) . $sql);
+        $this->socket->writeToSocket(pack('LC', \strlen($sql) + 1, 0x03) . $sql);
         $this->getResponse();
     }
 
     /**
      * @see https://dev.mysql.com/doc/internals/en/com-register-slave.html
      * @throws BinLogException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
-    private function registerSlave()
+    private function registerSlave(): void
     {
         $host = gethostname();
-        $hostLength = strlen($host);
-        $userLength = strlen(Config::getUser());
-        $passLength = strlen(Config::getPassword());
+        $hostLength = \strlen($host);
+        $userLength = \strlen(Config::getUser());
+        $passLength = \strlen(Config::getPassword());
 
         $data = pack('l', 18 + $hostLength + $userLength + $passLength);
-        $data .= chr(self::COM_REGISTER_SLAVE);
+        $data .= \chr(self::COM_REGISTER_SLAVE);
         $data .= pack('V', Config::getSlaveId());
         $data .= pack('C', $hostLength);
         $data .= $host;
@@ -237,10 +239,10 @@ class BinLogSocketConnect
     }
 
     /**
-     * @throws \MySQLReplication\Socket\SocketException
-     * @throws \MySQLReplication\BinLog\BinLogException
+     * @throws SocketException
+     * @throws BinLogException
      */
-    private function setBinLogDumpMariaGtid()
+    private function setBinLogDumpMariaGtid(): void
     {
         $this->execute('SET @mariadb_slave_capability = 4');
         $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
@@ -254,19 +256,19 @@ class BinLogSocketConnect
      * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump-gtid.html
      * @throws BinLogException
      * @throws GtidException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
-    private function setBinLogDumpGtid()
+    private function setBinLogDumpGtid(): void
     {
         $collection = GtidFactory::makeCollectionFromString(Config::getGtid());
 
-        $data = pack('l', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
+        $data = pack('l', 26 + $collection->getEncodedLength()) . \chr(self::COM_BINLOG_DUMP_GTID);
         $data .= pack('S', 0);
         $data .= pack('I', Config::getSlaveId());
         $data .= pack('I', 3);
-        $data .= chr(0);
-        $data .= chr(0);
-        $data .= chr(0);
+        $data .= \chr(0);
+        $data .= \chr(0);
+        $data .= \chr(0);
         $data .= BinaryDataReader::pack64bit(4);
         $data .= pack('I', $collection->getEncodedLength());
         $data .= $collection->getEncoded();
@@ -280,9 +282,9 @@ class BinLogSocketConnect
     /**
      * @see https://dev.mysql.com/doc/internals/en/com-binlog-dump.html
      * @throws BinLogException
-     * @throws \MySQLReplication\Socket\SocketException
+     * @throws SocketException
      */
-    private function setBinLogDump()
+    private function setBinLogDump(): void
     {
         $binFilePos = Config::getBinLogPosition();
         $binFileName = Config::getBinLogFileName();
@@ -298,7 +300,7 @@ class BinLogSocketConnect
             $binFileName = $master['File'];
         }
 
-        $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
+        $data = pack('i', \strlen($binFileName) + 11) . \chr(self::COM_BINLOG_DUMP);
         $data .= pack('I', $binFilePos);
         $data .= pack('v', 0);
         $data .= pack('I', Config::getSlaveId());
@@ -314,7 +316,7 @@ class BinLogSocketConnect
     /**
      * @return BinLogCurrent
      */
-    public function getBinLogCurrent()
+    public function getBinLogCurrent(): BinLogCurrent
     {
         return $this->binLogCurrent;
     }
@@ -322,7 +324,7 @@ class BinLogSocketConnect
     /**
      * @return bool
      */
-    public function getCheckSum()
+    public function getCheckSum(): bool
     {
         return $this->checkSum;
     }

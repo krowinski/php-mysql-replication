@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -34,7 +35,7 @@ abstract class RowsDTO extends EventDTO
     public function __construct(
         EventInfo $eventInfo,
         TableMap $tableMap,
-        $changedRows,
+        int $changedRows,
         array $values
     ) {
         parent::__construct($eventInfo);
@@ -47,7 +48,7 @@ abstract class RowsDTO extends EventDTO
     /**
      * @return TableMap
      */
-    public function getTableMap()
+    public function getTableMap(): TableMap
     {
         return $this->tableMap;
     }
@@ -55,7 +56,7 @@ abstract class RowsDTO extends EventDTO
     /**
      * @return int
      */
-    public function getChangedRows()
+    public function getChangedRows(): int
     {
         return $this->changedRows;
     }
@@ -63,7 +64,7 @@ abstract class RowsDTO extends EventDTO
     /**
      * @return array
      */
-    public function getValues()
+    public function getValues(): array
     {
         return $this->values;
     }
@@ -71,7 +72,7 @@ abstract class RowsDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .

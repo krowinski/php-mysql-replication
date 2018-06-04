@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -41,7 +42,7 @@ class EventSubscribers implements EventSubscriberInterface
      *
      * @return array The event names to listen to
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             ConstEventsNames::TABLE_MAP => 'onTableMap',
@@ -61,7 +62,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param UpdateRowsDTO $event
      */
-    public function onUpdate(UpdateRowsDTO $event)
+    public function onUpdate(UpdateRowsDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -69,14 +70,14 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param EventDTO $event
      */
-    protected function allEvents(EventDTO $event)
+    protected function allEvents(EventDTO $event): void
     {
     }
 
     /**
      * @param TableMapDTO $event
      */
-    public function onTableMap(TableMapDTO $event)
+    public function onTableMap(TableMapDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -84,7 +85,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param DeleteRowsDTO $event
      */
-    public function onDelete(DeleteRowsDTO $event)
+    public function onDelete(DeleteRowsDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -92,7 +93,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param GTIDLogDTO $event
      */
-    public function onGTID(GTIDLogDTO $event)
+    public function onGTID(GTIDLogDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -100,7 +101,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param QueryDTO $event
      */
-    public function onQuery(QueryDTO $event)
+    public function onQuery(QueryDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -108,7 +109,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param RotateDTO $event
      */
-    public function onRotate(RotateDTO $event)
+    public function onRotate(RotateDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -116,7 +117,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param XidDTO $event
      */
-    public function onXID(XidDTO $event)
+    public function onXID(XidDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -124,7 +125,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param WriteRowsDTO $event
      */
-    public function onWrite(WriteRowsDTO $event)
+    public function onWrite(WriteRowsDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -132,7 +133,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param MariaDbGtidLogDTO $event
      */
-    public function onMariaDbGtid(MariaDbGtidLogDTO $event)
+    public function onMariaDbGtid(MariaDbGtidLogDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -140,7 +141,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param FormatDescriptionEventDTO $event
      */
-    public function onFormatDescription(FormatDescriptionEventDTO $event)
+    public function onFormatDescription(FormatDescriptionEventDTO $event): void
     {
         $this->allEvents($event);
     }
@@ -148,7 +149,7 @@ class EventSubscribers implements EventSubscriberInterface
     /**
      * @param HeartbeatDTO $event
      */
-    public function onHeartbeat(HeartbeatDTO $event)
+    public function onHeartbeat(HeartbeatDTO $event): void
     {
         $this->allEvents($event);
     }

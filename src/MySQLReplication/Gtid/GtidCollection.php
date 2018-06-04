@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Gtid;
 
@@ -14,7 +15,7 @@ class GtidCollection extends ArrayCollection
     /**
      * @return int
      */
-    public function getEncodedLength()
+    public function getEncodedLength(): int
     {
         $l = 8;
         /** @var Gtid $gtid */
@@ -28,7 +29,7 @@ class GtidCollection extends ArrayCollection
     /**
      * @return string
      */
-    public function getEncoded()
+    public function getEncoded(): string
     {
         $s = BinaryDataReader::pack64bit($this->count());
         /** @var Gtid $gtid */

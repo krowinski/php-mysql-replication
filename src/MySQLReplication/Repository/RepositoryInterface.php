@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Repository;
 
@@ -13,17 +14,17 @@ interface RepositoryInterface
      * @param string $table
      * @return array
      */
-    public function getFields($database, $table);
+    public function getFields(string $database, string $table): array;
 
     /**
      * @return bool
      */
-    public function isCheckSum();
+    public function isCheckSum(): bool;
 
     /**
      * @return string
      */
-    public function getVersion();
+    public function getVersion(): string;
 
     /**
      * File
@@ -34,5 +35,5 @@ interface RepositoryInterface
      *
      * @return array
      */
-    public function getMasterStatus();
+    public function getMasterStatus(): array;
 }

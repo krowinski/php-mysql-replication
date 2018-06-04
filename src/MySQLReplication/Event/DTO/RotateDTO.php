@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -18,7 +19,7 @@ class RotateDTO extends EventDTO
     /**
      * @var string
      */
-    private $next_binlog;
+    private $nextBinlog;
     /**
      * @var string
      */
@@ -28,23 +29,23 @@ class RotateDTO extends EventDTO
      * RotateDTO constructor.
      * @param EventInfo $eventInfo
      * @param $position
-     * @param $next_binlog
+     * @param $nextBinlog
      */
     public function __construct(
         EventInfo $eventInfo,
-        $position,
-        $next_binlog
+        int $position,
+        string $nextBinlog
     ) {
         parent::__construct($eventInfo);
 
         $this->position = $position;
-        $this->next_binlog = $next_binlog;
+        $this->nextBinlog = $nextBinlog;
     }
 
     /**
      * @return int
      */
-    public function getPosition()
+    public function getPosition(): int
     {
         return $this->position;
     }
@@ -52,15 +53,15 @@ class RotateDTO extends EventDTO
     /**
      * @return string
      */
-    public function getNextBinlog()
+    public function getNextBinlog(): string
     {
-        return $this->next_binlog;
+        return $this->nextBinlog;
     }
 
     /**
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -68,7 +69,7 @@ class RotateDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -76,7 +77,7 @@ class RotateDTO extends EventDTO
             'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
             'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
             'Binlog position: ' . $this->position . PHP_EOL .
-            'Binlog filename: ' . $this->next_binlog . PHP_EOL;
+            'Binlog filename: ' . $this->nextBinlog . PHP_EOL;
     }
 
     /**

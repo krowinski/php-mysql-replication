@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -27,7 +28,7 @@ class XidDTO extends EventDTO
      */
     public function __construct(
         EventInfo $eventInfo,
-        $xid
+        string $xid
     ) {
         parent::__construct($eventInfo);
 
@@ -37,7 +38,7 @@ class XidDTO extends EventDTO
     /**
      * @return string
      */
-    public function getXid()
+    public function getXid(): string
     {
         return $this->xid;
     }
@@ -45,7 +46,7 @@ class XidDTO extends EventDTO
     /**
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -53,7 +54,7 @@ class XidDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .

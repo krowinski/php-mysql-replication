@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace example;
 
@@ -19,6 +20,7 @@ $binLogStream = new MySQLReplicationFactory(
         ->withUser('root')
         ->withHost('127.0.0.1')
         ->withPassword('root')
+        ->withPort(3333)
         ->build()
 );
 
@@ -31,7 +33,7 @@ class MyEventSubscribers extends EventSubscribers
     /**
      * @param EventDTO $event (your own handler more in EventSubscribers class )
      */
-    public function allEvents(EventDTO $event)
+    public function allEvents(EventDTO $event): void
     {
         // all events got __toString() implementation
         echo $event;

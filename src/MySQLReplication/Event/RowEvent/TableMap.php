@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
@@ -33,15 +34,15 @@ class TableMap implements \JsonSerializable
      * TableMap constructor.
      * @param string $database
      * @param string $table
-     * @param int $tableId
+     * @param string $tableId
      * @param int $columnsAmount
      * @param array $fields
      */
     public function __construct(
-        $database,
-        $table,
-        $tableId,
-        $columnsAmount,
+        string $database,
+        string $table,
+        string $tableId,
+        int $columnsAmount,
         array $fields
     ) {
         $this->database = $database;
@@ -54,7 +55,7 @@ class TableMap implements \JsonSerializable
     /**
      * @return string
      */
-    public function getDatabase()
+    public function getDatabase(): string
     {
         return $this->database;
     }
@@ -62,15 +63,15 @@ class TableMap implements \JsonSerializable
     /**
      * @return string
      */
-    public function getTable()
+    public function getTable(): string
     {
         return $this->table;
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getTableId()
+    public function getTableId(): string
     {
         return $this->tableId;
     }
@@ -78,7 +79,7 @@ class TableMap implements \JsonSerializable
     /**
      * @return int
      */
-    public function getColumnsAmount()
+    public function getColumnsAmount(): int
     {
         return $this->columnsAmount;
     }
@@ -86,7 +87,7 @@ class TableMap implements \JsonSerializable
     /**
      * @return array
      */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->fields;
     }

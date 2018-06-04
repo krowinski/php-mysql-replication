@@ -22,13 +22,14 @@ use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\MySQLReplicationFactory;
 use MySQLReplication\Socket\SocketException;
+use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * Class BaseTest
  * @package MySQLReplication\Unit
  */
-abstract class BaseTest extends \PHPUnit_Framework_TestCase
+abstract class BaseTest extends TestCase
 {
     /**
      * @var MySQLReplicationFactory
@@ -80,6 +81,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ->withUser('root')
             ->withHost('127.0.0.1')
             ->withPassword('root')
+            ->withPort(3333)
             ->withEventsIgnore([ConstEventType::GTID_LOG_EVENT]);
 
         $this->connect();

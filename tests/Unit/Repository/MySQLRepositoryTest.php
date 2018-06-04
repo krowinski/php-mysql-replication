@@ -5,6 +5,7 @@ namespace MySQLReplication\Tests\Unit\Repository;
 
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Tests\Unit\BaseTest;
 
@@ -34,7 +35,7 @@ class MySQLRepositoryTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetFields()
+    public function shouldGetFields(): void
     {
         $expected = [
             'COLUMN_NAME' => 'cname',
@@ -47,13 +48,14 @@ class MySQLRepositoryTest extends BaseTest
 
         $this->connection->method('fetchAll')->willReturn($expected);
 
-        self::assertEquals($expected,$this->mySQLRepositoryTest->getFields('foo', 'bar'));
+        self::assertEquals($expected, $this->mySQLRepositoryTest->getFields('foo', 'bar'));
     }
 
     /**
      * @test
+     * @throws DBALException
      */
-    public function shouldIsCheckSum()
+    public function shouldIsCheckSum(): void
     {
         self::assertFalse($this->mySQLRepositoryTest->isCheckSum());
 
@@ -69,7 +71,7 @@ class MySQLRepositoryTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetVersion()
+    public function shouldGetVersion(): void
     {
         $expected = [
             ['Value' => 'foo'],
@@ -79,13 +81,14 @@ class MySQLRepositoryTest extends BaseTest
 
         $this->connection->method('fetchAll')->willReturn($expected);
 
-        self::assertEquals('foobar123',$this->mySQLRepositoryTest->getVersion());
+        self::assertEquals('foobar123', $this->mySQLRepositoryTest->getVersion());
     }
 
     /**
      * @test
+     * @throws DBALException
      */
-    public function shouldGetMasterStatus()
+    public function shouldGetMasterStatus(): void
     {
         $expected = [
             'File' => 'mysql-bin.000002',
@@ -97,24 +100,27 @@ class MySQLRepositoryTest extends BaseTest
 
         $this->connection->method('fetchAssoc')->willReturn($expected);
 
-        self::assertEquals($expected,$this->mySQLRepositoryTest->getMasterStatus());
+        self::assertEquals($expected, $this->mySQLRepositoryTest->getMasterStatus());
     }
 
     /**
      * @test
      */
-    public function shouldDestroy()
+    public function shouldDestroy(): void
     {
         $this->mySQLRepositoryTest = null;
+        self::assertTrue(true);
     }
 
     /**
      * @test
+     * @throws DBALException
      */
-    public function shouldReconnect()
+    public function shouldReconnect(): void
     {
         // just to cover private getConnection
         $this->connection->method('ping')->willReturn(false);
         $this->mySQLRepositoryTest->isCheckSum();
+        self::assertTrue(true);
     }
 }

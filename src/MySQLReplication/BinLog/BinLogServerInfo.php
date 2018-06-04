@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
 
@@ -8,9 +9,9 @@ namespace MySQLReplication\BinLog;
  */
 class BinLogServerInfo
 {
-    const MYSQL_VERSION_MARIADB = 'MariaDB';
-    const MYSQL_VERSION_PERCONA = 'Percona';
-    const MYSQL_VERSION_GENERIC = 'MySQL';
+    private const MYSQL_VERSION_MARIADB = 'MariaDB';
+    private const MYSQL_VERSION_PERCONA = 'Percona';
+    private const MYSQL_VERSION_GENERIC = 'MySQL';
     /**
      * @var array
      */
@@ -20,18 +21,18 @@ class BinLogServerInfo
      * @param string $data
      * @param string $version
      */
-    public static function parsePackage($data, $version)
+    public static function parsePackage(string $data, string $version): void
     {
         $i = 0;
-        $length = strlen($data);
-        self::$serverInfo['protocol_version'] = ord($data[$i]);
+        $length = \strlen($data);
+        self::$serverInfo['protocol_version'] = \ord($data[$i]);
         $i++;
 
         //version
         self::$serverInfo['server_version'] = '';
         $start = $i;
         for ($i = $start; $i < $length; $i++) {
-            if ($data[$i] === chr(0)) {
+            if ($data[$i] === \chr(0)) {
                 $i++;
                 break;
             }
@@ -67,7 +68,7 @@ class BinLogServerInfo
         $i += 2;
 
         //auth_plugin_data_len (1) -- length of the combined auth_plugin_data, if auth_plugin_data_len is > 0
-        $salt_len = ord($data[$i]);
+        $salt_len = \ord($data[$i]);
         $i++;
 
         $salt_len = max(12, $salt_len - 9);
@@ -93,7 +94,7 @@ class BinLogServerInfo
     /**
      * @return string
      */
-    public static function getSalt()
+    public static function getSalt(): string
     {
         return self::$serverInfo['salt'];
     }
@@ -103,7 +104,7 @@ class BinLogServerInfo
      * @param string $version
      * @return string
      */
-    private static function parseVersion($version)
+    private static function parseVersion(string $version): string
     {
         if ('' !== $version) {
             if (false !== strpos($version, self::MYSQL_VERSION_MARIADB)) {
@@ -120,7 +121,7 @@ class BinLogServerInfo
     /**
      * @return string
      */
-    public static function getVersion()
+    public static function getVersion(): string
     {
         return self::$serverInfo['version_name'];
     }
@@ -128,7 +129,7 @@ class BinLogServerInfo
     /**
      * @return bool
      */
-    public static function isMariaDb()
+    public static function isMariaDb(): bool
     {
         return self::MYSQL_VERSION_MARIADB === self::getVersion();
     }
@@ -136,7 +137,7 @@ class BinLogServerInfo
     /**
      * @return bool
      */
-    public static function isPercona()
+    public static function isPercona(): bool
     {
         return self::MYSQL_VERSION_PERCONA === self::getVersion();
     }
@@ -144,7 +145,7 @@ class BinLogServerInfo
     /**
      * @return bool
      */
-    public static function isGeneric()
+    public static function isGeneric(): bool
     {
         return self::MYSQL_VERSION_GENERIC === self::getVersion();
     }

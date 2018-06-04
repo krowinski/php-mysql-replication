@@ -3,6 +3,7 @@
 namespace BinaryDataReader\Unit;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
+use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Tests\Unit\BaseTest;
 
 /**
@@ -15,7 +16,7 @@ class BinaryDataReaderTest extends BaseTest
      * @param string $data
      * @return BinaryDataReader
      */
-    private function getBinaryRead($data)
+    private function getBinaryRead($data): BinaryDataReader
     {
         return new BinaryDataReader($data);
     }
@@ -23,7 +24,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldRead()
+    public function shouldRead(): void
     {
         $expected = 'zażółć gęślą jaźń';
         self::assertSame($expected, pack('H*', $this->getBinaryRead(unpack('H*', $expected)[1])->read(52)));
@@ -31,28 +32,37 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
+     * @throws BinaryDataReaderException
      */
-    public function shouldReadCodedBinary()
+    public function shouldReadCodedBinary(): void
     {
-        $this->getBinaryRead(pack('C', ''))->readCodedBinary();
-        $this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary();
-        $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary();
-        $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary();
-        $this->getBinaryRead(
+        self::assertSame(0, $this->getBinaryRead(pack('C', ''))->readCodedBinary());
+        self::assertSame('', $this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary());
+        self::assertSame(
+            0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary()
+        );
+        self::assertSame(
+            0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary()
+        );
+        self::assertSame(
+            '18410715276673810432', $this->getBinaryRead(
             pack('V', BinaryDataReader::UNSIGNED_INT64_COLUMN) . pack('V', 2147483647) . pack('V', 2147483647)
-        )->readCodedBinary();
+        )->readCodedBinary()
+        );
     }
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
-    public function shouldThrowErrorOnUnknownCodedBinary()
+    public function shouldThrowErrorOnUnknownCodedBinary(): void
     {
+        $this->expectException(BinaryDataReaderException::class);
+
         $this->getBinaryRead(pack('i', 255))->readCodedBinary();
     }
 
-    public function dataProviderForUInt()
+    public function dataProviderForUInt(): array
     {
         return [
             [1, pack('c', 1), 1],
@@ -72,23 +82,25 @@ class BinaryDataReaderTest extends BaseTest
      * @param $size
      * @param $data
      * @param $expected
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
-    public function shouldReadUIntBySize($size, $data, $expected)
+    public function shouldReadUIntBySize($size, $data, $expected): void
     {
         self::assertSame($expected, $this->getBinaryRead($data)->readUIntBySize($size));
     }
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
-    public function shouldThrowErrorOnReadUIntBySizeNotSupported()
+    public function shouldThrowErrorOnReadUIntBySizeNotSupported(): void
     {
+        $this->expectException(BinaryDataReaderException::class);
+
         $this->getBinaryRead('')->readUIntBySize(32);
     }
 
-    public function dataProviderForBeInt()
+    public function dataProviderForBeInt(): array
     {
         return [
             [1, pack('c', 4), 4],
@@ -105,26 +117,28 @@ class BinaryDataReaderTest extends BaseTest
      * @param $size
      * @param $data
      * @param $expected
-     * @throws \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
-    public function shouldReadIntBeBySize($size, $data, $expected)
+    public function shouldReadIntBeBySize($size, $data, $expected): void
     {
         self::assertSame($expected, $this->getBinaryRead($data)->readIntBeBySize($size));
     }
 
     /**
      * @test
-     * @expectedException \MySQLReplication\BinaryDataReader\BinaryDataReaderException
+     * @throws BinaryDataReaderException
      */
-    public function shouldThrowErrorOnReadIntBeBySizeNotSupported()
+    public function shouldThrowErrorOnReadIntBeBySizeNotSupported(): void
     {
+        $this->expectException(BinaryDataReaderException::class);
+
         $this->getBinaryRead('')->readIntBeBySize(666);
     }
 
     /**
      * @test
      */
-    public function shouldReadInt16()
+    public function shouldReadInt16(): void
     {
         $expected = 1000;
         self::assertSame($expected, $this->getBinaryRead(pack('s', $expected))->readInt16());
@@ -133,7 +147,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldUnreadAdvance()
+    public function shouldUnreadAdvance(): void
     {
         $binaryDataReader = $this->getBinaryRead('123');
 
@@ -154,7 +168,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadInt24()
+    public function shouldReadInt24(): void
     {
         self::assertSame(-6513508, $this->getBinaryRead(pack('C3', -100, -100, -100))->readInt24());
     }
@@ -162,7 +176,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadInt64()
+    public function shouldReadInt64(): void
     {
         self::assertSame('-72057589759737856', $this->getBinaryRead(pack('VV', 4278190080, 4278190080))->readInt64());
     }
@@ -204,7 +218,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadDouble()
+    public function shouldReadDouble(): void
     {
         $expected = 1321312312.143567586;
         self::assertSame($expected, $this->getBinaryRead(pack('d', $expected))->readDouble());
@@ -213,7 +227,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadTableId()
+    public function shouldReadTableId(): void
     {
         self::assertSame(
             '7456176998088', $this->getBinaryRead(pack('v3', 2570258120, 2570258120, 2570258120))->readTableId()
@@ -223,7 +237,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldCheckIsCompleted()
+    public function shouldCheckIsCompleted(): void
     {
         self::assertFalse($this->getBinaryRead('')->isComplete(1));
 
@@ -235,7 +249,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldPack64bit()
+    public function shouldPack64bit(): void
     {
         $expected = '9223372036854775807';
         self::assertSame($expected, $this->getBinaryRead(BinaryDataReader::pack64bit($expected))->readInt64());
@@ -244,7 +258,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetBinaryDataLength()
+    public function shouldGetBinaryDataLength(): void
     {
         self::assertSame(3, $this->getBinaryRead('foo')->getBinaryDataLength());
     }

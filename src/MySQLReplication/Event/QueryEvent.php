@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -14,7 +15,7 @@ class QueryEvent extends EventCommon
     /**
      * @return QueryDTO
      */
-    public function makeQueryDTO()
+    public function makeQueryDTO(): QueryDTO
     {
         $this->binaryDataReader->advance(4);
         $executionTime = $this->binaryDataReader->readUInt32();

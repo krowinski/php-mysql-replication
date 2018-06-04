@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Exception;
 
@@ -21,14 +22,10 @@ class MySQLReplicationException extends \Exception
     const UNKNOWN_JSON_TYPE_MESSAGE = 'Unknown JSON type: ';
     const UNKNOWN_JSON_TYPE_CODE = 300;
 
-    const USER_ERROR_MESSAGE = 'Incorrect user given';
-    const USER_ERROR_CODE = 400;
     const IP_ERROR_MESSAGE = 'Incorrect IP given';
     const IP_ERROR_CODE = 401;
     const PORT_ERROR_MESSAGE = 'Incorrect port given should be numeric ';
     const PORT_ERROR_CODE = 402;
-    const PASSWORD_ERROR_MESSAGE = 'Incorrect password type';
-    const PASSWORD_ERROR_CODE = 403;
     const DB_NAME_ERROR_MESSAGE = 'Incorrect db name type';
     const DB_NAME_ERROR_CODE = 404;
     const CHARSET_ERROR_MESSAGE = 'Incorrect charset type';

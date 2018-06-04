@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
 
@@ -68,7 +69,7 @@ class BinLogCurrent implements \JsonSerializable
     /**
      * @param string $gtid
      */
-    public function setGtid($gtid)
+    public function setGtid(string $gtid): void
     {
         $this->gtid = $gtid;
     }
@@ -76,7 +77,7 @@ class BinLogCurrent implements \JsonSerializable
     /**
      * @return string
      */
-    public function getMariaDbGtid()
+    public function getMariaDbGtid(): string
     {
         return $this->mariaDbGtid;
     }
@@ -84,7 +85,7 @@ class BinLogCurrent implements \JsonSerializable
     /**
      * @param string $mariaDbGtid
      */
-    public function setMariaDbGtid($mariaDbGtid)
+    public function setMariaDbGtid(string $mariaDbGtid): void
     {
         $this->mariaDbGtid = $mariaDbGtid;
     }

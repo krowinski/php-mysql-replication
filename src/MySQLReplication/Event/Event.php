@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -64,13 +65,12 @@ class Event
     /**
      * @throws BinaryDataReaderException
      * @throws BinLogException
-     * @throws EventException
      * @throws MySQLReplicationException
      * @throws JsonBinaryDecoderException
      * @throws InvalidArgumentException
      * @throws SocketException
      */
-    public function consume()
+    public function consume(): void
     {
         $binaryDataReader = new BinaryDataReader($this->binLogSocketConnect->getResponse());
 
@@ -91,15 +91,15 @@ class Event
             return;
         }
 
-        if (in_array(
+        if (\in_array(
             $eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true
         )) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO();
-        } else if (in_array(
+        } else if (\in_array(
             $eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true
         )) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO();
-        } else if (in_array(
+        } else if (\in_array(
             $eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true
         )) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
@@ -127,7 +127,7 @@ class Event
      * @param BinaryDataReader $binaryDataReader
      * @return EventInfo
      */
-    private function createEventInfo(BinaryDataReader $binaryDataReader)
+    private function createEventInfo(BinaryDataReader $binaryDataReader): EventInfo
     {
         return new EventInfo(
             $binaryDataReader->readInt32(),
@@ -144,7 +144,7 @@ class Event
     /**
      * @param EventDTO $eventDTO
      */
-    private function dispatch(EventDTO $eventDTO = null)
+    private function dispatch(EventDTO $eventDTO = null): void
     {
         if (null !== $eventDTO) {
             $this->eventDispatcher->dispatch($eventDTO->getType(), $eventDTO);

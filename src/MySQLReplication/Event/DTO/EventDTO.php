@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -31,7 +32,7 @@ abstract class EventDTO extends Event implements \JsonSerializable
     /**
      * @return EventInfo
      */
-    public function getEventInfo()
+    public function getEventInfo(): EventInfo
     {
         return $this->eventInfo;
     }
@@ -39,10 +40,10 @@ abstract class EventDTO extends Event implements \JsonSerializable
     /**
      * @return string
      */
-    abstract public function getType();
+    abstract public function getType(): string;
 
     /**
      * @return string
      */
-    abstract public function __toString();
+    abstract public function __toString(): string;
 }

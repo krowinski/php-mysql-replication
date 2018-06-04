@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -31,7 +32,7 @@ class EventInfo implements \JsonSerializable
      */
     private $pos;
     /**
-     * @var string
+     * @var int
      */
     private $flag;
     /**
@@ -54,22 +55,22 @@ class EventInfo implements \JsonSerializable
     /**
      * EventInfo constructor.
      * @param int $timestamp
-     * @param string $type
+     * @param int $type
      * @param int $id
      * @param int $size
      * @param int $pos
-     * @param string $flag
+     * @param int $flag
      * @param bool $checkSum
      * @param BinLogCurrent $binLogCurrent
      */
     public function __construct(
-        $timestamp,
-        $type,
-        $id,
-        $size,
-        $pos,
-        $flag,
-        $checkSum,
+        int $timestamp,
+        int $type,
+        int $id,
+        int $size,
+        int $pos,
+        int $flag,
+        bool $checkSum,
         BinLogCurrent $binLogCurrent
     ) {
         $this->timestamp = $timestamp;
@@ -89,7 +90,7 @@ class EventInfo implements \JsonSerializable
     /**
      * @return BinLogCurrent
      */
-    public function getBinLogCurrent()
+    public function getBinLogCurrent(): BinLogCurrent
     {
         return $this->binLogCurrent;
     }
@@ -97,7 +98,7 @@ class EventInfo implements \JsonSerializable
     /**
      * @return string
      */
-    public function getDateTime()
+    public function getDateTime(): string
     {
         if (empty($this->dateTime)) {
             $this->dateTime = date('c', $this->timestamp);
@@ -107,9 +108,9 @@ class EventInfo implements \JsonSerializable
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getSizeNoHeader()
+    public function getSizeNoHeader(): int
     {
         if (empty($this->sizeNoHeader)) {
             $this->sizeNoHeader = (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
@@ -121,15 +122,15 @@ class EventInfo implements \JsonSerializable
     /**
      * @return int
      */
-    public function getTimestamp()
+    public function getTimestamp(): int
     {
         return $this->timestamp;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
@@ -137,7 +138,7 @@ class EventInfo implements \JsonSerializable
     /**
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -145,7 +146,7 @@ class EventInfo implements \JsonSerializable
     /**
      * @return int
      */
-    public function getSize()
+    public function getSize(): int
     {
         return $this->size;
     }
@@ -153,15 +154,15 @@ class EventInfo implements \JsonSerializable
     /**
      * @return int
      */
-    public function getPos()
+    public function getPos(): int
     {
         return $this->pos;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getFlag()
+    public function getFlag(): int
     {
         return $this->flag;
     }

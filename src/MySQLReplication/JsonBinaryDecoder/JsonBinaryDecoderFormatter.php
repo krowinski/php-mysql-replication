@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
@@ -17,7 +17,7 @@ class JsonBinaryDecoderFormatter
     /**
      * @param bool $bool
      */
-    public function formatValueBool($bool)
+    public function formatValueBool(bool $bool): void
     {
         $this->jsonString .= var_export($bool, true);
     }
@@ -25,40 +25,40 @@ class JsonBinaryDecoderFormatter
     /**
      * @param int $val
      */
-    public function formatValueNumeric($val)
+    public function formatValueNumeric(int $val): void
     {
         $this->jsonString .= $val;
     }
 
     /**
-     * @param string $val
+     * @param mixed $val
      */
-    public function formatValue($val)
+    public function formatValue($val): void
     {
         $this->jsonString .= '"' . $val . '"';
     }
 
-    public function formatEndObject()
+    public function formatEndObject(): void
     {
         $this->jsonString .= '}';
     }
 
-    public function formatBeginArray()
+    public function formatBeginArray(): void
     {
         $this->jsonString .= '[';
     }
 
-    public function formatEndArray()
+    public function formatEndArray(): void
     {
         $this->jsonString .= ']';
     }
 
-    public function formatBeginObject()
+    public function formatBeginObject(): void
     {
         $this->jsonString .= '{';
     }
 
-    public function formatNextEntry()
+    public function formatNextEntry(): void
     {
         $this->jsonString .= ',';
     }
@@ -66,12 +66,12 @@ class JsonBinaryDecoderFormatter
     /**
      * @param string $name
      */
-    public function formatName($name)
+    public function formatName(string $name): void
     {
         $this->jsonString .= '"' . $name . '":';
     }
 
-    public function formatValueNull()
+    public function formatValueNull(): void
     {
         $this->jsonString .= 'null';
     }
@@ -79,7 +79,7 @@ class JsonBinaryDecoderFormatter
     /**
      * @return string
      */
-    public function getJsonString()
+    public function getJsonString(): string
     {
         return $this->jsonString;
     }

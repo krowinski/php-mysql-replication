@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -30,9 +31,9 @@ class MariaDbGtidLogDTO extends EventDTO
 
     public function __construct(
         EventInfo $eventInfo,
-        $flag,
-        $domainId,
-        $sequenceNumber
+        int $flag,
+        int $domainId,
+        int $sequenceNumber
     ) {
         parent::__construct($eventInfo);
 
@@ -44,7 +45,7 @@ class MariaDbGtidLogDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -59,7 +60,7 @@ class MariaDbGtidLogDTO extends EventDTO
     /**
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -79,7 +80,7 @@ class MariaDbGtidLogDTO extends EventDTO
     /**
      * @return int
      */
-    public function getFlag()
+    public function getFlag(): int
     {
         return $this->flag;
     }
@@ -87,7 +88,7 @@ class MariaDbGtidLogDTO extends EventDTO
     /**
      * @return int
      */
-    public function getSequenceNumber()
+    public function getSequenceNumber(): int
     {
         return $this->sequenceNumber;
     }
@@ -95,7 +96,7 @@ class MariaDbGtidLogDTO extends EventDTO
     /**
      * @return int
      */
-    public function getDomainId()
+    public function getDomainId(): int
     {
         return $this->domainId;
     }

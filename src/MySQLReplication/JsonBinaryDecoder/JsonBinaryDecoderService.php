@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
@@ -14,20 +14,20 @@ use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
  */
 class JsonBinaryDecoderService
 {
-    const SMALL_OBJECT = 0;
-    const LARGE_OBJECT = 1;
-    const SMALL_ARRAY = 2;
-    const LARGE_ARRAY = 3;
-    const LITERAL = 4;
-    const INT16 = 5;
-    const UINT16 = 6;
-    const INT32 = 7;
-    const UINT32 = 8;
-    const INT64 = 9;
-    const UINT64 = 10;
-    const DOUBLE = 11;
-    const STRING = 12;
-    const OPAQUE = 15;
+    public const SMALL_OBJECT = 0;
+    public const LARGE_OBJECT = 1;
+    public const SMALL_ARRAY = 2;
+    public const LARGE_ARRAY = 3;
+    public const LITERAL = 4;
+    public const INT16 = 5;
+    public const UINT16 = 6;
+    public const INT32 = 7;
+    public const UINT32 = 8;
+    public const INT64 = 9;
+    public const UINT64 = 10;
+    public const DOUBLE = 11;
+    public const STRING = 12;
+    public const OPAQUE = 15;
 
     /**
      * @var BinaryDataReader
@@ -57,7 +57,7 @@ class JsonBinaryDecoderService
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
      */
-    public function parseToString()
+    public function parseToString(): string
     {
         $this->parseJson($this->binaryDataReader->readUInt8());
 
@@ -70,7 +70,7 @@ class JsonBinaryDecoderService
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
      */
-    private function parseJson($type)
+    private function parseJson(int $type): void
     {
         if (self::SMALL_OBJECT === $type) {
             $this->parseObject(BinaryDataReader::UNSIGNED_SHORT_LENGTH);
@@ -91,7 +91,7 @@ class JsonBinaryDecoderService
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      */
-    private function parseObject($intSize)
+    private function parseObject(int $intSize): void
     {
         $elementCount = $this->binaryDataReader->readUIntBySize($intSize);
         $size = $this->binaryDataReader->readUIntBySize($intSize);
@@ -99,7 +99,8 @@ class JsonBinaryDecoderService
         // Read each key-entry, consisting of the offset and length of each key ...
         $keyLengths = [];
         for ($i = 0; $i !== $elementCount; ++$i) {
-            $this->binaryDataReader->readUIntBySize($intSize); // $keyOffset unused
+            // $keyOffset unused
+            $this->binaryDataReader->readUIntBySize($intSize);
             $keyLengths[$i] = $this->binaryDataReader->readUInt16();
         }
 
@@ -137,7 +138,7 @@ class JsonBinaryDecoderService
      * @throws BinaryDataReaderException
      * @throws \LengthException
      */
-    private function parseValueType($numBytes, $intSize)
+    private function parseValueType(int $numBytes, int $intSize): JsonBinaryDecoderValue
     {
         $type = $this->binaryDataReader->readInt8();
 
@@ -203,9 +204,9 @@ class JsonBinaryDecoderService
     /**
      * @return bool|null
      */
-    private function readLiteral()
+    private function readLiteral(): ?bool
     {
-        $literal = ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
+        $literal = \ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
         if (0 === $literal) {
             return null;
         }
@@ -225,14 +226,14 @@ class JsonBinaryDecoderService
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
      */
-    private function assignValues(JsonBinaryDecoderValue $jsonBinaryDecoderValue)
+    private function assignValues(JsonBinaryDecoderValue $jsonBinaryDecoderValue): void
     {
         if (false === $jsonBinaryDecoderValue->isIsResolved()) {
             $this->parseJson($jsonBinaryDecoderValue->getType());
         } else {
             if (null === $jsonBinaryDecoderValue->getValue()) {
                 $this->jsonBinaryDecoderFormatter->formatValueNull();
-            } else if (is_bool($jsonBinaryDecoderValue->getValue())) {
+            } else if (\is_bool($jsonBinaryDecoderValue->getValue())) {
                 $this->jsonBinaryDecoderFormatter->formatValueBool($jsonBinaryDecoderValue->getValue());
             } else if (is_numeric($jsonBinaryDecoderValue->getValue())) {
                 $this->jsonBinaryDecoderFormatter->formatValueNumeric($jsonBinaryDecoderValue->getValue());
@@ -246,7 +247,7 @@ class JsonBinaryDecoderService
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      */
-    private function parseArray($size)
+    private function parseArray(int $size): void
     {
         $numElements = $this->binaryDataReader->readUInt16();
         $numBytes = $this->binaryDataReader->readUInt16();
@@ -274,7 +275,7 @@ class JsonBinaryDecoderService
      * @param int $type
      * @throws JsonBinaryDecoderException
      */
-    private function parseScalar($type)
+    private function parseScalar(int $type): void
     {
         if (self::LITERAL === $type) {
             $this->parseBoolean();
@@ -306,7 +307,7 @@ class JsonBinaryDecoderService
         }
     }
 
-    private function parseBoolean()
+    private function parseBoolean(): void
     {
         $r = $this->readLiteral();
         if (null === $r) {
@@ -319,7 +320,7 @@ class JsonBinaryDecoderService
     /**
      * @return int
      */
-    private function readVariableInt()
+    private function readVariableInt(): int
     {
         $length = $this->binaryDataReader->getBinaryDataLength();
         $len = 0;

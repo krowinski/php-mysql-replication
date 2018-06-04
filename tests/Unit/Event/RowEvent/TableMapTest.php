@@ -15,12 +15,12 @@ class TableMapTest extends BaseTest
     /**
      * @test
      */
-    public function shouldMakeTableMap()
+    public function shouldMakeTableMap(): void
     {
         $expected = [
             'database'      => 'foo',
             'table'         => 'bar',
-            'tableId'       => 1,
+            'tableId' => '1',
             'columnsAmount' => 2,
             'fields'        => ['foo1' => 'bar1'],
         ];

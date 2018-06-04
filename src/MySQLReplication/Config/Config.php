@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Config;
 
@@ -98,23 +99,23 @@ class Config implements \JsonSerializable
      * @param int $heartbeatPeriod
      */
     public function __construct(
-        $user,
-        $host,
-        $port,
-        $password,
-        $charset,
-        $gtid,
-        $mariaGtid,
-        $slaveId,
-        $binLogFileName,
-        $binLogPosition,
+        string $user,
+        string $host,
+        int $port,
+        string $password,
+        string $charset,
+        string $gtid,
+        string $mariaGtid,
+        int $slaveId,
+        string $binLogFileName,
+        int $binLogPosition,
         array $eventsOnly,
         array $eventsIgnore,
         array $tablesOnly,
         array $databasesOnly,
-        $tableCacheSize,
+        int $tableCacheSize,
         array $custom,
-        $heartbeatPeriod
+        int $heartbeatPeriod
     ) {
         self::$user = $user;
         self::$host = $host;
@@ -138,11 +139,8 @@ class Config implements \JsonSerializable
     /**
      * @throws ConfigException
      */
-    public static function validate()
+    public static function validate(): void
     {
-        if (!empty(self::$user) && !is_string(self::$user)) {
-            throw new ConfigException(ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE);
-        }
         if (!empty(self::$host)) {
             $ip = gethostbyname(self::$host);
             if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
@@ -151,44 +149,26 @@ class Config implements \JsonSerializable
         }
         if (!empty(self::$port) && false === filter_var(
                 self::$port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
-            )
-        ) {
+            )) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty(self::$password) && !is_string(self::$password) && !is_numeric(self::$password)) {
-            throw new ConfigException(ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE);
-        }
-        if (!empty(self::$charset) && !is_string(self::$charset)) {
-            throw new ConfigException(ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE);
-        }
-        if (!empty(self::$gtid) && !is_string(self::$gtid)) {
+        if (!empty(self::$gtid)) {
             foreach (explode(',', self::$gtid) as $gtid) {
                 if (!(bool)preg_match(
                     '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
-                )
-                ) {
+                )) {
                     throw new ConfigException(ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE);
                 }
             }
         }
-        if (!empty(self::$slaveId) && false === filter_var(self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])
-        ) {
+        if (!empty(self::$slaveId) && false === filter_var(
+                self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+            )) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
-        }
-        if (!empty(self::$binLogFileName) && !is_string(self::$binLogFileName)) {
-            throw new ConfigException(
-                ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE
-            );
         }
         if (false === filter_var(self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
-            );
-        }
-
-        if (!empty(self::$mariaDbGtid) && !is_string(self::$mariaDbGtid)) {
-            throw new ConfigException(
-                ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE
             );
         }
         if (false === filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
@@ -198,8 +178,7 @@ class Config implements \JsonSerializable
         }
         if (0 !== self::$heartbeatPeriod && false === filter_var(
                 self::$heartbeatPeriod, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 4294967]]
-            )
-        ) {
+            )) {
             throw new ConfigException(
                 ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE
             );
@@ -209,7 +188,7 @@ class Config implements \JsonSerializable
     /**
      * @return array
      */
-    public static function getCustom()
+    public static function getCustom(): array
     {
         return self::$custom;
     }
@@ -217,7 +196,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getUser()
+    public static function getUser(): string
     {
         return self::$user;
     }
@@ -225,7 +204,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getHost()
+    public static function getHost(): string
     {
         return self::$host;
     }
@@ -233,7 +212,7 @@ class Config implements \JsonSerializable
     /**
      * @return int
      */
-    public static function getPort()
+    public static function getPort(): int
     {
         return self::$port;
     }
@@ -241,7 +220,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getPassword()
+    public static function getPassword(): string
     {
         return self::$password;
     }
@@ -249,7 +228,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getCharset()
+    public static function getCharset(): string
     {
         return self::$charset;
     }
@@ -257,7 +236,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getGtid()
+    public static function getGtid(): string
     {
         return self::$gtid;
     }
@@ -265,7 +244,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getMariaDbGtid()
+    public static function getMariaDbGtid(): string
     {
         return self::$mariaDbGtid;
     }
@@ -273,7 +252,7 @@ class Config implements \JsonSerializable
     /**
      * @return int
      */
-    public static function getSlaveId()
+    public static function getSlaveId(): int
     {
         return self::$slaveId;
     }
@@ -281,7 +260,7 @@ class Config implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getBinLogFileName()
+    public static function getBinLogFileName(): string
     {
         return self::$binLogFileName;
     }
@@ -289,7 +268,7 @@ class Config implements \JsonSerializable
     /**
      * @return int
      */
-    public static function getBinLogPosition()
+    public static function getBinLogPosition(): int
     {
         return self::$binLogPosition;
     }
@@ -297,7 +276,7 @@ class Config implements \JsonSerializable
     /**
      * @return array
      */
-    public static function getEventsOnly()
+    public static function getEventsOnly(): array
     {
         return self::$eventsOnly;
     }
@@ -305,7 +284,7 @@ class Config implements \JsonSerializable
     /**
      * @return array
      */
-    public static function getEventsIgnore()
+    public static function getEventsIgnore(): array
     {
         return self::$eventsIgnore;
     }
@@ -313,7 +292,7 @@ class Config implements \JsonSerializable
     /**
      * @return array
      */
-    public static function getTablesOnly()
+    public static function getTablesOnly(): array
     {
         return self::$tablesOnly;
     }
@@ -321,7 +300,7 @@ class Config implements \JsonSerializable
     /**
      * @return array
      */
-    public static function getDatabasesOnly()
+    public static function getDatabasesOnly(): array
     {
         return self::$databasesOnly;
     }
@@ -329,7 +308,7 @@ class Config implements \JsonSerializable
     /**
      * @return int
      */
-    public static function getTableCacheSize()
+    public static function getTableCacheSize(): int
     {
         return self::$tableCacheSize;
     }
@@ -338,31 +317,31 @@ class Config implements \JsonSerializable
      * @param string $database
      * @return bool
      */
-    public static function checkDataBasesOnly($database)
+    public static function checkDataBasesOnly(string $database): bool
     {
-        return [] !== self::getDatabasesOnly() && !in_array($database, self::getDatabasesOnly(), true);
+        return [] !== self::getDatabasesOnly() && !\in_array($database, self::getDatabasesOnly(), true);
     }
 
     /**
      * @param string $table
      * @return bool
      */
-    public static function checkTablesOnly($table)
+    public static function checkTablesOnly(string $table): bool
     {
-        return [] !== self::getTablesOnly() && !in_array($table, self::getTablesOnly(), true);
+        return [] !== self::getTablesOnly() && !\in_array($table, self::getTablesOnly(), true);
     }
 
     /**
      * @param int $type
      * @return bool
      */
-    public static function checkEvent($type)
+    public static function checkEvent(int $type): bool
     {
-        if ([] !== self::getEventsOnly() && !in_array($type, self::getEventsOnly(), true)) {
+        if ([] !== self::getEventsOnly() && !\in_array($type, self::getEventsOnly(), true)) {
             return false;
         }
 
-        if (in_array($type, self::getEventsIgnore(), true)) {
+        if (\in_array($type, self::getEventsIgnore(), true)) {
             return false;
         }
 
@@ -372,7 +351,7 @@ class Config implements \JsonSerializable
     /**
      * @return int
      */
-    public static function getHeartbeatPeriod()
+    public static function getHeartbeatPeriod(): int
     {
         return self::$heartbeatPeriod;
     }

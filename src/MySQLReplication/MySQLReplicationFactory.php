@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication;
 
@@ -12,7 +13,6 @@ use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Event\Event;
-use MySQLReplication\Event\EventException;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
@@ -108,7 +108,7 @@ class MySQLReplicationFactory
     /**
      * @param EventSubscriberInterface $eventSubscribers
      */
-    public function registerSubscriber(EventSubscriberInterface $eventSubscribers)
+    public function registerSubscriber(EventSubscriberInterface $eventSubscribers): void
     {
         $this->eventDispatcher->addSubscriber($eventSubscribers);
     }
@@ -116,7 +116,7 @@ class MySQLReplicationFactory
     /**
      * @param EventSubscriberInterface $eventSubscribers
      */
-    public function unregisterSubscriber(EventSubscriberInterface $eventSubscribers)
+    public function unregisterSubscriber(EventSubscriberInterface $eventSubscribers): void
     {
         $this->eventDispatcher->removeSubscriber($eventSubscribers);
     }
@@ -124,7 +124,7 @@ class MySQLReplicationFactory
     /**
      * @return Connection
      */
-    public function getDbConnection()
+    public function getDbConnection(): Connection
     {
         return $this->connection;
     }
@@ -134,11 +134,10 @@ class MySQLReplicationFactory
      * @throws InvalidArgumentException
      * @throws BinLogException
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws SocketException
      */
-    public function consume()
+    public function consume(): void
     {
         $this->event->consume();
     }
@@ -146,13 +145,12 @@ class MySQLReplicationFactory
     /**
      * @throws SocketException
      * @throws JsonBinaryDecoderException
-     * @throws EventException
      * @throws BinaryDataReaderException
      * @throws BinLogException
      * @throws InvalidArgumentException
      * @throws MySQLReplicationException
      */
-    public function run()
+    public function run(): void
     {
         while (1) {
             $this->consume();

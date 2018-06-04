@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Config;
 
@@ -12,7 +13,7 @@ class ConfigFactory
      * @param array $config
      * @return Config
      */
-    public static function makeConfigFromArray(array $config)
+    public static function makeConfigFromArray(array $config): Config
     {
         $configBuilder = new ConfigBuilder();
         foreach ($config as $k => $v)

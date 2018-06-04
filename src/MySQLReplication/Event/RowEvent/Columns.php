@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
@@ -17,17 +18,16 @@ class Columns
     private static $field;
 
     /**
-     * @param string $columnType
+     * @param int $columnType
      * @param array $columnSchema
      * @param BinaryDataReader $binaryDataReader
      * @return array
      */
     public static function parse(
-        $columnType,
+        int $columnType,
         array $columnSchema,
         BinaryDataReader $binaryDataReader
-    )
-    {
+    ): array {
         self::$field = [];
         self::$field['type'] = $columnType;
         self::$field['name'] = $columnSchema['COLUMN_NAME'];
@@ -77,7 +77,7 @@ class Columns
      * @param BinaryDataReader $packet
      * @param array $columnSchema
      */
-    protected static function getFieldSpecial(BinaryDataReader $packet, array $columnSchema)
+    protected static function getFieldSpecial(BinaryDataReader $packet, array $columnSchema): void
     {
         $metadata = ($packet->readUInt8() << 8) + $packet->readUInt8();
         $real_type = $metadata >> 8;
@@ -93,7 +93,7 @@ class Columns
     /**
      * @param array $columnSchema
      */
-    protected static function getFieldSpecialValues(array $columnSchema)
+    protected static function getFieldSpecialValues(array $columnSchema): void
     {
         if (self::$field['type'] === ConstFieldType::ENUM) {
             self::$field['enum_values'] = explode(

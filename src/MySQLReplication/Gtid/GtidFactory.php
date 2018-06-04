@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Gtid;
 
@@ -13,7 +14,7 @@ class GtidFactory
      * @return GtidCollection
      * @throws GtidException
      */
-    public static function makeCollectionFromString($gtids)
+    public static function makeCollectionFromString(string $gtids): GtidCollection
     {
         $collection = new GtidCollection();
         foreach (array_filter(explode(',', $gtids)) as $gtid) {

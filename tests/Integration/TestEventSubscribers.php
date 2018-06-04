@@ -28,7 +28,7 @@ class TestEventSubscribers extends EventSubscribers
     /**
      * @param EventDTO $event
      */
-    public function allEvents(EventDTO $event)
+    public function allEvents(EventDTO $event): void
     {
         $this->baseTest->setEvent($event);
     }

@@ -19,7 +19,7 @@ class BasicTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetDeleteEvent()
+    public function shouldGetDeleteEvent(): void
     {
         $this->createAndInsertValue(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))',

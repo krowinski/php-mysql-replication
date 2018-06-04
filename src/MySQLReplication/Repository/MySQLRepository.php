@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Repository;
 
@@ -35,7 +36,7 @@ class MySQLRepository implements RepositoryInterface
      * @param string $table
      * @return array
      */
-    public function getFields($database, $table)
+    public function getFields(string $database, string $table): array
     {
         $sql = '
              SELECT
@@ -59,7 +60,7 @@ class MySQLRepository implements RepositoryInterface
     /**
      * @return Connection
      */
-    private function getConnection()
+    private function getConnection(): Connection
     {
         if (false === $this->connection->ping()) {
             $this->connection->close();
@@ -73,7 +74,7 @@ class MySQLRepository implements RepositoryInterface
      * @return bool
      * @throws DBALException
      */
-    public function isCheckSum()
+    public function isCheckSum(): bool
     {
         $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
@@ -83,11 +84,11 @@ class MySQLRepository implements RepositoryInterface
     /**
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         $r = '';
         $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
-        if (is_array($versions) && 0 !== count($versions)) {
+        if (\is_array($versions) && 0 !== \count($versions)) {
             foreach ($versions as $version) {
                 $r .= $version['Value'];
             }
@@ -106,7 +107,7 @@ class MySQLRepository implements RepositoryInterface
      * @return array
      * @throws DBALException
      */
-    public function getMasterStatus()
+    public function getMasterStatus(): array
     {
         return $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
     }

@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
@@ -15,7 +15,7 @@ class JsonBinaryDecoderFactory
      * @param string $data
      * @return JsonBinaryDecoderService
      */
-    public static function makeJsonBinaryDecoder($data)
+    public static function makeJsonBinaryDecoder(string $data): JsonBinaryDecoderService
     {
         return new JsonBinaryDecoderService(
             new BinaryDataReader($data),

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -15,7 +16,7 @@ class RotateEvent extends EventCommon
     /**
      * @return RotateDTO
      */
-    public function makeRotateEventDTO()
+    public function makeRotateEventDTO(): RotateDTO
     {
         $binFilePos = $this->binaryDataReader->readUInt64();
         $binFileName = $this->binaryDataReader->read(
@@ -35,7 +36,7 @@ class RotateEvent extends EventCommon
     /**
      * @return int
      */
-    private function getSizeToRemoveByVersion()
+    private function getSizeToRemoveByVersion(): int
     {
         if (BinLogServerInfo::isMariaDb()) {
             return 0;

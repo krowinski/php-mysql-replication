@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MySQLReplication\Socket;
 
@@ -25,9 +25,9 @@ class Socket implements SocketInterface
     /**
      * @return bool
      */
-    public function isConnected()
+    public function isConnected(): bool
     {
-        return is_resource($this->socket);
+        return \is_resource($this->socket);
     }
 
     /**
@@ -35,7 +35,7 @@ class Socket implements SocketInterface
      * @param int $port
      * @throws SocketException
      */
-    public function connectToStream($host, $port)
+    public function connectToStream(string $host, int $port): void
     {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!$this->socket) {
@@ -55,7 +55,7 @@ class Socket implements SocketInterface
     /**
      * @return string
      */
-    private function getSocketErrorMessage()
+    private function getSocketErrorMessage(): string
     {
         return socket_strerror($this->getSocketErrorCode());
     }
@@ -63,7 +63,7 @@ class Socket implements SocketInterface
     /**
      * @return int
      */
-    private function getSocketErrorCode()
+    private function getSocketErrorCode(): int
     {
         return socket_last_error();
     }
@@ -73,7 +73,7 @@ class Socket implements SocketInterface
      * @return string
      * @throws SocketException
      */
-    public function readFromSocket($length)
+    public function readFromSocket(int $length): string
     {
         $received = socket_recv($this->socket, $buf, $length, MSG_WAITALL);
         if ($length === $received) {
@@ -95,9 +95,9 @@ class Socket implements SocketInterface
      * @param string $data
      * @throws SocketException
      */
-    public function writeToSocket($data)
+    public function writeToSocket(string $data): void
     {
-        if (!socket_write($this->socket, $data, strlen($data))) {
+        if (!socket_write($this->socket, $data, \strlen($data))) {
             throw new SocketException(
                 SocketException::SOCKET_UNABLE_TO_WRITE_MESSAGE . $this->getSocketErrorMessage(),
                 SocketException::SOCKET_UNABLE_TO_WRITE_CODE

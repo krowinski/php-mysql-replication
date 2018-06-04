@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -38,7 +39,7 @@ class TableMapDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -54,7 +55,7 @@ class TableMapDTO extends EventDTO
     /**
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -74,7 +75,7 @@ class TableMapDTO extends EventDTO
     /**
      * @return TableMap
      */
-    public function getTableMap()
+    public function getTableMap(): TableMap
     {
         return $this->tableMap;
     }

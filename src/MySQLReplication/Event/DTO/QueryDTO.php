@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
@@ -37,9 +38,9 @@ class QueryDTO extends EventDTO
      */
     public function __construct(
         EventInfo $eventInfo,
-        $database,
-        $executionTime,
-        $query
+        string $database,
+        int $executionTime,
+        string $query
     ) {
         parent::__construct($eventInfo);
 
@@ -51,7 +52,7 @@ class QueryDTO extends EventDTO
     /**
      * @return string
      */
-    public function getDatabase()
+    public function getDatabase(): string
     {
         return $this->database;
     }
@@ -59,7 +60,7 @@ class QueryDTO extends EventDTO
     /**
      * @return int
      */
-    public function getExecutionTime()
+    public function getExecutionTime(): int
     {
         return $this->executionTime;
     }
@@ -67,7 +68,7 @@ class QueryDTO extends EventDTO
     /**
      * @return string
      */
-    public function getQuery()
+    public function getQuery(): string
     {
         return $this->query;
     }
@@ -75,7 +76,7 @@ class QueryDTO extends EventDTO
     /**
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -83,7 +84,7 @@ class QueryDTO extends EventDTO
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -107,4 +108,3 @@ class QueryDTO extends EventDTO
         return get_object_vars($this);
     }
 }
-

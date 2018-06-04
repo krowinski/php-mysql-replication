@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -13,7 +14,7 @@ class MariaDbGtidEvent extends EventCommon
     /**
      * @return MariaDbGtidLogDTO
      */
-    public function makeMariaDbGTIDLogDTO()
+    public function makeMariaDbGTIDLogDTO(): MariaDbGtidLogDTO
     {
         $sequenceNumber = $this->binaryDataReader->readUInt64();
         $domainId = $this->binaryDataReader->readUInt32();

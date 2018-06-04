@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Config;
 
@@ -81,7 +82,7 @@ class ConfigBuilder
      * @param string $user
      * @return ConfigBuilder
      */
-    public function withUser($user)
+    public function withUser(string $user): ConfigBuilder
     {
         $this->user = $user;
 
@@ -92,7 +93,7 @@ class ConfigBuilder
      * @param string $host
      * @return ConfigBuilder
      */
-    public function withHost($host)
+    public function withHost(string $host): ConfigBuilder
     {
         $this->host = $host;
 
@@ -103,7 +104,7 @@ class ConfigBuilder
      * @param int $port
      * @return ConfigBuilder
      */
-    public function withPort($port)
+    public function withPort(int $port): ConfigBuilder
     {
         $this->port = $port;
 
@@ -114,7 +115,7 @@ class ConfigBuilder
      * @param string $password
      * @return ConfigBuilder
      */
-    public function withPassword($password)
+    public function withPassword(string $password): ConfigBuilder
     {
         $this->password = $password;
 
@@ -125,7 +126,7 @@ class ConfigBuilder
      * @param string $charset
      * @return ConfigBuilder
      */
-    public function withCharset($charset)
+    public function withCharset(string $charset): ConfigBuilder
     {
         $this->charset = $charset;
 
@@ -136,7 +137,7 @@ class ConfigBuilder
      * @param string $gtid
      * @return ConfigBuilder
      */
-    public function withGtid($gtid)
+    public function withGtid(string $gtid): ConfigBuilder
     {
         $this->gtid = $gtid;
 
@@ -147,7 +148,7 @@ class ConfigBuilder
      * @param int $slaveId
      * @return ConfigBuilder
      */
-    public function withSlaveId($slaveId)
+    public function withSlaveId(int $slaveId): ConfigBuilder
     {
         $this->slaveId = $slaveId;
 
@@ -158,7 +159,7 @@ class ConfigBuilder
      * @param string $binLogFileName
      * @return ConfigBuilder
      */
-    public function withBinLogFileName($binLogFileName)
+    public function withBinLogFileName(string $binLogFileName): ConfigBuilder
     {
         $this->binLogFileName = $binLogFileName;
 
@@ -169,7 +170,7 @@ class ConfigBuilder
      * @param int $binLogPosition
      * @return ConfigBuilder
      */
-    public function withBinLogPosition($binLogPosition)
+    public function withBinLogPosition(int $binLogPosition): ConfigBuilder
     {
         $this->binLogPosition = $binLogPosition;
 
@@ -181,7 +182,7 @@ class ConfigBuilder
      * @param array $eventsOnly
      * @return ConfigBuilder
      */
-    public function withEventsOnly(array $eventsOnly)
+    public function withEventsOnly(array $eventsOnly): ConfigBuilder
     {
         $this->eventsOnly = $eventsOnly;
 
@@ -193,7 +194,7 @@ class ConfigBuilder
      * @param array $eventsIgnore
      * @return ConfigBuilder
      */
-    public function withEventsIgnore(array $eventsIgnore)
+    public function withEventsIgnore(array $eventsIgnore): ConfigBuilder
     {
         $this->eventsIgnore = $eventsIgnore;
 
@@ -204,7 +205,7 @@ class ConfigBuilder
      * @param array $tablesOnly
      * @return ConfigBuilder
      */
-    public function withTablesOnly(array $tablesOnly)
+    public function withTablesOnly(array $tablesOnly): ConfigBuilder
     {
         $this->tablesOnly = $tablesOnly;
 
@@ -215,7 +216,7 @@ class ConfigBuilder
      * @param array $databasesOnly
      * @return ConfigBuilder
      */
-    public function withDatabasesOnly(array $databasesOnly)
+    public function withDatabasesOnly(array $databasesOnly): ConfigBuilder
     {
         $this->databasesOnly = $databasesOnly;
 
@@ -226,7 +227,7 @@ class ConfigBuilder
      * @param string $mariaDbGtid
      * @return ConfigBuilder
      */
-    public function withMariaDbGtid($mariaDbGtid)
+    public function withMariaDbGtid(string $mariaDbGtid): ConfigBuilder
     {
         $this->mariaDbGtid = $mariaDbGtid;
 
@@ -237,7 +238,7 @@ class ConfigBuilder
      * @param int $tableCacheSize
      * @return $this
      */
-    public function withTableCacheSize($tableCacheSize)
+    public function withTableCacheSize(int $tableCacheSize): ConfigBuilder
     {
         $this->tableCacheSize = $tableCacheSize;
 
@@ -248,7 +249,7 @@ class ConfigBuilder
      * @param array $custom
      * @return $this
      */
-    public function withCustom(array $custom)
+    public function withCustom(array $custom): ConfigBuilder
     {
         $this->custom = $custom;
 
@@ -260,7 +261,7 @@ class ConfigBuilder
      * @param int $heartbeatPeriod
      * @return $this
      */
-    public function withHeartbeatPeriod($heartbeatPeriod)
+    public function withHeartbeatPeriod(int $heartbeatPeriod): ConfigBuilder
     {
         $this->heartbeatPeriod = $heartbeatPeriod;
 
@@ -270,7 +271,7 @@ class ConfigBuilder
     /**
      * @return Config
      */
-    public function build()
+    public function build(): Config
     {
         return new Config(
             $this->user,
