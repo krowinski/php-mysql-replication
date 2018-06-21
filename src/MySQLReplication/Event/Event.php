@@ -28,6 +28,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 class Event
 {
     const MARIADB_DUMMY_QUERY = '# Dum';
+    const EOF_HEADER_VALUE = 254;
 
     /**
      * @var BinLogSocketConnect
@@ -78,8 +79,10 @@ class Event
     {
         $binaryDataReader = new BinaryDataReader($this->binLogSocketConnect->getResponse());
 
-        // "ok" value on first byte continue
-        $binaryDataReader->advance(1);
+        // check EOF_Packet -> https://dev.mysql.com/doc/internals/en/packet-EOF_Packet.html
+        if (self::EOF_HEADER_VALUE === $binaryDataReader->readUInt8()) {
+            return;
+        }
 
         // decode all events data
         $eventInfo = $this->createEventInfo($binaryDataReader);
