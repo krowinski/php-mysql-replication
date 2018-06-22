@@ -2,6 +2,10 @@
 
 # Release Notes
 
+## v5.0.2 (2018-06-22)
+- Added checking for eof (#42)
+- Added support for column type 11 - TIME (mysql 5.5 only) (#41) 
+
 ## v5.0.1 (2018-05-29)
 - Added tests now include php 7.2 and MariaDb 10.3
 - Added truncate table test (#37)
