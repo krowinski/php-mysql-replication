@@ -12,7 +12,6 @@ use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\EventCommon;
-use MySQLReplication\Event\EventException;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
@@ -403,7 +402,6 @@ class RowEvent extends EventCommon
      * @return WriteRowsDTO|null
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -458,7 +456,6 @@ class RowEvent extends EventCommon
     /**
      * @return array
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -566,6 +563,8 @@ class RowEvent extends EventCommon
                 $values[$name] = $this->getDatetime2($column);
             } else if ($column['type'] === ConstFieldType::TIMESTAMP) {
                 $values[$name] = date('c', $this->binaryDataReader->readUInt32());
+            } else if ($column['type'] === ConstFieldType::TIME) {
+                $values[$name] = $this->getTime();
             } else if ($column['type'] === ConstFieldType::TIME2) {
                 $values[$name] = $this->getTime2($column);
             } else if ($column['type'] === ConstFieldType::TIMESTAMP2) {
@@ -917,7 +916,6 @@ class RowEvent extends EventCommon
      * @return DeleteRowsDTO
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -985,5 +983,19 @@ class RowEvent extends EventCommon
         }
 
         return '';
+    }
+
+    /**
+     * @return string
+     */
+    protected function getTime()
+    {
+        $data = $this->binaryDataReader->readUInt24();
+
+        if (0 === $data) {
+            return '00-00-00';
+        }
+
+        return sprintf('%s%02d:%02d:%02d', $data < 0 ? '-' : '', $data / 10000, ($data % 10000) / 100, $data % 100);
     }
 }
