@@ -2,6 +2,9 @@
 
 # Release Notes
 
+## v5.0.3
+- Added symfony 4.0 compatibility in composer
+
 ## v5.0.2 (2018-06-22)
 - Added checking for eof (#42)
 - Added support for column type 11 - TIME (mysql 5.5 only) (#41) 
