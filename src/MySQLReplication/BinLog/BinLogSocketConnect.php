@@ -81,10 +81,27 @@ class BinLogSocketConnect
             return '';
         }
         $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
+        $isMaxDataLength = $dataLength === $this->binaryDataMaxLength;
 
         $result = $this->socket->readFromSocket($dataLength);
         if (true === $checkResponse) {
-            $this->isWriteSuccessful($result);
+            $this->isWriteSuccessful($result, $isMaxDataLength);
+        }
+
+        //https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
+        while ($isMaxDataLength) {
+            $header = $this->socket->readFromSocket(4);
+            if ('' === $header) {
+                return $result;
+            }
+            $dataLength = unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
+            $isMaxDataLength = $dataLength === $this->binaryDataMaxLength;
+
+            $next_result = $this->socket->readFromSocket($dataLength);
+            if (true === $checkResponse) {
+                $this->isWriteSuccessful($next_result, $isMaxDataLength);
+            }
+            $result .= $next_result;
         }
 
         return $result;
@@ -92,10 +109,15 @@ class BinLogSocketConnect
 
     /**
      * @param string $data
+     * @param bool   $isMaxDataLength
+     *
      * @throws BinLogException
      */
-    private function isWriteSuccessful($data)
+    private function isWriteSuccessful($data, $isMaxDataLength = false)
     {
+        if ($isMaxDataLength) {
+            return;
+        }
         $head = ord($data[0]);
         if (!in_array($head, $this->packageOkHeader, true)) {
             $errorCode = unpack('v', $data[1] . $data[2])[1];
