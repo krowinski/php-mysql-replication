@@ -2,10 +2,10 @@
 
 # Release Notes
 
-## v5.0.4
+## v5.0.4 (2018-08-10)
 - Added support to recive more than 16Mbyte
 
-## v5.0.3
+## v5.0.3 (2018-08-07)
 - Added symfony 4.0 compatibility in composer
 
 ## v5.0.2 (2018-06-22)
