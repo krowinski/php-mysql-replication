@@ -2,6 +2,9 @@
 
 # Release Notes
 
+## v5.0.4
+- Added support to recive more than 16Mbyte
+
 ## v5.0.3
 - Added symfony 4.0 compatibility in composer
 
