@@ -1,6 +1,7 @@
-
-
 # Release Notes
+
+## v5.0.5 (2018-11-11)
+ - Fixed support to recive more than 16Mbyte + tests 
 
 ## v5.0.4 (2018-08-10)
 - Added support to recive more than 16Mbyte
