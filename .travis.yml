@@ -32,7 +32,9 @@ before_script:
   - "echo '[mysqld]'            | sudo tee /etc/mysql/conf.d/replication.cnf"
   - "echo 'log-bin=mysql-bin'   | sudo tee -a /etc/mysql/conf.d/replication.cnf"
   - "echo 'server-id=1'         | sudo tee -a /etc/mysql/conf.d/replication.cnf"
-  - "echo 'binlog-format = row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'binlog-format= row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'max_allowed_packet= 64M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'innodb_log_file_size= 250M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
   - "cat /etc/mysql/conf.d/replication.cnf"
 
   # Enable GTID (only for mysql 5.*)

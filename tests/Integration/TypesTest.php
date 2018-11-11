@@ -614,6 +614,24 @@ class TypesTest extends BaseTest
     }
 
     /**
+     * https://dev.mysql.com/doc/internals/en/mysql-packet.html
+     * https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
+     * @test
+     */
+    public function shouldBeLongerTextThan16Mb()
+    {
+        $long_text_data = '';
+        for ($i = 0; $i < 40000000; $i++) {
+            $long_text_data .= 'a';
+        }
+        $create_query = "CREATE TABLE test (data LONGTEXT)";
+        $insert_query = "INSERT INTO test (data) VALUES ({$long_text_data})";
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals(strlen($long_text_data), strlen($event->getValues()[0]['test']));
+    }
+
+    /**
      * @test
      */
     public function shouldBeBlob()
