@@ -797,7 +797,8 @@ class TypesTest extends BaseTest
             -- (100, CONCAT('{\"', REPEAT('a', 64 * 1024 - 1), '\":123}')),
             (101, '{\"bool\": true}'),
             (102, '{\"bool\": false}'),
-            (103, '{\"null\": null}')
+            (103, '{\"null\": null}'),
+            (104, '[\"\\\\\"test\"]')
         ";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
@@ -832,5 +833,6 @@ class TypesTest extends BaseTest
         self::assertEquals('{"bool":true}', $results[25]['j']);
         self::assertEquals('{"bool":false}', $results[26]['j']);
         self::assertEquals('{"null":null}', $results[27]['j']);
+        self::assertEquals('["\"test"]', $results[28]['j']);
     }
 }

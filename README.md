@@ -365,3 +365,21 @@ php example/benchmark.php
     8058 event by seconds (11000 total)
     8071 event by seconds (12000 total)
 
+FAQ
+=========
+
+1. ### Why and when need php-mysql-replication ?
+ Well first of all mysql don't give you async calls. You usually need to program this in your application (by event dispaching and adding to some queue system and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication protocol you can lisen on write events and process then asynchronously (best combo it's to add item to some queue system like rabbitmq, redis or kafka).
+
+2. ### It's awsome ! but what is the catch ?
+ Well first of all you need to know that a lot of events may come through, like if you update 1 000 000  records in table   "bar" and you need this one insert from your table "foo" Then all must be processed by script and you need to wait for your data. This is normal and this how it's work. You can speed up using [config options](https://github.com/krowinski/php-mysql-replication#configuration).
+Also if script crashes you need to save from time to time position form binlog (or gtid) to start from this position when  you run this script again to avoid duplicates.
+
+3. ### I need to process 1 000 000 records and its taking forever!!
+ Like I mention in 1 point use queue system like rabbitmq, redis or kafka, they will give you ability to process data in multiple scripts.
+
+4. ### I have a problem ? you script is missing something ! I have found a bug !
+ Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to workon it in my free time :)
+
+5. ### How much its give overhead to mysql server ?
+ It work like any other mysql in slave mode and its giving same overhead.

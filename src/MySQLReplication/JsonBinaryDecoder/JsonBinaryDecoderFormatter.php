@@ -35,7 +35,7 @@ class JsonBinaryDecoderFormatter
      */
     public function formatValue($val)
     {
-        $this->jsonString .= '"' . $val . '"';
+        $this->jsonString .= '"' . addslashes($val) . '"';
     }
 
     public function formatEndObject()

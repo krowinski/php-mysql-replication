@@ -69,7 +69,6 @@ class Event
     /**
      * @throws BinaryDataReaderException
      * @throws BinLogException
-     * @throws EventException
      * @throws MySQLReplicationException
      * @throws JsonBinaryDecoderException
      * @throws InvalidArgumentException
@@ -89,11 +88,22 @@ class Event
 
         $eventDTO = null;
 
+        // we always need this events to clean table maps and for BinLogCurrent class to keep track of binlog position
         // always parse table map event but propagate when needed (we need this for creating table cache)
         if (ConstEventType::TABLE_MAP_EVENT === $eventInfo->getType()) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO();
+        } else if (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
+            $this->cache->clear();
+            $eventDTO = (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO();
+        } else if (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
+            $eventDTO = (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
+        } else if (ConstEventType::HEARTBEAT_LOG_EVENT === $eventInfo->getType()) {
+            $eventDTO = new HeartbeatDTO($eventInfo);
+        } else if (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
+            $eventDTO = (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO();
         }
 
+        // check for ignore and permitted events
         if (!Config::checkEvent($eventInfo->getType())) {
             return;
         }
@@ -112,21 +122,12 @@ class Event
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
         } else if (ConstEventType::XID_EVENT === $eventInfo->getType()) {
             $eventDTO = (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO();
-        } else if (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
-            $this->cache->clear();
-            $eventDTO = (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO();
-        } else if (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
-            $eventDTO = (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
         } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
             $eventDTO = $this->filterDummyMariaDbEvents(
                 (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
             );
-        } else if (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
-            $eventDTO = (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO();
         } else if (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
             $eventDTO = new FormatDescriptionEventDTO($eventInfo);
-        } else if (ConstEventType::HEARTBEAT_LOG_EVENT === $eventInfo->getType()) {
-            $eventDTO = new HeartbeatDTO($eventInfo);
         }
 
         $this->dispatch($eventDTO);

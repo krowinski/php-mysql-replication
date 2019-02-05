@@ -12,7 +12,6 @@ use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Event\Event;
-use MySQLReplication\Event\EventException;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidException;
@@ -134,7 +133,6 @@ class MySQLReplicationFactory
      * @throws InvalidArgumentException
      * @throws BinLogException
      * @throws BinaryDataReaderException
-     * @throws EventException
      * @throws JsonBinaryDecoderException
      * @throws SocketException
      */
@@ -146,7 +144,6 @@ class MySQLReplicationFactory
     /**
      * @throws SocketException
      * @throws JsonBinaryDecoderException
-     * @throws EventException
      * @throws BinaryDataReaderException
      * @throws BinLogException
      * @throws InvalidArgumentException
