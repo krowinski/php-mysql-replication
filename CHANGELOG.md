@@ -1,12 +1,23 @@
 # Release Notes
 
+## v5.0.6 (2019-02-05)
+- Fixed json with slash (#48)
+- Fixed disabling events that are needed (#46)
+- Changed to @inherit phpdoc in jsonSerialize methods
+- Removed unused exceptions from phpdoc
+- Changed moved wiki do readme
+- Changed added missing php extensions to composer.json
+
 ## v5.0.5 (2018-11-11)
- - Fixed support to recive more than 16Mbyte + tests 
+- Fixed support to receive more than 16MB + tests 
 
 ## v5.0.4 (2018-08-10)
-- Added support to recive more than 16Mbyte
+- Added support to receive more than 16MB
 
 ## v5.0.3 (2018-08-07)
+- Added symfony 4.0 compatibility in composer
+
+## v5.0.3
 - Added symfony 4.0 compatibility in composer
 
 ## v5.0.2 (2018-06-22)
