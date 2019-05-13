@@ -614,6 +614,24 @@ class TypesTest extends BaseTest
     }
 
     /**
+     * https://dev.mysql.com/doc/internals/en/mysql-packet.html
+     * https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
+     * @test
+     */
+    public function shouldBeLongerTextThan16Mb()
+    {
+        $long_text_data = '';
+        for ($i = 0; $i < 40000000; $i++) {
+            $long_text_data .= 'a';
+        }
+        $create_query = "CREATE TABLE test (data LONGTEXT);";
+        $insert_query = "INSERT INTO test (data) VALUES ('{$long_text_data}')";
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals(strlen($long_text_data), strlen($event->getValues()[0]['data']));
+    }
+
+    /**
      * @test
      */
     public function shouldBeBlob()
@@ -779,7 +797,8 @@ class TypesTest extends BaseTest
             -- (100, CONCAT('{\"', REPEAT('a', 64 * 1024 - 1), '\":123}')),
             (101, '{\"bool\": true}'),
             (102, '{\"bool\": false}'),
-            (103, '{\"null\": null}')
+            (103, '{\"null\": null}'),
+            (104, '[\"\\\\\"test\"]')
         ";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
@@ -814,5 +833,6 @@ class TypesTest extends BaseTest
         self::assertEquals('{"bool":true}', $results[25]['j']);
         self::assertEquals('{"bool":false}', $results[26]['j']);
         self::assertEquals('{"null":null}', $results[27]['j']);
+        self::assertEquals('["\"test"]', $results[28]['j']);
     }
 }

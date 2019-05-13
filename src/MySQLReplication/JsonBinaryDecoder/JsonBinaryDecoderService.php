@@ -230,14 +230,12 @@ class JsonBinaryDecoderService
     {
         if (false === $jsonBinaryDecoderValue->isIsResolved()) {
             $this->parseJson($jsonBinaryDecoderValue->getType());
-        } else {
-            if (null === $jsonBinaryDecoderValue->getValue()) {
-                $this->jsonBinaryDecoderFormatter->formatValueNull();
-            } else if (\is_bool($jsonBinaryDecoderValue->getValue())) {
-                $this->jsonBinaryDecoderFormatter->formatValueBool($jsonBinaryDecoderValue->getValue());
-            } else if (is_numeric($jsonBinaryDecoderValue->getValue())) {
-                $this->jsonBinaryDecoderFormatter->formatValueNumeric($jsonBinaryDecoderValue->getValue());
-            }
+        } else if (null === $jsonBinaryDecoderValue->getValue()) {
+            $this->jsonBinaryDecoderFormatter->formatValueNull();
+        } else if (is_bool($jsonBinaryDecoderValue->getValue())) {
+            $this->jsonBinaryDecoderFormatter->formatValueBool($jsonBinaryDecoderValue->getValue());
+        } else if (is_numeric($jsonBinaryDecoderValue->getValue())) {
+            $this->jsonBinaryDecoderFormatter->formatValueNumeric($jsonBinaryDecoderValue->getValue());
         }
     }
 

@@ -62,5 +62,16 @@ class ConstEventType
     public const DELETE_ROWS_EVENT_V2 = 32;
 
     // mariadb
+    // https://github.com/MariaDB/server/blob/10.4/sql/log_event.h
+    public const MARIA_BINLOG_CHECKPOINT_EVENT = 161;
     public const MARIA_GTID_EVENT = 162;
+    public const MARIA_GTID_LIST_EVENT = 163;
+    public const MARIA_START_ENCRYPTION_EVENT = 164;
+    public const MARIA_QUERY_COMPRESSED_EVENT = 165;
+    public const MARIA_WRITE_ROWS_COMPRESSED_EVENT_V1 = 166;
+    public const MARIA_UPDATE_ROWS_COMPRESSED_EVENT_V1 = 167;
+    public const MARIA_DELETE_ROWS_COMPRESSED_EVENT_V1 = 168;
+    public const MARIA_WRITE_ROWS_COMPRESSED_EVENT = 169;
+    public const MARIA_UPDATE_ROWS_COMPRESSED_EVENT = 170;
+    public const MARIA_DELETE_ROWS_COMPRESSED_EVENT = 171;
 }

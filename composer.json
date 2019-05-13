@@ -15,6 +15,8 @@
   "require": {
     "php": ">=7.1",
     "ext-sockets": "*",
+    "ext-json": "*",
+    "ext-bcmath": "*",
     "doctrine/dbal": "^2.5",
     "doctrine/collections": "^1.3",
     "symfony/event-dispatcher": "^2.8|^3.1|^4.0",

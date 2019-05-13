@@ -20,7 +20,7 @@ class ConstFieldType
     public const LONGLONG = 8;
     public const INT24 = 9;
     public const DATE = 10;
-    public const TIME = 11;
+    public const TIME = 11; // MySQL 5.5
     public const DATETIME = 12;
     public const YEAR = 13;
     public const NEWDATE = 14;

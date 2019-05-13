@@ -35,7 +35,7 @@ class JsonBinaryDecoderFormatter
      */
     public function formatValue($val): void
     {
-        $this->jsonString .= '"' . $val . '"';
+        $this->jsonString .= '"' . self::escapeJsonString($val) . '"';
     }
 
     public function formatEndObject(): void
@@ -82,5 +82,21 @@ class JsonBinaryDecoderFormatter
     public function getJsonString(): string
     {
         return $this->jsonString;
+    }
+
+    /**
+     * Some characters needs to be escaped
+     * @see http://www.json.org/
+     * @see https://stackoverflow.com/questions/1048487/phps-json-encode-does-not-escape-all-json-control-characters
+     * @param string $value
+     * @return string
+     */
+    private static function escapeJsonString($value)
+    {
+        return str_replace(
+            ["\\", '/', '"', "\n", "\r", "\t", "\x08", "\x0c"],
+            ["\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b"],
+            $value
+        );
     }
 }
