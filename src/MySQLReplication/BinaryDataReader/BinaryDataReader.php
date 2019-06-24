@@ -61,7 +61,7 @@ class BinaryDataReader
         $this->readBytes += $length;
         $this->data = substr($this->data, $length);
 
-        return $return;
+        return str_pad($return, $length, "0", STR_PAD_LEFT);
     }
 
     /**
