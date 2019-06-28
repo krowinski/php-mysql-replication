@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
+use DateTime;
+use Exception;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Config\Config;
@@ -16,20 +18,13 @@ use MySQLReplication\Event\EventCommon;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
-use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderFactory;
+use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderService;
 use MySQLReplication\Repository\RepositoryInterface;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
-/**
- * Class RowEvent
- * @package MySQLReplication\RowEvent
- */
 class RowEvent extends EventCommon
 {
-    /**
-     * @var array
-     */
     private static $bitCountInByte = [
         0,
         1,
@@ -288,26 +283,14 @@ class RowEvent extends EventCommon
         7,
         8,
     ];
-    /**
-     * @var RepositoryInterface
-     */
     private $repository;
-    /**
-     * @var TableMap
-     */
-    private $currentTableMap;
-    /**
-     * @var CacheInterface
-     */
     private $cache;
 
     /**
-     * RowEvent constructor.
-     * @param RepositoryInterface $repository
-     * @param BinaryDataReader $binaryDataReader
-     * @param EventInfo $eventInfo
-     * @param CacheInterface $cache
+     * @var TableMap|null
      */
+    private $currentTableMap;
+
     public function __construct(
         RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
@@ -324,10 +307,8 @@ class RowEvent extends EventCommon
      * This describe the structure of a table.
      * It's send before a change append on a table.
      * A end user of the lib should have no usage of this
-     *
-     * @return TableMapDTO|null
-     * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
+     * @throws InvalidArgumentException
      */
     public function makeTableMapDTO(): ?TableMapDTO
     {
@@ -350,7 +331,7 @@ class RowEvent extends EventCommon
         }
 
         $this->binaryDataReader->advance(1);
-        $data['columns_amount'] = $this->binaryDataReader->readCodedBinary();
+        $data['columns_amount'] = (int)$this->binaryDataReader->readCodedBinary();
         $data['column_types'] = $this->binaryDataReader->read($data['columns_amount']);
 
         if ($this->cache->has($data['table_id'])) {
@@ -364,7 +345,7 @@ class RowEvent extends EventCommon
         $fields = [];
         // if you drop tables and parse of logs you will get empty scheme
         if (!empty($columns)) {
-            $columnLength = \strlen($data['column_types']);
+            $columnLength = strlen($data['column_types']);
             for ($i = 0; $i < $columnLength; ++$i) {
                 // this a dirty hack to prevent row events containing columns which have been dropped
                 if (!isset($columns[$i])) {
@@ -379,7 +360,7 @@ class RowEvent extends EventCommon
 
                     $type = ConstFieldType::IGNORE;
                 } else {
-                    $type = \ord($data['column_types'][$i]);
+                    $type = ord($data['column_types'][$i]);
                 }
 
                 $fields[$i] = Columns::parse($type, $columns[$i], $this->binaryDataReader);
@@ -400,9 +381,8 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * @return WriteRowsDTO|null
-     * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
+     * @throws InvalidArgumentException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
      */
@@ -417,13 +397,12 @@ class RowEvent extends EventCommon
         return new WriteRowsDTO(
             $this->eventInfo,
             $this->currentTableMap,
-            \count($values),
+            count($values),
             $values
         );
     }
 
     /**
-     * @return bool
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
      */
@@ -432,7 +411,7 @@ class RowEvent extends EventCommon
         $tableId = $this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
 
-        if (\in_array(
+        if (in_array(
             $this->eventInfo->getType(), [
             ConstEventType::DELETE_ROWS_EVENT_V2,
             ConstEventType::WRITE_ROWS_EVENT_V2,
@@ -455,7 +434,6 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * @return array
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
@@ -479,18 +457,12 @@ class RowEvent extends EventCommon
         return $values;
     }
 
-    /**
-     * @param int $columnsAmount
-     * @return int
-     */
-    protected function getColumnsBinarySize($columnsAmount): int
+    protected function getColumnsBinarySize(int $columnsAmount): int
     {
         return (int)(($columnsAmount + 7) / 8);
     }
 
     /**
-     * @param string $colsBitmap
-     * @return array
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      * @throws MySQLReplicationException
@@ -585,9 +557,7 @@ class RowEvent extends EventCommon
             } else if ($column['type'] === ConstFieldType::GEOMETRY) {
                 $values[$name] = $this->getString($column['length_size']);
             } else if ($column['type'] === ConstFieldType::JSON) {
-                $values[$name] = JsonBinaryDecoderFactory::makeJsonBinaryDecoder(
-                    $this->getString($column['length_size'])
-                )->parseToString();
+                $values[$name] = JsonBinaryDecoderService::makeJsonBinaryDecoder($this->getString($column['length_size']))->parseToString();
             } else {
                 throw new MySQLReplicationException('Unknown row type: ' . $column['type']);
             }
@@ -598,18 +568,14 @@ class RowEvent extends EventCommon
         return $values;
     }
 
-    /**
-     * @param string $bitmap
-     * @return int
-     */
     protected function bitCount(string $bitmap): int
     {
         $n = 0;
-        $bitmapLength = \strlen($bitmap);
+        $bitmapLength = strlen($bitmap);
         for ($i = 0; $i < $bitmapLength; ++$i) {
             $bit = $bitmap[$i];
-            if (\is_string($bit)) {
-                $bit = \ord($bit);
+            if (is_string($bit)) {
+                $bit = ord($bit);
             }
             $n += self::$bitCountInByte[$bit];
         }
@@ -617,44 +583,27 @@ class RowEvent extends EventCommon
         return $n;
     }
 
-    /**
-     * @param string $bitmap
-     * @param int $position
-     * @return int
-     */
-    protected function getBitFromBitmap(string $bitmap, int $position): int
-    {
-        $bit = $bitmap[(int)($position / 8)];
-        if (\is_string($bit)) {
-            $bit = \ord($bit);
-        }
-
-        return $bit;
-    }
-
-    /**
-     * @param string $bitmap
-     * @param int $position
-     * @return int
-     */
     protected function bitGet(string $bitmap, int $position): int
     {
         return $this->getBitFromBitmap($bitmap, $position) & (1 << ($position & 7));
     }
 
-    /**
-     * @param string $nullBitmap
-     * @param int $position
-     * @return int
-     */
+    protected function getBitFromBitmap(string $bitmap, int $position): int
+    {
+        $bit = $bitmap[(int)($position / 8)];
+        if (is_string($bit)) {
+            $bit = ord($bit);
+        }
+
+        return $bit;
+    }
+
     protected function checkNull(string $nullBitmap, int $position): int
     {
         return $this->getBitFromBitmap($nullBitmap, $position) & (1 << ($position % 8));
     }
 
     /**
-     * @param int $size
-     * @return string
      * @throws BinaryDataReaderException
      */
     protected function getString(int $size): string
@@ -665,8 +614,6 @@ class RowEvent extends EventCommon
     /**
      * Read MySQL's new decimal format introduced in MySQL 5
      * https://dev.mysql.com/doc/refman/5.6/en/precision-math-decimal-characteristics.html
-     * @param array $column
-     * @return string
      * @throws BinaryDataReaderException
      */
     protected function getDecimal(array $column): string
@@ -716,9 +663,6 @@ class RowEvent extends EventCommon
         return bcmul($res, '1', $column['precision']);
     }
 
-    /**
-     * @return null|string
-     */
     protected function getDatetime(): ?string
     {
         $value = $this->binaryDataReader->readUInt64();
@@ -727,7 +671,7 @@ class RowEvent extends EventCommon
             return null;
         }
 
-        return \DateTime::createFromFormat('YmdHis', $value)->format('Y-m-d H:i:s');
+        return DateTime::createFromFormat('YmdHis', $value)->format('Y-m-d H:i:s');
     }
 
     /**
@@ -740,9 +684,9 @@ class RowEvent extends EventCommon
      * 6 bits second         (0-59)
      * ---------------------------
      * 40 bits = 5 bytes
-     * @param array $column
-     * @return string|null
+     *
      * @throws BinaryDataReaderException
+     *
      * @link https://dev.mysql.com/doc/internals/en/date-and-time-data-type-representation.html
      */
     protected function getDatetime2(array $column): ?string
@@ -759,12 +703,12 @@ class RowEvent extends EventCommon
         $second = $this->binaryDataReader->getBinarySlice($data, 34, 6, 40);
 
         try {
-            $date = new \DateTime($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
-        } catch (\Exception $exception) {
+            $date = new DateTime($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
+        } catch (Exception $exception) {
             return null;
         }
         // not all errors are thrown as exception :(
-        if (array_sum(\DateTime::getLastErrors()) > 0) {
+        if (array_sum(DateTime::getLastErrors()) > 0) {
             return null;
         }
 
@@ -772,8 +716,6 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * @param array $column
-     * @return string
      * @throws BinaryDataReaderException
      * @link https://dev.mysql.com/doc/internals/en/date-and-time-data-type-representation.html
      */
@@ -800,6 +742,16 @@ class RowEvent extends EventCommon
         return (string)$time;
     }
 
+    protected function getTime(): string
+    {
+        $data = $this->binaryDataReader->readUInt24();
+        if (0 === $data) {
+            return '00-00-00';
+        }
+
+        return sprintf('%s%02d:%02d:%02d', $data < 0 ? '-' : '', $data / 10000, ($data % 10000) / 100, $data % 100);
+    }
+
     /**
      * TIME encoding for non fractional part:
      * 1 bit sign    (1= non-negative, 0= negative)
@@ -810,8 +762,6 @@ class RowEvent extends EventCommon
      * ---------------------
      * 24 bits = 3 bytes
      *
-     * @param array $column
-     * @return string
      * @throws BinaryDataReaderException
      */
     protected function getTime2(array $column): string
@@ -822,12 +772,10 @@ class RowEvent extends EventCommon
         $minute = $this->binaryDataReader->getBinarySlice($data, 12, 6, 24);
         $second = $this->binaryDataReader->getBinarySlice($data, 18, 6, 24);
 
-        return (new \DateTime())->setTime($hour, $minute, $second)->format('H:i:s') . $this->getFSP($column);
+        return (new DateTime())->setTime($hour, $minute, $second)->format('H:i:s') . $this->getFSP($column);
     }
 
     /**
-     * @param array $column
-     * @return string
      * @throws BinaryDataReaderException
      */
     protected function getTimestamp2(array $column): string
@@ -841,9 +789,6 @@ class RowEvent extends EventCommon
         return $datetime;
     }
 
-    /**
-     * @return string|null
-     */
     protected function getDate(): ?string
     {
         $time = $this->binaryDataReader->readUInt24();
@@ -858,12 +803,25 @@ class RowEvent extends EventCommon
             return null;
         }
 
-        return (new \DateTime())->setDate($year, $month, $day)->format('Y-m-d');
+        return (new DateTime())->setDate($year, $month, $day)->format('Y-m-d');
     }
 
     /**
-     * @param array $column
-     * @return array
+     * @throws BinaryDataReaderException
+     */
+    protected function getEnum(array $column): string
+    {
+        $value = $this->binaryDataReader->readUIntBySize($column['size']) - 1;
+
+        // check if given value exists in enums, if there not existing enum mysql returns empty string.
+        if (array_key_exists($value, $column['enum_values'])) {
+            return $column['enum_values'][$value];
+        }
+
+        return '';
+    }
+
+    /**
      * @throws BinaryDataReaderException
      */
     protected function getSet(array $column): array
@@ -880,11 +838,6 @@ class RowEvent extends EventCommon
         return $sets;
     }
 
-    /**
-     * Read MySQL BIT type
-     * @param array $column
-     * @return string
-     */
     protected function getBit(array $column): string
     {
         $res = '';
@@ -919,7 +872,6 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * @return DeleteRowsDTO|null
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
@@ -936,13 +888,12 @@ class RowEvent extends EventCommon
         return new DeleteRowsDTO(
             $this->eventInfo,
             $this->currentTableMap,
-            \count($values),
+            count($values),
             $values
         );
     }
 
     /**
-     * @return UpdateRowsDTO|null
      * @throws InvalidArgumentException
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
@@ -969,39 +920,8 @@ class RowEvent extends EventCommon
         return new UpdateRowsDTO(
             $this->eventInfo,
             $this->currentTableMap,
-            \count($values),
+            count($values),
             $values
         );
-    }
-
-    /**
-     * @param array $column
-     * @return string
-     * @throws BinaryDataReaderException
-     */
-    protected function getEnum(array $column): string
-    {
-        $value = $this->binaryDataReader->readUIntBySize($column['size']) - 1;
-
-        // check if given value exists in enums, if there not existing enum mysql returns empty string.
-        if (array_key_exists($value, $column['enum_values'])) {
-            return $column['enum_values'][$value];
-        }
-
-        return '';
-    }
-
-    /**
-     * @return string
-     */
-    protected function getTime()
-    {
-        $data = $this->binaryDataReader->readUInt24();
-
-        if (0 === $data) {
-            return '00-00-00';
-        }
-
-        return sprintf('%s%02d:%02d:%02d', $data < 0 ? '-' : '', $data / 10000, ($data % 10000) / 100, $data % 100);
     }
 }

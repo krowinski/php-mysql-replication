@@ -3,101 +3,28 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Config;
 
-/**
- * Class Config
- * @package MySQLReplication\Config
- */
-class Config implements \JsonSerializable
+use JsonSerializable;
+
+class Config implements JsonSerializable
 {
-    /**
-     * @var string
-     */
     private static $user;
-    /**
-     * @var string
-     */
     private static $host;
-    /**
-     * @var int
-     */
     private static $port;
-    /**
-     * @var string
-     */
     private static $password;
-    /**
-     * @var string
-     */
     private static $charset;
-    /**
-     * @var string
-     */
     private static $gtid;
-    /**
-     * @var int
-     */
     private static $slaveId;
-    /**
-     * @var string
-     */
     private static $binLogFileName;
-    /**
-     * @var int
-     */
     private static $binLogPosition;
-    /**
-     * @var array
-     */
     private static $eventsOnly;
-    /**
-     * @var array
-     */
     private static $eventsIgnore;
-    /**
-     * @var array
-     */
     private static $tablesOnly;
-    /**
-     * @var array
-     */
     private static $databasesOnly;
-    /**
-     * @var string
-     */
     private static $mariaDbGtid;
-    /**
-     * @var int
-     */
     private static $tableCacheSize;
-    /**
-     * @var array
-     */
     private static $custom;
-    /**
-     * @var int
-     */
     private static $heartbeatPeriod;
 
-    /**
-     * Config constructor.
-     * @param string $user
-     * @param string $host
-     * @param int $port
-     * @param string $password
-     * @param string $charset
-     * @param string $gtid
-     * @param string $mariaGtid
-     * @param int $slaveId
-     * @param string $binLogFileName
-     * @param $binLogPosition
-     * @param array $eventsOnly
-     * @param array $eventsIgnore
-     * @param array $tablesOnly
-     * @param array $databasesOnly
-     * @param int $tableCacheSize
-     * @param array $custom
-     * @param int $heartbeatPeriod
-     */
     public function __construct(
         string $user,
         string $host,
@@ -134,6 +61,66 @@ class Config implements \JsonSerializable
         self::$tableCacheSize = $tableCacheSize;
         self::$custom = $custom;
         self::$heartbeatPeriod = $heartbeatPeriod;
+    }
+
+    public static function makeConfigFromArray(array $config): Config
+    {
+        $configBuilder = new ConfigBuilder();
+        foreach ($config as $k => $v) {
+            if ('user' === $k) {
+                $configBuilder->withUser($v);
+            }
+            if ('ip' === $k || 'host' === $k) {
+                $configBuilder->withHost($v);
+            }
+            if ('port' === $k) {
+                $configBuilder->withPort($v);
+            }
+            if ('password' === $k) {
+                $configBuilder->withPassword($v);
+            }
+            if ('charset' === $k) {
+                $configBuilder->withCharset($v);
+            }
+            if ('gtid' === $k) {
+                $configBuilder->withGtid($v);
+            }
+            if ('slaveId' === $k) {
+                $configBuilder->withSlaveId($v);
+            }
+            if ('binLogFileName' === $k) {
+                $configBuilder->withBinLogFileName($v);
+            }
+            if ('binLogPosition' === $k) {
+                $configBuilder->withBinLogPosition($v);
+            }
+            if ('eventsOnly' === $k) {
+                $configBuilder->withEventsOnly($v);
+            }
+            if ('eventsIgnore' === $k) {
+                $configBuilder->withEventsIgnore($v);
+            }
+            if ('tablesOnly' === $k) {
+                $configBuilder->withTablesOnly($v);
+            }
+            if ('databasesOnly' === $k) {
+                $configBuilder->withDatabasesOnly($v);
+            }
+            if ('mariaDbGtid' === $k) {
+                $configBuilder->withMariaDbGtid($v);
+            }
+            if ('tableCacheSize' === $k) {
+                $configBuilder->withTableCacheSize($v);
+            }
+            if ('custom' === $k) {
+                $configBuilder->withCustom($v);
+            }
+            if ('heartbeatPeriod' === $k) {
+                $configBuilder->withHeartbeatPeriod($v);
+            }
+        }
+
+        return $configBuilder->build();
     }
 
     /**
@@ -185,180 +172,114 @@ class Config implements \JsonSerializable
         }
     }
 
-    /**
-     * @return array
-     */
     public static function getCustom(): array
     {
         return self::$custom;
     }
 
-    /**
-     * @return string
-     */
     public static function getUser(): string
     {
         return self::$user;
     }
 
-    /**
-     * @return string
-     */
     public static function getHost(): string
     {
         return self::$host;
     }
 
-    /**
-     * @return int
-     */
     public static function getPort(): int
     {
         return self::$port;
     }
 
-    /**
-     * @return string
-     */
     public static function getPassword(): string
     {
         return self::$password;
     }
 
-    /**
-     * @return string
-     */
     public static function getCharset(): string
     {
         return self::$charset;
     }
 
-    /**
-     * @return string
-     */
     public static function getGtid(): string
     {
         return self::$gtid;
     }
 
-    /**
-     * @return string
-     */
     public static function getMariaDbGtid(): string
     {
         return self::$mariaDbGtid;
     }
 
-    /**
-     * @return int
-     */
     public static function getSlaveId(): int
     {
         return self::$slaveId;
     }
 
-    /**
-     * @return string
-     */
     public static function getBinLogFileName(): string
     {
         return self::$binLogFileName;
     }
 
-    /**
-     * @return int
-     */
     public static function getBinLogPosition(): int
     {
         return self::$binLogPosition;
     }
 
-    /**
-     * @return array
-     */
-    public static function getEventsOnly(): array
-    {
-        return self::$eventsOnly;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getEventsIgnore(): array
-    {
-        return self::$eventsIgnore;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getTablesOnly(): array
-    {
-        return self::$tablesOnly;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getDatabasesOnly(): array
-    {
-        return self::$databasesOnly;
-    }
-
-    /**
-     * @return int
-     */
     public static function getTableCacheSize(): int
     {
         return self::$tableCacheSize;
     }
 
-    /**
-     * @param string $database
-     * @return bool
-     */
     public static function checkDataBasesOnly(string $database): bool
     {
-        return [] !== self::getDatabasesOnly() && !\in_array($database, self::getDatabasesOnly(), true);
+        return [] !== self::getDatabasesOnly() && !in_array($database, self::getDatabasesOnly(), true);
     }
 
-    /**
-     * @param string $table
-     * @return bool
-     */
+    public static function getDatabasesOnly(): array
+    {
+        return self::$databasesOnly;
+    }
+
     public static function checkTablesOnly(string $table): bool
     {
-        return [] !== self::getTablesOnly() && !\in_array($table, self::getTablesOnly(), true);
+        return [] !== self::getTablesOnly() && !in_array($table, self::getTablesOnly(), true);
     }
 
-    /**
-     * @param int $type
-     * @return bool
-     */
+    public static function getTablesOnly(): array
+    {
+        return self::$tablesOnly;
+    }
+
     public static function checkEvent(int $type): bool
     {
-        if ([] !== self::getEventsOnly() && !\in_array($type, self::getEventsOnly(), true)) {
+        if ([] !== self::getEventsOnly() && !in_array($type, self::getEventsOnly(), true)) {
             return false;
         }
 
-        if (\in_array($type, self::getEventsIgnore(), true)) {
+        if (in_array($type, self::getEventsIgnore(), true)) {
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return int
-     */
+    public static function getEventsOnly(): array
+    {
+        return self::$eventsOnly;
+    }
+
+    public static function getEventsIgnore(): array
+    {
+        return self::$eventsIgnore;
+    }
+
     public static function getHeartbeatPeriod(): int
     {
         return self::$heartbeatPeriod;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_class_vars(self::class);

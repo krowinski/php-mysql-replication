@@ -4,8 +4,6 @@ declare(strict_types=1);
 namespace MySQLReplication\Definitions;
 
 /**
- * Class ConstEventType
- * @package MySQLReplication\Definitions
  * @see https://dev.mysql.com/doc/internals/en/event-classes-and-types.html
  */
 class ConstEventType

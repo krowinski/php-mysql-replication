@@ -6,21 +6,10 @@ namespace MySQLReplication\Repository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 
-/**
- * Class MySQLRepository
- * @package MySQLReplication\Repository
- */
 class MySQLRepository implements RepositoryInterface
 {
-    /**
-     * @var Connection
-     */
     private $connection;
 
-    /**
-     * MySQLRepository constructor.
-     * @param Connection $connection
-     */
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
@@ -31,11 +20,6 @@ class MySQLRepository implements RepositoryInterface
         $this->connection->close();
     }
 
-    /**
-     * @param string $database
-     * @param string $table
-     * @return array
-     */
     public function getFields(string $database, string $table): array
     {
         $sql = '
@@ -57,9 +41,6 @@ class MySQLRepository implements RepositoryInterface
         return $this->getConnection()->fetchAll($sql, [$database, $table]);
     }
 
-    /**
-     * @return Connection
-     */
     private function getConnection(): Connection
     {
         if (false === $this->connection->ping()) {
@@ -71,7 +52,6 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * @return bool
      * @throws DBALException
      */
     public function isCheckSum(): bool
@@ -81,14 +61,11 @@ class MySQLRepository implements RepositoryInterface
         return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
 
-    /**
-     * @return string
-     */
     public function getVersion(): string
     {
         $r = '';
         $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
-        if (\is_array($versions) && 0 !== \count($versions)) {
+        if (is_array($versions) && 0 !== count($versions)) {
             foreach ($versions as $version) {
                 $r .= $version['Value'];
             }
@@ -98,13 +75,7 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * File
-     * Position
-     * Binlog_Do_DB
-     * Binlog_Ignore_DB
-     * Executed_Gtid_Set
-     *
-     * @return array
+     * @inheritDoc
      * @throws DBALException
      */
     public function getMasterStatus(): array

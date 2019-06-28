@@ -21,22 +21,22 @@ class ConfigTest extends BaseTest
     public function shouldMakeConfig(): void
     {
         $expected = [
-            'user'            => 'foo',
-            'host'            => '127.0.0.1',
-            'port'            => 3308,
-            'password'        => 'secret',
-            'charset'         => 'utf8',
-            'gtid'            => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
-            'slaveId'         => 1,
-            'binLogFileName'  => 'binfile1.bin',
-            'binLogPosition'  => 666,
-            'eventsOnly'      => [],
-            'eventsIgnore'    => [],
-            'tablesOnly'      => ['test_table'],
-            'databasesOnly'   => ['test_database'],
-            'mariaDbGtid'     => '123:123',
-            'tableCacheSize'  => 777,
-            'custom'          => [['random' => 'data']],
+            'user' => 'foo',
+            'host' => '127.0.0.1',
+            'port' => 3308,
+            'password' => 'secret',
+            'charset' => 'utf8',
+            'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
+            'slaveId' => 1,
+            'binLogFileName' => 'binfile1.bin',
+            'binLogPosition' => 666,
+            'eventsOnly' => [],
+            'eventsIgnore' => [],
+            'tablesOnly' => ['test_table'],
+            'databasesOnly' => ['test_database'],
+            'mariaDbGtid' => '123:123',
+            'tableCacheSize' => 777,
+            'custom' => [['random' => 'data']],
             'heartbeatPeriod' => 69,
         ];
 
@@ -147,7 +147,7 @@ class ConfigTest extends BaseTest
         $this->expectExceptionMessage($expectedMessage);
         $this->expectExceptionCode($expectedCode);
 
-        $config = ConfigFactory::makeConfigFromArray([$configKey => $configValue]);
+        $config = Config::makeConfigFromArray([$configKey => $configValue]);
         $config::validate();
     }
 
@@ -166,5 +166,32 @@ class ConfigTest extends BaseTest
             ['heartbeatPeriod', 4294968, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
             ['heartbeatPeriod', -1, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
         ];
+    }
+
+    public function shouldMakeConfigFromArray(): void
+    {
+        $expected = [
+            'user' => 'foo',
+            'host' => '127.0.0.1',
+            'port' => 3308,
+            'password' => 'secret',
+            'charset' => 'utf8',
+            'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
+            'slaveId' => 1,
+            'binLogFileName' => 'binfile1.bin',
+            'binLogPosition' => 666,
+            'eventsOnly' => [],
+            'eventsIgnore' => [],
+            'tablesOnly' => ['test_table'],
+            'databasesOnly' => ['test_database'],
+            'mariaDbGtid' => '123:123',
+            'tableCacheSize' => 777,
+            'custom' => [['random' => 'data']],
+            'heartbeatPeriod' => 69,
+        ];
+
+        $config = Config::makeConfigFromArray($expected);
+
+        self::assertSame(json_encode($expected), json_encode($config));
     }
 }

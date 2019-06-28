@@ -7,18 +7,13 @@ use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Event\DTO\RotateDTO;
 
 /**
- * Class RotateEvent
- * @package MySQLReplication\Event
  * @see https://dev.mysql.com/doc/internals/en/rotate-event.html
  */
 class RotateEvent extends EventCommon
 {
-    /**
-     * @return RotateDTO
-     */
     public function makeRotateEventDTO(): RotateDTO
     {
-        $binFilePos = $this->binaryDataReader->readUInt64();
+        $binFilePos = (int)$this->binaryDataReader->readUInt64();
         $binFileName = $this->binaryDataReader->read(
             $this->eventInfo->getSizeNoHeader() - $this->getSizeToRemoveByVersion()
         );
@@ -33,9 +28,6 @@ class RotateEvent extends EventCommon
         );
     }
 
-    /**
-     * @return int
-     */
     private function getSizeToRemoveByVersion(): int
     {
         if (BinLogServerInfo::isMariaDb()) {

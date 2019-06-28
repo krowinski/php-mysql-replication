@@ -7,26 +7,11 @@ use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\TableMap;
 
-/**
- * Class TableMapDTO
- * @package MySQLReplication\DTO
- */
 class TableMapDTO extends EventDTO
 {
-    /**
-     * @var string
-     */
     private $type = ConstEventsNames::TABLE_MAP;
-    /**
-     * @var TableMap
-     */
     private $tableMap;
 
-    /**
-     * TableMapDTO constructor.
-     * @param EventInfo $eventInfo
-     * @param TableMap $tableMap
-     */
     public function __construct(
         EventInfo $eventInfo,
         TableMap $tableMap
@@ -36,9 +21,6 @@ class TableMapDTO extends EventDTO
         $this->tableMap = $tableMap;
     }
 
-    /**
-     * @return string
-     */
     public function __toString(): string
     {
         return PHP_EOL .
@@ -52,25 +34,16 @@ class TableMapDTO extends EventDTO
             'Columns amount: ' . $this->tableMap->getColumnsAmount() . PHP_EOL;
     }
 
-    /**
-     * @return string
-     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);
     }
 
-    /**
-     * @return TableMap
-     */
     public function getTableMap(): TableMap
     {
         return $this->tableMap;

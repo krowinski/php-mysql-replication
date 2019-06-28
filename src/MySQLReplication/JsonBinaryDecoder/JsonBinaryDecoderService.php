@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
+use LengthException;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 
 /**
- * Class JsonBinaryDecoderService
- * @package MySQLReplication\JsonBinaryDecoder
  * @see https://github.com/mysql/mysql-server/blob/5.7/sql/json_binary.cc
  * @see https://github.com/shyiko/mysql-binlog-connector-java/blob/master/src/main/java/com/github/shyiko/mysql/binlog/event/deserialization/json/JsonBinary.java
  */
@@ -29,20 +28,9 @@ class JsonBinaryDecoderService
     public const STRING = 12;
     public const OPAQUE = 15;
 
-    /**
-     * @var BinaryDataReader
-     */
     private $binaryDataReader;
-    /**
-     * @var JsonBinaryDecoderFormatter
-     */
     private $jsonBinaryDecoderFormatter;
 
-    /**
-     * JsonBinaryDecoderService constructor.
-     * @param BinaryDataReader $binaryDataReader
-     * @param JsonBinaryDecoderFormatter $jsonBinaryDecoderFormatter
-     */
     public function __construct(
         BinaryDataReader $binaryDataReader,
         JsonBinaryDecoderFormatter $jsonBinaryDecoderFormatter
@@ -51,11 +39,17 @@ class JsonBinaryDecoderService
         $this->jsonBinaryDecoderFormatter = $jsonBinaryDecoderFormatter;
     }
 
+    public static function makeJsonBinaryDecoder(string $data): JsonBinaryDecoderService
+    {
+        return new JsonBinaryDecoderService(
+            new BinaryDataReader($data),
+            new JsonBinaryDecoderFormatter()
+        );
+    }
+
     /**
-     * @return string
-     * @throws \LengthException
-     * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
+     * @throws JsonBinaryDecoderException
      */
     public function parseToString(): string
     {
@@ -65,8 +59,6 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param int $type
-     * @throws \LengthException
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
      */
@@ -86,8 +78,6 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param int $intSize
-     * @throws \LengthException
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      */
@@ -132,11 +122,7 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param int $numBytes
-     * @param int $intSize
-     * @return JsonBinaryDecoderValue
      * @throws BinaryDataReaderException
-     * @throws \LengthException
      */
     private function parseValueType(int $numBytes, int $intSize): JsonBinaryDecoderValue
     {
@@ -186,7 +172,7 @@ class JsonBinaryDecoderService
 
         $offset = $this->binaryDataReader->readUIntBySize($intSize);
         if ($offset > $numBytes) {
-            throw new \LengthException(
+            throw new LengthException(
                 'The offset for the value in the JSON binary document is ' .
                 $offset .
                 ', which is larger than the binary form of the JSON document (' .
@@ -201,12 +187,9 @@ class JsonBinaryDecoderService
         );
     }
 
-    /**
-     * @return bool|null
-     */
     private function readLiteral(): ?bool
     {
-        $literal = \ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
+        $literal = ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
         if (0 === $literal) {
             return null;
         }
@@ -221,8 +204,6 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param JsonBinaryDecoderValue $jsonBinaryDecoderValue
-     * @throws \LengthException
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
      */
@@ -240,8 +221,6 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param int $size
-     * @throws \LengthException
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      */
@@ -270,7 +249,6 @@ class JsonBinaryDecoderService
     }
 
     /**
-     * @param int $type
      * @throws JsonBinaryDecoderException
      */
     private function parseScalar(int $type): void
@@ -315,9 +293,6 @@ class JsonBinaryDecoderService
         }
     }
 
-    /**
-     * @return int
-     */
     private function readVariableInt(): int
     {
         $length = $this->binaryDataReader->getBinaryDataLength();

@@ -6,23 +6,10 @@ namespace MySQLReplication\Event\RowEvent;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Definitions\ConstFieldType;
 
-/**
- * Class Columns
- * @package MySQLReplication\Event\RowEvent
- */
 class Columns
 {
-    /**
-     * @var array
-     */
-    private static $field;
+    private static $field = [];
 
-    /**
-     * @param int $columnType
-     * @param array $columnSchema
-     * @param BinaryDataReader $binaryDataReader
-     * @return array
-     */
     public static function parse(
         int $columnType,
         array $columnSchema,
@@ -73,10 +60,6 @@ class Columns
         return self::$field;
     }
 
-    /**
-     * @param BinaryDataReader $packet
-     * @param array $columnSchema
-     */
     protected static function getFieldSpecial(BinaryDataReader $packet, array $columnSchema): void
     {
         $metadata = ($packet->readUInt8() << 8) + $packet->readUInt8();
@@ -90,9 +73,6 @@ class Columns
         }
     }
 
-    /**
-     * @param array $columnSchema
-     */
     protected static function getFieldSpecialValues(array $columnSchema): void
     {
         if (self::$field['type'] === ConstFieldType::ENUM) {

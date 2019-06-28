@@ -3,11 +3,9 @@ declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
 
-/**
- * Class BinLogCurrent
- * @package MySQLReplication\BinLog
- */
-class BinLogCurrent implements \JsonSerializable
+use JsonSerializable;
+
+class BinLogCurrent implements JsonSerializable
 {
     /**
      * @var int
@@ -26,73 +24,46 @@ class BinLogCurrent implements \JsonSerializable
      */
     private $mariaDbGtid;
 
-    /**
-     * @return int
-     */
-    public function getBinLogPosition()
+    public function getBinLogPosition(): int
     {
         return $this->binLogPosition;
     }
 
-    /**
-     * @param int $binLogPosition
-     */
-    public function setBinLogPosition($binLogPosition)
+    public function setBinLogPosition(int $binLogPosition): void
     {
         $this->binLogPosition = $binLogPosition;
     }
 
-    /**
-     * @return string
-     */
-    public function getBinFileName()
+    public function getBinFileName(): string
     {
         return $this->binFileName;
     }
 
-    /**
-     * @param string $binFileName
-     */
-    public function setBinFileName($binFileName)
+    public function setBinFileName(string $binFileName): void
     {
         $this->binFileName = $binFileName;
     }
 
-    /**
-     * @return string
-     */
-    public function getGtid()
+    public function getGtid(): string
     {
         return $this->gtid;
     }
 
-    /**
-     * @param string $gtid
-     */
     public function setGtid(string $gtid): void
     {
         $this->gtid = $gtid;
     }
 
-    /**
-     * @return string
-     */
     public function getMariaDbGtid(): string
     {
         return $this->mariaDbGtid;
     }
 
-    /**
-     * @param string $mariaDbGtid
-     */
     public function setMariaDbGtid(string $mariaDbGtid): void
     {
         $this->mariaDbGtid = $mariaDbGtid;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

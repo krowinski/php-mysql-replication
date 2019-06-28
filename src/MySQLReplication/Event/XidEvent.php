@@ -5,15 +5,8 @@ namespace MySQLReplication\Event;
 
 use MySQLReplication\Event\DTO\XidDTO;
 
-/**
- * Class XidEvent
- * @package MySQLReplication\Event
- */
 class XidEvent extends EventCommon
 {
-    /**
-     * @return XidDTO
-     */
     public function makeXidDTO(): XidDTO
     {
         return new XidDTO(

@@ -6,26 +6,11 @@ namespace MySQLReplication\Event\DTO;
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
-/**
- * Class XidDTO
- * @package MySQLReplication\Event\DTO
- */
 class XidDTO extends EventDTO
 {
-    /**
-     * @var string
-     */
     private $type = ConstEventsNames::XID;
-    /**
-     * @var string
-     */
     private $xid;
 
-    /**
-     * GTIDLogEventDTO constructor.
-     * @param EventInfo $eventInfo
-     * @param string $xid
-     */
     public function __construct(
         EventInfo $eventInfo,
         string $xid
@@ -35,25 +20,11 @@ class XidDTO extends EventDTO
         $this->xid = $xid;
     }
 
-    /**
-     * @return string
-     */
     public function getXid(): string
     {
         return $this->xid;
     }
 
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @return string
-     */
     public function __toString(): string
     {
         return PHP_EOL .
@@ -64,9 +35,11 @@ class XidDTO extends EventDTO
             'Transaction ID: ' . $this->xid . PHP_EOL;
     }
 
-    /**
-     * @inheritdoc
-     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
     public function jsonSerialize()
     {
         return get_object_vars($this);

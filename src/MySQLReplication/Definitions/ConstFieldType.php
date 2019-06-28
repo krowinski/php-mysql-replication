@@ -3,10 +3,6 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Definitions;
 
-/**
- * Class ConstFieldType
- * @package MySQLReplication\Definitions
- */
 class ConstFieldType
 {
     public const DECIMAL = 0;

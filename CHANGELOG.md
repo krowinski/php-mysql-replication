@@ -1,5 +1,11 @@
 # Release Notes
 
+## v6.0.0 (2019-?????)
+- Removed support for lesser then php7
+- Added strong and string types 
+- Changed: ConfigFactory removed and method make form array moved to Config
+- Changed: MariaDbGtidLogDTO replaced getSequenceNumber with getMariaDbGtid
+
 ## v5.0.6 (2019-02-05)
 - Fixed json with slash (#48)
 - Fixed disabling events that are needed (#46)

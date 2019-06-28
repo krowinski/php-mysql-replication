@@ -3,10 +3,6 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Definitions;
 
-/**
- * Class ConstEventsNames
- * @package MySQLReplication\Definitions
- */
 class ConstEventsNames
 {
     public const TABLE_MAP = 'tableMap';

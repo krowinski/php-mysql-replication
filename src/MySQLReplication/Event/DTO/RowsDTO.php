@@ -6,32 +6,12 @@ namespace MySQLReplication\Event\DTO;
 use MySQLReplication\Event\EventInfo;
 use MySQLReplication\Event\RowEvent\TableMap;
 
-/**
- * Class RowsDTO
- * @package MySQLReplication\DTO
- */
 abstract class RowsDTO extends EventDTO
 {
-    /**
-     * @var array
-     */
     private $values;
-    /**
-     * @var int
-     */
     private $changedRows;
-    /**
-     * @var TableMap
-     */
     private $tableMap;
 
-    /**
-     * GTIDLogEventDTO constructor.
-     * @param EventInfo $eventInfo
-     * @param TableMap $tableMap
-     * @param int $changedRows
-     * @param array $values
-     */
     public function __construct(
         EventInfo $eventInfo,
         TableMap $tableMap,
@@ -45,33 +25,21 @@ abstract class RowsDTO extends EventDTO
         $this->tableMap = $tableMap;
     }
 
-    /**
-     * @return TableMap
-     */
     public function getTableMap(): TableMap
     {
         return $this->tableMap;
     }
 
-    /**
-     * @return int
-     */
     public function getChangedRows(): int
     {
         return $this->changedRows;
     }
 
-    /**
-     * @return array
-     */
     public function getValues(): array
     {
         return $this->values;
     }
 
-    /**
-     * @return string
-     */
     public function __toString(): string
     {
         return PHP_EOL .
@@ -85,9 +53,6 @@ abstract class RowsDTO extends EventDTO
             'Values: ' . print_r($this->values, true) . PHP_EOL;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

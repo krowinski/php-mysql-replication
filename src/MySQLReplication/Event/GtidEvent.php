@@ -5,15 +5,8 @@ namespace MySQLReplication\Event;
 
 use MySQLReplication\Event\DTO\GTIDLogDTO;
 
-/**
- * Class GtidEvent
- * @package MySQLReplication\Event
- */
 class GtidEvent extends EventCommon
 {
-    /**
-     * @return GTIDLogDTO
-     */
     public function makeGTIDLogDTO(): GTIDLogDTO
     {
         $commit_flag = 1 === $this->binaryDataReader->readUInt8();
