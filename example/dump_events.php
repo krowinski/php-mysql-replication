@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-namespace example;
-
 error_reporting(E_ALL);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
@@ -13,7 +11,9 @@ use MySQLReplication\Event\EventSubscribers;
 use MySQLReplication\MySQLReplicationFactory;
 
 /**
- * Your db configuration @see ConfigBuilder for more options
+ * Your db configuration
+ * @see ConfigBuilder
+ * @link https://github.com/krowinski/bcmath-extended/blob/master/README.md
  */
 $binLogStream = new MySQLReplicationFactory(
     (new ConfigBuilder())
@@ -27,28 +27,24 @@ $binLogStream = new MySQLReplicationFactory(
 );
 
 /**
- * Class BenchmarkEventSubscribers
- * @package example
+ * Register your events handler
+ * @see EventSubscribers
  */
-class MyEventSubscribers extends EventSubscribers
-{
-    /**
-     * @param EventDTO $event (your own handler more in EventSubscribers class )
-     */
-    public function allEvents(EventDTO $event): void
+$binLogStream->registerSubscriber(
+    new class() extends EventSubscribers
     {
-        // all events got __toString() implementation
-        echo $event;
+        public function allEvents(EventDTO $event): void
+        {
+            // all events got __toString() implementation
+            echo $event;
 
-        // all events got JsonSerializable implementation
-        //echo json_encode($event, JSON_PRETTY_PRINT);
+            // all events got JsonSerializable implementation
+            //echo json_encode($event, JSON_PRETTY_PRINT);
 
-        echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+            echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
+        }
     }
-}
-
-// register your events handler here
-$binLogStream->registerSubscriber(new MyEventSubscribers());
+);
 
 // start consuming events
 $binLogStream->run();
