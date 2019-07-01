@@ -52,7 +52,7 @@ abstract class BaseTest extends TestCase
             ->withUser('root')
             ->withHost('127.0.0.1')
             ->withPassword('root')
-            ->withPort(3333)
+            ->withPort(3306)
             ->withEventsIgnore([ConstEventType::GTID_LOG_EVENT]);
 
         $this->connect();
