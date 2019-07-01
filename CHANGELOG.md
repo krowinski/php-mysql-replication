@@ -10,6 +10,7 @@
 - Fixed column order
 - Changed: getFields and getMasterStatus returns no VO
 - Changed: Column to ColumnDTO and added ColumnDTOCollection 
+- Changed: replaced getFields with getColumnDTOCollection in TableMap
 
 ## v5.0.6 (2019-02-05)
 - Fixed json with slash (#48)
