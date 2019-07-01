@@ -63,7 +63,6 @@ class Event
 
         // decode all events data
         $eventInfo = $this->createEventInfo($binaryDataReader);
-        var_dump($eventInfo);
 
         $eventDTO = null;
 
