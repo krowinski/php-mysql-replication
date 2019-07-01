@@ -266,6 +266,10 @@ class TypesTest extends BaseTest
      */
     public function shouldBeTimestampMySQL56(): void
     {
+        if ($this->checkForVersion(5.6)) {
+            $this->markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
         $create_query = 'CREATE TABLE test (test0 TIMESTAMP(0),
             test1 TIMESTAMP(1),
             test2 TIMESTAMP(2),
@@ -675,8 +679,13 @@ class TypesTest extends BaseTest
      */
     public function shouldBeGeometry(): void
     {
+        $prefix = 'ST_';
+        if ($this->checkForVersion(5.6)) {
+            $prefix = '';
+        }
+
         $create_query = 'CREATE TABLE test (test GEOMETRY);';
-        $insert_query = 'INSERT INTO test VALUES(GeomFromText("POINT(1 1)"))';
+        $insert_query = 'INSERT INTO test VALUES(' . $prefix . 'GeomFromText("POINT(1 1)"))';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -763,8 +772,8 @@ class TypesTest extends BaseTest
      */
     public function shouldBeJson(): void
     {
-        if (false === strpos($this->connection->fetchColumn('SELECT VERSION()'), '5.7')) {
-            $this->markTestIncomplete('Only for mysql 5.7');
+        if ($this->checkForVersion(5.7)) {
+            $this->markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
         $create_query = 'create table t1 (i INT, j JSON)';

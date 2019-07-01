@@ -5,10 +5,11 @@ language: php
 php:
   - 7.1
   - 7.2
-  - 7.3
 env:
+  - DB=mysql55
   - DB=mysql57
   - DB=mysql56
+  - DB=mysql80
   - DB=mariadb
 
 cache: 

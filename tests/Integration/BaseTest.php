@@ -99,6 +99,11 @@ abstract class BaseTest extends TestCase
         $this->disconnect();
     }
 
+    protected function checkForVersion(float $version): bool
+    {
+        return (float)$this->connection->fetchColumn('SELECT VERSION()') < $version;
+    }
+
     protected function disconnect(): void
     {
         $this->mySQLReplicationFactory->unregisterSubscriber($this->testEventSubscribers);

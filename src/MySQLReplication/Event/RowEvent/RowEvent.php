@@ -528,7 +528,7 @@ class RowEvent extends EventCommon
             } else if ($type === ConstFieldType::DATETIME2) {
                 $values[$name] = $this->getDatetime2($column);
             } else if ($type === ConstFieldType::TIMESTAMP) {
-                $values[$name] = date('c', $this->binaryDataReader->readUInt32());
+                $values[$name] = date('Y-m-d H:i:s', $this->binaryDataReader->readUInt32());
             } else if ($type === ConstFieldType::TIME) {
                 $values[$name] = $this->getTime();
             } else if ($type === ConstFieldType::TIME2) {
@@ -664,7 +664,12 @@ class RowEvent extends EventCommon
             return null;
         }
 
-        return DateTime::createFromFormat('YmdHis', $value)->format('Y-m-d H:i:s');
+        $date = DateTime::createFromFormat('YmdHis', $value)->format('Y-m-d H:i:s');
+        if (array_sum(DateTime::getLastErrors()) > 0) {
+            return null;
+        }
+
+        return $date;
     }
 
     /**
@@ -700,7 +705,6 @@ class RowEvent extends EventCommon
         } catch (Exception $exception) {
             return null;
         }
-        // not all errors are thrown as exception :(
         if (array_sum(DateTime::getLastErrors()) > 0) {
             return null;
         }
@@ -740,7 +744,7 @@ class RowEvent extends EventCommon
     {
         $data = $this->binaryDataReader->readUInt24();
         if (0 === $data) {
-            return '00-00-00';
+            return '00:00:00';
         }
 
         return sprintf('%s%02d:%02d:%02d', $data < 0 ? '-' : '', $data / 10000, ($data % 10000) / 100, $data % 100);
