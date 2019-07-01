@@ -6,12 +6,11 @@ php:
   - 7.1
   - 7.2
 env:
-  - DB=mysql55
   - DB=mysql57
   - DB=mysql56
   - DB=mariadb
 
-cache: 
+cache:
   apt: true
   bundler: true
   directories:
@@ -24,7 +23,6 @@ before_script:
   - "sudo apt-get remove mysql* -y --purge"
   - "if [ $DB = 'mysql57' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mysql56' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.6 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
-  - "if [ $DB = 'mysql55' ]; then echo deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.5 | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mysql-server -y --allow-unauthenticated; fi"
   - "if [ $DB = 'mariadb' ]; then sudo rm -rf /var/lib/mysql /etc/mysql; echo deb http://ftp.hosteurope.de/mirror/mariadb.org/repo/10.3/ubuntu trusty main | sudo tee /etc/apt/sources.list.d/mysql.list; sudo apt-get update; sudo apt-get install mariadb-server-10.3 -y --allow-unauthenticated; fi"
   - "sudo mysql_upgrade --force"
 
@@ -32,10 +30,9 @@ before_script:
   - "echo '[mysqld]'            | sudo tee /etc/mysql/conf.d/replication.cnf"
   - "echo 'log-bin=mysql-bin'   | sudo tee -a /etc/mysql/conf.d/replication.cnf"
   - "echo 'server-id=1'         | sudo tee -a /etc/mysql/conf.d/replication.cnf"
-  - "echo 'binlog-format=row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
-  - "echo 'max_allowed_packet=64M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
-  - "echo 'innodb_log_file_size=250M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
-
+  - "echo 'binlog-format= row' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'max_allowed_packet= 64M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
+  - "echo 'innodb_log_file_size= 250M' | sudo tee -a /etc/mysql/conf.d/replication.cnf"
   - "cat /etc/mysql/conf.d/replication.cnf"
 
   # Enable GTID (only for mysql 5.*)
@@ -50,9 +47,8 @@ before_script:
   - "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';\""
   - "mysql_tzinfo_to_sql /usr/share/zoneinfo/ | mysql -u root mysql"
 
-  - if [ $DB = 'mysql57' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
   - if [ $DB = 'mysql56' ]; then echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
-  - if [ $DB = 'mysql55' ]; then echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
+  - if [ $DB = 'mysql57' ]; then echo "USE mysql;\nUPDATE user SET authentication_string=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
   - if [ $DB = 'mariadb' ]; then echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE User='root';\nFLUSH PRIVILEGES;\n" | mysql -u root; fi
 
 install:
