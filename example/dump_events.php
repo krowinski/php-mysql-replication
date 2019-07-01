@@ -22,6 +22,7 @@ $binLogStream = new MySQLReplicationFactory(
         ->withPassword('root')
         ->withPort(3333)
         ->withSlaveId(100)
+        ->withHeartbeatPeriod(2)
         ->build()
 );
 

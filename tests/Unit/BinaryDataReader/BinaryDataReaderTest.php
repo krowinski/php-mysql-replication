@@ -13,6 +13,15 @@ use MySQLReplication\Tests\Unit\BaseTest;
 class BinaryDataReaderTest extends BaseTest
 {
     /**
+     * @test
+     */
+    public function shouldRead(): void
+    {
+        $expected = 'zażółć gęślą jaźń';
+        self::assertSame($expected, pack('H*', $this->getBinaryRead(unpack('H*', $expected)[1])->read(52)));
+    }
+
+    /**
      * @param string $data
      * @return BinaryDataReader
      */
@@ -23,32 +32,14 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     */
-    public function shouldRead(): void
-    {
-        $expected = 'zażółć gęślą jaźń';
-        self::assertSame($expected, pack('H*', $this->getBinaryRead(unpack('H*', $expected)[1])->read(52)));
-    }
-
-    /**
-     * @test
      * @throws BinaryDataReaderException
      */
     public function shouldReadCodedBinary(): void
     {
         self::assertSame(0, $this->getBinaryRead(pack('C', ''))->readCodedBinary());
-        self::assertSame('', $this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary());
-        self::assertSame(
-            0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary()
-        );
-        self::assertSame(
-            0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary()
-        );
-        self::assertSame(
-            '18410715276673810432', $this->getBinaryRead(
-            pack('V', BinaryDataReader::UNSIGNED_INT64_COLUMN) . pack('V', 2147483647) . pack('V', 2147483647)
-        )->readCodedBinary()
-        );
+        self::assertNull($this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary());
+        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary());
+        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary());
     }
 
     /**
@@ -71,9 +62,16 @@ class BinaryDataReaderTest extends BaseTest
             [4, pack('I', 123123543), 123123543],
             [5, pack('CI', 71, 2570258120), 657986078791],
             [6, pack('v3', 2570258120, 2570258120, 2570258120), 7456176998088],
-            [7, pack('CSI', 66, 7890, 2570258120), 43121775657013826],
-            [8, pack('VV', 4278190080, 4278190080), '18374686483949813760'],
+            [7, pack('CSI', 66, 7890, 2570258120), 43121775657013826]
         ];
+    }
+
+    /**
+     * @test
+     */
+    public function shouldReadReadUInt64(): void
+    {
+        $this->assertSame('18374686483949813760', $this->getBinaryRead(pack('VV', 4278190080, 4278190080))->readUInt64());
     }
 
     /**
@@ -189,10 +187,10 @@ class BinaryDataReaderTest extends BaseTest
         $expected = 255;
         self::assertSame(
             $expected, hexdec(
-            bin2hex(
-                $this->getBinaryRead(pack('cc', 1, $expected))->readLengthCodedPascalString(1)
+                bin2hex(
+                    $this->getBinaryRead(pack('cc', 1, $expected))->readLengthString(1)
+                )
             )
-        )
         );
     }
 
@@ -242,7 +240,7 @@ class BinaryDataReaderTest extends BaseTest
         self::assertFalse($this->getBinaryRead('')->isComplete(1));
 
         $r = $this->getBinaryRead(str_repeat('-', 30));
-        $r->advance(20);
+        $r->advance(21);
         self::assertTrue($r->isComplete(1));
     }
 

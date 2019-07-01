@@ -61,11 +61,6 @@ class BinaryDataReader
         return $return;
     }
 
-    /**
-     * Push again data in data buffer. It's use when you want
-     * to extract a bit from a value a let the rest of the code normally
-     * read the data
-     */
     public function unread(string $data): void
     {
         $this->readBytes -= strlen($data);
@@ -73,10 +68,6 @@ class BinaryDataReader
     }
 
     /**
-     * Read a 'Length Coded Binary' number from the data buffer.
-     * Length coded numbers can be anywhere from 1 to 9 bytes depending
-     * on the value of the first byte.
-     * From PyMYSQL source code
      * @throws BinaryDataReaderException
      */
     public function readCodedBinary(): ?int
@@ -144,13 +135,12 @@ class BinaryDataReader
     /**
      * @throws BinaryDataReaderException
      */
-    public function readLengthCodedPascalString(int $size): string
+    public function readLengthString(int $size): string
     {
         return $this->read($this->readUIntBySize($size));
     }
 
     /**
-     * Read a little endian integer values based on byte number
      * @throws BinaryDataReaderException
      */
     public function readUIntBySize(int $size): int
@@ -215,7 +205,6 @@ class BinaryDataReader
     }
 
     /**
-     * Read a big endian integer values based on byte number
      * @throws BinaryDataReaderException
      */
     public function readIntBeBySize(int $size): int
@@ -295,7 +284,7 @@ class BinaryDataReader
 
     public function isComplete(int $size): bool
     {
-        return !($this->readBytes + 1 - 20 < $size);
+        return !($this->readBytes - 20 < $size);
     }
 
     public function getBinaryDataLength(): int
@@ -303,9 +292,6 @@ class BinaryDataReader
         return strlen($this->data);
     }
 
-    /**
-     * Read a part of binary data and extract a number
-     */
     public function getBinarySlice(int $binary, int $start, int $size, int $binaryLength): int
     {
         $binary >>= $binaryLength - ($start + $size);

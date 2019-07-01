@@ -5,6 +5,8 @@ namespace MySQLReplication\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
+use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\Exception\MySQLReplicationException;
 
 class MySQLRepository implements RepositoryInterface
 {
@@ -20,7 +22,7 @@ class MySQLRepository implements RepositoryInterface
         $this->connection->close();
     }
 
-    public function getFields(string $database, string $table): array
+    public function getFields(string $database, string $table): FieldDTOCollection
     {
         $sql = '
              SELECT
@@ -36,9 +38,11 @@ class MySQLRepository implements RepositoryInterface
                     `TABLE_SCHEMA` = ?
                 AND
                     `TABLE_NAME` = ?
+            ORDER BY 
+                ORDINAL_POSITION        
        ';
 
-        return $this->getConnection()->fetchAll($sql, [$database, $table]);
+        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAll($sql, [$database, $table]));
     }
 
     private function getConnection(): Connection
@@ -77,9 +81,18 @@ class MySQLRepository implements RepositoryInterface
     /**
      * @inheritDoc
      * @throws DBALException
+     * @throws BinLogException
      */
-    public function getMasterStatus(): array
+    public function getMasterStatus(): MasterStatusDTO
     {
-        return $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        $data = $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        if (empty($data)) {
+            throw new BinLogException(
+                MySQLReplicationException::BINLOG_NOT_ENABLED,
+                MySQLReplicationException::BINLOG_NOT_ENABLED_CODE
+            );
+        }
+
+        return MasterStatusDTO::makeFromArray($data);
     }
 }

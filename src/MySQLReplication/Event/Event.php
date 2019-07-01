@@ -32,7 +32,6 @@ class Event
     private $eventDispatcher;
     private $cache;
 
-
     public function __construct(
         BinLogSocketConnect $binLogSocketConnect,
         RowEventFactory $rowEventFactory,
@@ -64,6 +63,7 @@ class Event
 
         // decode all events data
         $eventInfo = $this->createEventInfo($binaryDataReader);
+        var_dump($eventInfo);
 
         $eventDTO = null;
 
@@ -87,24 +87,16 @@ class Event
             return;
         }
 
-        if (in_array(
-            $eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true
-        )) {
+        if (in_array($eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO();
-        } else if (in_array(
-            $eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true
-        )) {
+        } else if (in_array($eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO();
-        } else if (in_array(
-            $eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true
-        )) {
+        } else if (in_array($eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
         } else if (ConstEventType::XID_EVENT === $eventInfo->getType()) {
             $eventDTO = (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO();
         } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
-            $eventDTO = $this->filterDummyMariaDbEvents(
-                (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
-            );
+            $eventDTO = $this->filterDummyMariaDbEvents((new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO());
         } else if (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
             $eventDTO = new FormatDescriptionEventDTO($eventInfo);
         }

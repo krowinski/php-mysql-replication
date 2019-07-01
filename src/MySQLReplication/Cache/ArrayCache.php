@@ -72,7 +72,7 @@ class ArrayCache implements CacheInterface
         if (count(self::$tableMapCache) > Config::getTableCacheSize()) {
             self::$tableMapCache = array_slice(
                 self::$tableMapCache,
-                ceil(Config::getTableCacheSize() / 2),
+                (int)(Config::getTableCacheSize() / 2),
                 null,
                 true
             );

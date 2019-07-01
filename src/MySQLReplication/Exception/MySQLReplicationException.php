@@ -47,5 +47,4 @@ class MySQLReplicationException extends \Exception
     const DISCONNECTED_MESSAGE = 'Disconnected by remote side';
     const UNABLE_TO_WRITE_SOCKET = 'Unable to write to socket: ';
     const UNABLE_TO_CREATE_SOCKET = 'Unable to create socket: ';
-
 }

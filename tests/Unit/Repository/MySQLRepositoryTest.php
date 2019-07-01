@@ -6,6 +6,8 @@ namespace MySQLReplication\Tests\Unit\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
+use MySQLReplication\Repository\FieldDTOCollection;
+use MySQLReplication\Repository\MasterStatusDTO;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Tests\Unit\BaseTest;
 
@@ -38,17 +40,19 @@ class MySQLRepositoryTest extends BaseTest
     public function shouldGetFields(): void
     {
         $expected = [
-            'COLUMN_NAME' => 'cname',
-            'COLLATION_NAME' => 'colname',
-            'CHARACTER_SET_NAME' => 'charname',
-            'COLUMN_COMMENT' => 'colcommnet',
-            'COLUMN_TYPE' => 'coltype',
-            'COLUMN_KEY' => 'colkey'
+            [
+                'COLUMN_NAME' => 'cname',
+                'COLLATION_NAME' => 'colname',
+                'CHARACTER_SET_NAME' => 'charname',
+                'COLUMN_COMMENT' => 'colcommnet',
+                'COLUMN_TYPE' => 'coltype',
+                'COLUMN_KEY' => 'colkey'
+            ]
         ];
 
         $this->connection->method('fetchAll')->willReturn($expected);
 
-        self::assertEquals($expected, $this->mySQLRepositoryTest->getFields('foo', 'bar'));
+        self::assertEquals(FieldDTOCollection::makeFromArray($expected), $this->mySQLRepositoryTest->getFields('foo', 'bar'));
     }
 
     /**
@@ -86,7 +90,6 @@ class MySQLRepositoryTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
      */
     public function shouldGetMasterStatus(): void
     {
@@ -100,7 +103,7 @@ class MySQLRepositoryTest extends BaseTest
 
         $this->connection->method('fetchAssoc')->willReturn($expected);
 
-        self::assertEquals($expected, $this->mySQLRepositoryTest->getMasterStatus());
+        self::assertEquals(MasterStatusDTO::makeFromArray($expected), $this->mySQLRepositoryTest->getMasterStatus());
     }
 
     /**
@@ -114,7 +117,6 @@ class MySQLRepositoryTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
      */
     public function shouldReconnect(): void
     {

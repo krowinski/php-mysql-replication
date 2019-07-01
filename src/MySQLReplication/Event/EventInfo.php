@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
+use JsonSerializable;
 use MySQLReplication\BinLog\BinLogCurrent;
 
-class EventInfo implements \JsonSerializable
+class EventInfo implements JsonSerializable
 {
     private $timestamp;
     private $type;

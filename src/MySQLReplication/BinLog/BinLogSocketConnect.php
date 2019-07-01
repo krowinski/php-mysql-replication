@@ -5,10 +5,8 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidCollection;
 use MySQLReplication\Gtid\GtidException;
-use MySQLReplication\Gtid\GtidFactory;
 use MySQLReplication\Repository\RepositoryInterface;
 use MySQLReplication\Socket\SocketException;
 use MySQLReplication\Socket\SocketInterface;
@@ -67,7 +65,7 @@ class BinLogSocketConnect
             $this->isWriteSuccessful($result);
         }
 
-        //https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
+        // https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
         while ($isMaxDataLength) {
             $header = $this->socket->readFromSocket(4);
             if ('' === $header) {
@@ -132,21 +130,6 @@ class BinLogSocketConnect
      */
     private static function getCapabilities(): int
     {
-        /*
-            Left only as information
-            $foundRows = 1 << 1;
-            $connectWithDb = 1 << 3;
-            $compress = 1 << 5;
-            $odbc = 1 << 6;
-            $localFiles = 1 << 7;
-            $ignoreSpace = 1 << 8;
-            $multiStatements = 1 << 16;
-            $multiResults = 1 << 17;
-            $interactive = 1 << 10;
-            $ssl = 1 << 11;
-            $ignoreSigPipe = 1 << 12;
-        */
-
         $noSchema = 1 << 4;
         $longPassword = 1;
         $longFlag = 1 << 2;
@@ -276,15 +259,9 @@ class BinLogSocketConnect
         $binFilePos = Config::getBinLogPosition();
         $binFileName = Config::getBinLogFileName();
         if (0 === $binFilePos && '' === $binFileName) {
-            $master = $this->repository->getMasterStatus();
-            if ([] === $master) {
-                throw new BinLogException(
-                    MySQLReplicationException::BINLOG_NOT_ENABLED,
-                    MySQLReplicationException::BINLOG_NOT_ENABLED_CODE
-                );
-            }
-            $binFilePos = (int)$master['Position'];
-            $binFileName = (string)$master['File'];
+            $masterStatusDTO = $this->repository->getMasterStatus();
+            $binFilePos = $masterStatusDTO->getPosition();
+            $binFileName = $masterStatusDTO->getFile();
         }
 
         $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);

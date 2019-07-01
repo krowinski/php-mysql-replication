@@ -5,6 +5,11 @@
 - Added strong and string types 
 - Changed: ConfigFactory removed and method make form array moved to Config
 - Changed: MariaDbGtidLogDTO replaced getSequenceNumber with getMariaDbGtid
+- Fixed Insert NULL in a boolean column returns no rows
+- Fixed float problem about time field type
+- Fixed column order
+- Changed: getFields and getMasterStatus returns no VO
+- Changed: Column to ColumnDTO and added ColumnDTOCollection 
 
 ## v5.0.6 (2019-02-05)
 - Fixed json with slash (#48)

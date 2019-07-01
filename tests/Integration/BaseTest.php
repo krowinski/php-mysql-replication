@@ -3,32 +3,15 @@
 namespace MySQLReplication\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
-use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Config\ConfigBuilder;
-use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventType;
-use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
-use MySQLReplication\Event\DTO\GTIDLogDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
-use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
-use MySQLReplication\Event\DTO\UpdateRowsDTO;
-use MySQLReplication\Event\DTO\WriteRowsDTO;
-use MySQLReplication\Event\DTO\XidDTO;
-use MySQLReplication\Exception\MySQLReplicationException;
-use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\MySQLReplicationFactory;
-use MySQLReplication\Socket\SocketException;
 use PHPUnit\Framework\TestCase;
-use Psr\SimpleCache\InvalidArgumentException;
 
-/**
- * Class BaseTest
- * @package MySQLReplication\Unit
- */
 abstract class BaseTest extends TestCase
 {
     /**
@@ -56,24 +39,12 @@ abstract class BaseTest extends TestCase
      */
     private $testEventSubscribers;
 
-    /**
-     * @param EventDTO $eventDTO
-     */
-    public function setEvent(EventDTO $eventDTO)
+    public function setEvent(EventDTO $eventDTO): void
     {
         $this->currentEvent = $eventDTO;
     }
 
-    /**
-     * @throws BinLogException
-     * @throws ConfigException
-     * @throws DBALException
-     * @throws GtidException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
-     * @throws SocketException
-     */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -92,14 +63,7 @@ abstract class BaseTest extends TestCase
 
     }
 
-    /**
-     * @throws BinLogException
-     * @throws DBALException
-     * @throws ConfigException
-     * @throws GtidException
-     * @throws SocketException
-     */
-    public function connect()
+    public function connect(): void
     {
         $this->mySQLReplicationFactory = new MySQLReplicationFactory($this->configBuilder->build());
         $this->testEventSubscribers = new TestEventSubscribers($this);
@@ -114,12 +78,7 @@ abstract class BaseTest extends TestCase
         $this->connection->exec('SET SESSION sql_mode = \'\';');
     }
 
-    /**
-     * @return EventDTO
-     * @throws MySQLReplicationException
-     * @throws InvalidArgumentException
-     */
-    protected function getEvent()
+    protected function getEvent(): EventDTO
     {
         // events can be null lets us continue until we find event
         $this->currentEvent = null;
@@ -133,29 +92,21 @@ abstract class BaseTest extends TestCase
         return $this->currentEvent;
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
 
         $this->disconnect();
     }
 
-    protected function disconnect()
+    protected function disconnect(): void
     {
         $this->mySQLReplicationFactory->unregisterSubscriber($this->testEventSubscribers);
         $this->mySQLReplicationFactory = null;
         $this->connection = null;
     }
 
-    /**
-     * @param string $createQuery
-     * @param string $insertQuery
-     * @return DeleteRowsDTO|EventDTO|GTIDLogDTO|QueryDTO|RotateDTO|TableMapDTO|UpdateRowsDTO|WriteRowsDTO|XidDTO
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
-     * @throws DBALException
-     */
-    protected function createAndInsertValue($createQuery, $insertQuery)
+    protected function createAndInsertValue(string $createQuery, string $insertQuery): EventDTO
     {
         $this->connection->exec($createQuery);
         $this->connection->exec($insertQuery);

@@ -11,20 +11,20 @@ class TableMap implements JsonSerializable
     private $table;
     private $tableId;
     private $columnsAmount;
-    private $fields;
+    private $columnDTOCollection;
 
     public function __construct(
         string $database,
         string $table,
         string $tableId,
         int $columnsAmount,
-        array $fields
+        ColumnDTOCollection $columnDTOCollection
     ) {
         $this->database = $database;
         $this->table = $table;
         $this->tableId = $tableId;
         $this->columnsAmount = $columnsAmount;
-        $this->fields = $fields;
+        $this->columnDTOCollection = $columnDTOCollection;
     }
 
     public function getDatabase(): string
@@ -47,9 +47,12 @@ class TableMap implements JsonSerializable
         return $this->columnsAmount;
     }
 
-    public function getFields(): array
+    /**
+     * @return ColumnDTOCollection|ColumnDTO[]
+     */
+    public function getColumnDTOCollection(): ColumnDTOCollection
     {
-        return $this->fields;
+        return $this->columnDTOCollection;
     }
 
     public function jsonSerialize()
