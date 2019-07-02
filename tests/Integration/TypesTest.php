@@ -774,7 +774,7 @@ class TypesTest extends BaseTest
      */
     public function shouldBeJson(): void
     {
-        if ($this->checkForVersion(5.7) || !BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
         }
 

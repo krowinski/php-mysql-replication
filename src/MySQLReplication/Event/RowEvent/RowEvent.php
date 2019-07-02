@@ -468,9 +468,9 @@ class RowEvent extends EventCommon
         $nullBitmap = $this->binaryDataReader->read($this->getColumnsBinarySize($this->bitCount($colsBitmap)));
         $nullBitmapIndex = 0;
 
-        foreach ($this->currentTableMap->getColumnDTOCollection() as $i => $column) {
-            $name = $column->getName();
-            $type = $column->getType();
+        foreach ($this->currentTableMap->getColumnDTOCollection() as $i => $columnDTO) {
+            $name = $columnDTO->getName();
+            $type = $columnDTO->getType();
 
             if (0 === $this->bitGet($colsBitmap, $i)) {
                 $values[$name] = null;
@@ -480,34 +480,34 @@ class RowEvent extends EventCommon
             if ($this->checkNull($nullBitmap, $nullBitmapIndex)) {
                 $values[$name] = null;
             } else if ($type === ConstFieldType::IGNORE) {
-                $this->binaryDataReader->advance($column->getLengthSize());
+                $this->binaryDataReader->advance($columnDTO->getLengthSize());
                 $values[$name] = null;
             } else if ($type === ConstFieldType::TINY) {
-                if ($column->isUnsigned()) {
+                if ($columnDTO->isUnsigned()) {
                     $values[$name] = $this->binaryDataReader->readUInt8();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt8();
                 }
             } else if ($type === ConstFieldType::SHORT) {
-                if ($column->isUnsigned()) {
+                if ($columnDTO->isUnsigned()) {
                     $values[$name] = $this->binaryDataReader->readUInt16();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt16();
                 }
             } else if ($type === ConstFieldType::LONG) {
-                if ($column->isUnsigned()) {
+                if ($columnDTO->isUnsigned()) {
                     $values[$name] = $this->binaryDataReader->readUInt32();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt32();
                 }
             } else if ($type === ConstFieldType::LONGLONG) {
-                if ($column->isUnsigned()) {
+                if ($columnDTO->isUnsigned()) {
                     $values[$name] = $this->binaryDataReader->readUInt64();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt64();
                 }
             } else if ($type === ConstFieldType::INT24) {
-                if ($column->isUnsigned()) {
+                if ($columnDTO->isUnsigned()) {
                     $values[$name] = $this->binaryDataReader->readUInt24();
                 } else {
                     $values[$name] = $this->binaryDataReader->readInt24();
@@ -518,23 +518,23 @@ class RowEvent extends EventCommon
             } else if ($type === ConstFieldType::DOUBLE) {
                 $values[$name] = $this->binaryDataReader->readDouble();
             } else if ($type === ConstFieldType::VARCHAR || $type === ConstFieldType::STRING) {
-                $values[$name] = $column->getMaxLength() > 255 ? $this->getString(2) : $this->getString(1);
+                $values[$name] = $columnDTO->getMaxLength() > 255 ? $this->getString(2) : $this->getString(1);
             } else if ($type === ConstFieldType::NEWDECIMAL) {
-                $values[$name] = $this->getDecimal($column);
+                $values[$name] = $this->getDecimal($columnDTO);
             } else if ($type === ConstFieldType::BLOB) {
-                $values[$name] = $this->getString($column->getLengthSize());
+                $values[$name] = $this->getString($columnDTO->getLengthSize());
             } else if ($type === ConstFieldType::DATETIME) {
                 $values[$name] = $this->getDatetime();
             } else if ($type === ConstFieldType::DATETIME2) {
-                $values[$name] = $this->getDatetime2($column);
+                $values[$name] = $this->getDatetime2($columnDTO);
             } else if ($type === ConstFieldType::TIMESTAMP) {
                 $values[$name] = date('Y-m-d H:i:s', $this->binaryDataReader->readUInt32());
             } else if ($type === ConstFieldType::TIME) {
                 $values[$name] = $this->getTime();
             } else if ($type === ConstFieldType::TIME2) {
-                $values[$name] = $this->getTime2($column);
+                $values[$name] = $this->getTime2($columnDTO);
             } else if ($type === ConstFieldType::TIMESTAMP2) {
-                $values[$name] = $this->getTimestamp2($column);
+                $values[$name] = $this->getTimestamp2($columnDTO);
             } else if ($type === ConstFieldType::DATE) {
                 $values[$name] = $this->getDate();
             } else if ($type === ConstFieldType::YEAR) {
@@ -542,15 +542,15 @@ class RowEvent extends EventCommon
                 $year = $this->binaryDataReader->readUInt8();
                 $values[$name] = 0 === $year ? null : 1900 + $year;
             } else if ($type === ConstFieldType::ENUM) {
-                $values[$name] = $this->getEnum($column);
+                $values[$name] = $this->getEnum($columnDTO);
             } else if ($type === ConstFieldType::SET) {
-                $values[$name] = $this->getSet($column);
+                $values[$name] = $this->getSet($columnDTO);
             } else if ($type === ConstFieldType::BIT) {
-                $values[$name] = $this->getBit($column);
+                $values[$name] = $this->getBit($columnDTO);
             } else if ($type === ConstFieldType::GEOMETRY) {
-                $values[$name] = $this->getString($column->getLengthSize());
+                $values[$name] = $this->getString($columnDTO->getLengthSize());
             } else if ($type === ConstFieldType::JSON) {
-                $values[$name] = JsonBinaryDecoderService::makeJsonBinaryDecoder($this->getString($column->getLengthSize()))->parseToString();
+                $values[$name] = JsonBinaryDecoderService::makeJsonBinaryDecoder($this->getString($columnDTO->getLengthSize()))->parseToString();
             } else {
                 throw new MySQLReplicationException('Unknown row type: ' . $type);
             }
