@@ -3,7 +3,7 @@
 set -ex
 
 if [ $DB == 'mysql:8.0' ]; then
-    docker run -p 0.0.0.0:3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST=% --name=mysql -d mysql:${DB} \
+    docker run -p 0.0.0.0:3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST=% --name=mysql -d ${DB} \
     mysqld \
       --datadir=/var/lib/mysql \
       --user=mysql \
@@ -13,7 +13,7 @@ if [ $DB == 'mysql:8.0' ]; then
       --max_allowed_packet=64M \
       --default_authentication_plugin=mysql_native_password
 else
-    docker run -p 0.0.0.0:3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST=% --name=mysql -d mysql:${DB} \
+    docker run -p 0.0.0.0:3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST=% --name=mysql -d ${DB} \
     mysqld \
       --datadir=/var/lib/mysql \
       --user=mysql \
