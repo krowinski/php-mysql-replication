@@ -24,7 +24,7 @@ else
 fi
 
 mysql() {
-  docker exec mysql mysql "${@}"
+  docker exec mysql mysql -proot "${@}"
 }
 while :
 do
