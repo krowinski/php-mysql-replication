@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
+use MySQLReplication\BinLog\BinLogServerInfo;
+
 class TypesTest extends BaseTest
 {
     /**
@@ -630,7 +632,7 @@ class TypesTest extends BaseTest
     /**
      * https://dev.mysql.com/doc/internals/en/mysql-packet.html
      * https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
-     * 
+     *
      */
     public function shouldBeLongerTextThan16Mb(): void
     {
@@ -772,7 +774,7 @@ class TypesTest extends BaseTest
      */
     public function shouldBeJson(): void
     {
-        if ($this->checkForVersion(5.7)) {
+        if ($this->checkForVersion(5.7) || !BinLogServerInfo::isMariaDb()) {
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
