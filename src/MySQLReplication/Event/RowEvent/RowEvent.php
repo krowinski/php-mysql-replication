@@ -23,6 +23,7 @@ use MySQLReplication\Repository\FieldDTO;
 use MySQLReplication\Repository\RepositoryInterface;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
+use RuntimeException;
 
 class RowEvent extends EventCommon
 {
@@ -465,6 +466,10 @@ class RowEvent extends EventCommon
      */
     protected function getColumnData(string $colsBitmap): array
     {
+        if (null === $this->currentTableMap) {
+            throw new RuntimeException('Current table map is missing!');
+        }
+
         $values = [];
 
         // null bitmap length = (bits set in 'columns-present-bitmap'+7)/8
