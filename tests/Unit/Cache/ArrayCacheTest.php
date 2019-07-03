@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace BinaryDataReader\Unit;
 
@@ -6,15 +7,8 @@ use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Tests\Unit\BaseTest;
 
-/**
- * Class ArrayCache
- * @package MySQLReplication\Cache
- */
 class ArrayCacheTest extends BaseTest
 {
-    /**
-     * @var ArrayCache
-     */
     private $arrayCache;
 
     public function setUp()
@@ -26,7 +20,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGet()
+    public function shouldGet(): void
     {
         $this->arrayCache->set('foo', 'bar');
         self::assertSame('bar', $this->arrayCache->get('foo'));
@@ -35,7 +29,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldSet()
+    public function shouldSet(): void
     {
         $this->arrayCache->set('foo', 'bar');
         self::assertSame('bar', $this->arrayCache->get('foo'));
@@ -44,7 +38,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldClearCacheOnSet()
+    public function shouldClearCacheOnSet(): void
     {
         (new ConfigBuilder())->withTableCacheSize(1)->build();
 
@@ -56,7 +50,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldDelete()
+    public function shouldDelete(): void
     {
         $this->arrayCache->set('foo', 'bar');
         $this->arrayCache->delete('foo');
@@ -66,7 +60,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldClear()
+    public function shouldClear(): void
     {
         $this->arrayCache->set('foo', 'bar');
         $this->arrayCache->set('foo1', 'bar1');
@@ -77,7 +71,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGetMultiple()
+    public function shouldGetMultiple(): void
     {
         $expect = ['foo' => 'bar', 'foo1' => 'bar1'];
         $this->arrayCache->setMultiple($expect);
@@ -87,7 +81,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldSetMultiple()
+    public function shouldSetMultiple(): void
     {
         $expect = ['foo' => 'bar', 'foo1' => 'bar1'];
         $this->arrayCache->setMultiple($expect);
@@ -97,7 +91,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldDeleteMultiple()
+    public function shouldDeleteMultiple(): void
     {
         $expect = ['foo' => 'bar', 'foo1' => 'bar1', 'foo2' => 'bar2'];
         $this->arrayCache->setMultiple($expect);
@@ -108,7 +102,7 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldHas()
+    public function shouldHas(): void
     {
         self::assertFalse($this->arrayCache->has('foo'));
         $this->arrayCache->set('foo', 'bar');

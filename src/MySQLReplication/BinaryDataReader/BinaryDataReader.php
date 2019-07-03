@@ -292,11 +292,21 @@ class BinaryDataReader
         return strlen($this->data);
     }
 
+    public function getData(): string
+    {
+        return $this->data;
+    }
+
     public function getBinarySlice(int $binary, int $start, int $size, int $binaryLength): int
     {
         $binary >>= $binaryLength - ($start + $size);
         $mask = ((1 << $size) - 1);
 
         return $binary & $mask;
+    }
+
+    public function getReadBytes(): int
+    {
+        return $this->readBytes;
     }
 }

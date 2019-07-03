@@ -1,23 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace BinaryDataReader\Unit;
 
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Config\ConfigException;
-use MySQLReplication\Config\ConfigFactory;
 use MySQLReplication\Tests\Unit\BaseTest;
 
-/**
- * Class ConfigTest
- * @package BinaryDataReader\Unit
- */
 class ConfigTest extends BaseTest
 {
-    /**
-     * @test
-     * @throws ConfigException
-     */
     public function shouldMakeConfig(): void
     {
         $expected = [
@@ -86,6 +78,7 @@ class ConfigTest extends BaseTest
      */
     public function shouldCheckDataBasesOnly(): void
     {
+        (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();
         self::assertTrue(Config::checkDataBasesOnly('foo'));
 
         (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
@@ -132,28 +125,6 @@ class ConfigTest extends BaseTest
         self::assertFalse(Config::checkEvent(4));
     }
 
-    /**
-     * @test
-     * @dataProvider shouldValidateProvider
-     * @param string $configKey
-     * @param mixed $configValue
-     * @param string $expectedMessage
-     * @param int $expectedCode
-     * @throws ConfigException
-     */
-    public function shouldValidate($configKey, $configValue, $expectedMessage, $expectedCode): void
-    {
-        $this->expectException(ConfigException::class);
-        $this->expectExceptionMessage($expectedMessage);
-        $this->expectExceptionCode($expectedCode);
-
-        $config = Config::makeConfigFromArray([$configKey => $configValue]);
-        $config::validate();
-    }
-
-    /**
-     * @return array
-     */
     public function shouldValidateProvider(): array
     {
         return [
@@ -168,30 +139,19 @@ class ConfigTest extends BaseTest
         ];
     }
 
-    public function shouldMakeConfigFromArray(): void
+    /**
+     * @test
+     * @dataProvider shouldValidateProvider
+     */
+    public function shouldValidate(string $configKey, $configValue, string $expectedMessage, int $expectedCode): void
     {
-        $expected = [
-            'user' => 'foo',
-            'host' => '127.0.0.1',
-            'port' => 3308,
-            'password' => 'secret',
-            'charset' => 'utf8',
-            'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
-            'slaveId' => 1,
-            'binLogFileName' => 'binfile1.bin',
-            'binLogPosition' => 666,
-            'eventsOnly' => [],
-            'eventsIgnore' => [],
-            'tablesOnly' => ['test_table'],
-            'databasesOnly' => ['test_database'],
-            'mariaDbGtid' => '123:123',
-            'tableCacheSize' => 777,
-            'custom' => [['random' => 'data']],
-            'heartbeatPeriod' => 69,
-        ];
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage($expectedMessage);
+        $this->expectExceptionCode($expectedCode);
 
-        $config = Config::makeConfigFromArray($expected);
-
-        self::assertSame(json_encode($expected), json_encode($config));
+        /** @var Config $config */
+        $config = (new ConfigBuilder())->{'with' . strtoupper($configKey)}($configValue)->build();
+        $config::validate();
     }
+
 }

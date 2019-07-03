@@ -355,7 +355,11 @@ class RowEvent extends EventCommon
                     $type = ConstFieldType::IGNORE;
                 }
 
-                $columnDTOCollection->set($offset, ColumnDTO::make($type, $fieldDTOCollection->offsetGet($offset), $this->binaryDataReader));
+                /** @var FieldDTO $fieldDTO */
+                $fieldDTO = $fieldDTOCollection->offsetGet($offset);
+                if (null !== $fieldDTO) {
+                    $columnDTOCollection->set($offset, ColumnDTO::make($type, $fieldDTO, $this->binaryDataReader));
+                }
             }
         }
 
@@ -433,7 +437,7 @@ class RowEvent extends EventCommon
     protected function getValues(): array
     {
         // if we don't get columns from information schema we don't know how to assign them
-        if ($this->currentTableMap->getColumnDTOCollection()->isEmpty()) {
+        if ($this->currentTableMap === null || $this->currentTableMap->getColumnDTOCollection()->isEmpty()) {
             return [];
         }
 

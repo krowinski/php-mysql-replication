@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace BinaryDataReader\Unit;
 
@@ -6,10 +7,6 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\Tests\Unit\BaseTest;
 
-/**
- * Class BinaryDataReaderTest
- * @package BinaryDataReader\Unit
- */
 class BinaryDataReaderTest extends BaseTest
 {
     /**
@@ -21,10 +18,6 @@ class BinaryDataReaderTest extends BaseTest
         self::assertSame($expected, pack('H*', $this->getBinaryRead(unpack('H*', $expected)[1])->read(52)));
     }
 
-    /**
-     * @param string $data
-     * @return BinaryDataReader
-     */
     private function getBinaryRead($data): BinaryDataReader
     {
         return new BinaryDataReader($data);
@@ -32,7 +25,6 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @throws BinaryDataReaderException
      */
     public function shouldReadCodedBinary(): void
     {
@@ -44,7 +36,6 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @throws BinaryDataReaderException
      */
     public function shouldThrowErrorOnUnknownCodedBinary(): void
     {
@@ -77,10 +68,6 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @dataProvider dataProviderForUInt
      * @test
-     * @param $size
-     * @param $data
-     * @param $expected
-     * @throws BinaryDataReaderException
      */
     public function shouldReadUIntBySize($size, $data, $expected): void
     {
@@ -89,7 +76,6 @@ class BinaryDataReaderTest extends BaseTest
 
     /**
      * @test
-     * @throws BinaryDataReaderException
      */
     public function shouldThrowErrorOnReadUIntBySizeNotSupported(): void
     {
@@ -112,19 +98,14 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @dataProvider dataProviderForBeInt
      * @test
-     * @param $size
-     * @param $data
-     * @param $expected
-     * @throws BinaryDataReaderException
      */
-    public function shouldReadIntBeBySize($size, $data, $expected): void
+    public function shouldReadIntBeBySize(int $size, string $data, int $expected): void
     {
         self::assertSame($expected, $this->getBinaryRead($data)->readIntBeBySize($size));
     }
 
     /**
      * @test
-     * @throws BinaryDataReaderException
      */
     public function shouldThrowErrorOnReadIntBeBySizeNotSupported(): void
     {
@@ -149,18 +130,18 @@ class BinaryDataReaderTest extends BaseTest
     {
         $binaryDataReader = $this->getBinaryRead('123');
 
-        self::assertAttributeEquals('123', 'data', $binaryDataReader);
-        self::assertAttributeEquals(0, 'readBytes', $binaryDataReader);
+        self::assertEquals('123', $binaryDataReader->getData());
+        self::assertEquals(0, $binaryDataReader->getReadBytes());
 
         $binaryDataReader->advance(2);
 
-        self::assertAttributeEquals('3', 'data', $binaryDataReader);
-        self::assertAttributeEquals(2, 'readBytes', $binaryDataReader);
+        self::assertEquals('3', $binaryDataReader->getData());
+        self::assertEquals(2, $binaryDataReader->getReadBytes());
 
         $binaryDataReader->unread('12');
 
-        self::assertAttributeEquals('123', 'data', $binaryDataReader);
-        self::assertAttributeEquals(0, 'readBytes', $binaryDataReader);
+        self::assertEquals('123', $binaryDataReader->getData());
+        self::assertEquals(0, $binaryDataReader->getReadBytes());
     }
 
     /**
@@ -182,7 +163,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadLengthCodedPascalString()
+    public function shouldReadLengthCodedPascalString(): void
     {
         $expected = 255;
         self::assertSame(
@@ -197,7 +178,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadInt32()
+    public function shouldReadInt32(): void
     {
         $expected = 777333;
         self::assertSame($expected, $this->getBinaryRead(pack('i', $expected))->readInt32());
@@ -207,7 +188,7 @@ class BinaryDataReaderTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReadFloat()
+    public function shouldReadFloat(): void
     {
         $expected = 0.001;
         self::assertSame($expected, $this->getBinaryRead(pack('f', $expected))->readFloat());
@@ -249,8 +230,8 @@ class BinaryDataReaderTest extends BaseTest
      */
     public function shouldPack64bit(): void
     {
-        $expected = '9223372036854775807';
-        self::assertSame($expected, $this->getBinaryRead(BinaryDataReader::pack64bit($expected))->readInt64());
+        $expected = 9223372036854775807;
+        self::assertSame((string)$expected, $this->getBinaryRead(BinaryDataReader::pack64bit($expected))->readInt64());
     }
 
     /**

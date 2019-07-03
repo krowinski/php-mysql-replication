@@ -12,6 +12,7 @@
 - Changed: Column to ColumnDTO and added ColumnDTOCollection 
 - Changed: replaced getFields with getColumnDTOCollection in TableMap
 - Added: more compatibility for mysql 5.5, 5.6, 5.7, maria 10 and 8.0 
+- Removed: makeConfigFromArray
 
 ## v5.0.6 (2019-02-05)
 - Fixed json with slash (#48)
