@@ -1,10 +1,8 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
-use Doctrine\DBAL\DBALException;
-use MySQLReplication\BinLog\BinLogException;
-use MySQLReplication\Config\ConfigException;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
@@ -12,24 +10,13 @@ use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
-use MySQLReplication\Exception\MySQLReplicationException;
-use MySQLReplication\Gtid\GtidException;
-use MySQLReplication\Socket\SocketException;
-use Psr\SimpleCache\InvalidArgumentException;
 
-/**
- * Class BasicTest
- * @package MySQLReplication\Tests\Integration
- */
 class BasicTest extends BaseTest
 {
     /**
      * @test
-     * @throws DBALException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
      */
-    public function shouldGetDeleteEvent()
+    public function shouldGetDeleteEvent(): void
     {
         $this->createAndInsertValue(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))',
@@ -51,11 +38,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
      */
-    public function shouldGetUpdateEvent()
+    public function shouldGetUpdateEvent(): void
     {
         $this->createAndInsertValue(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))',
@@ -79,11 +63,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
      */
-    public function shouldGetWriteEventDropTable()
+    public function shouldGetWriteEventDropTable(): void
     {
         $this->connection->exec($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
         $this->connection->exec('INSERT INTO `test` VALUES (1)');
@@ -118,11 +99,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
      */
-    public function shouldGetQueryEventCreateTable()
+    public function shouldGetQueryEventCreateTable(): void
     {
         $this->connection->exec(
             $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
@@ -136,15 +114,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws BinLogException
-     * @throws ConfigException
-     * @throws DBALException
-     * @throws GtidException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
-     * @throws SocketException
      */
-    public function shouldDropColumn()
+    public function shouldDropColumn(): void
     {
         $this->disconnect();
 
@@ -171,15 +142,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws BinLogException
-     * @throws ConfigException
-     * @throws DBALException
-     * @throws GtidException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
-     * @throws SocketException
      */
-    public function shouldFilterEvents()
+    public function shouldFilterEvents(): void
     {
         $this->disconnect();
 
@@ -200,15 +164,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
-     * @throws BinLogException
-     * @throws ConfigException
-     * @throws MySQLReplicationException
-     * @throws GtidException
-     * @throws SocketException
-     * @throws InvalidArgumentException
      */
-    public function shouldFilterTables()
+    public function shouldFilterTables(): void
     {
         $expectedTable = 'test_2';
         $expectedValue = 'foobar';
@@ -228,9 +185,8 @@ class BasicTest extends BaseTest
 
         $this->connection->exec('INSERT INTO test_4 (data) VALUES (\'foo\')');
         $this->connection->exec('INSERT INTO test_3 (data) VALUES (\'bar\')');
-        $this->connection->exec('INSERT INTO test_2 (data) VALUES (\''. $expectedValue .'\')');
+        $this->connection->exec('INSERT INTO test_2 (data) VALUES (\'' . $expectedValue . '\')');
 
-        /** @var WriteRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
         self::assertEquals($expectedTable, $event->getTableMap()->getTable());
@@ -239,11 +195,8 @@ class BasicTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
-     * @throws InvalidArgumentException
-     * @throws MySQLReplicationException
      */
-    public function shouldTruncateTable()
+    public function shouldTruncateTable(): void
     {
         $this->disconnect();
 
@@ -260,7 +213,6 @@ class BasicTest extends BaseTest
         $this->connection->exec('INSERT INTO test_truncate_column VALUES (1, \'A value\')');
         $this->connection->exec('TRUNCATE TABLE test_truncate_column');
 
-        /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertSame('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))', $event->getQuery());
         $event = $this->getEvent();

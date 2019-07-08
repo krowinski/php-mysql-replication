@@ -1,254 +1,136 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Config;
 
-/**
- * Class ConfigBuilder
- * @package MySQLReplication\Config
- */
 class ConfigBuilder
 {
-    /**
-     * @var string
-     */
     private $user = '';
-    /**
-     * @var string
-     */
     private $host = 'localhost';
-    /**
-     * @var int
-     */
     private $port = 3306;
-    /**
-     * @var string
-     */
     private $password = '';
-    /**
-     * @var string
-     */
     private $charset = 'utf8';
-    /**
-     * @var string
-     */
     private $gtid = '';
-    /**
-     * @var int
-     */
     private $slaveId = 666;
-    /**
-     * @var string
-     */
     private $binLogFileName = '';
-    /**
-     * @var int
-     */
     private $binLogPosition = 0;
-    /**
-     * @var array
-     */
     private $eventsOnly = [];
-    /**
-     * @var array
-     */
     private $eventsIgnore = [];
-    /**
-     * @var array
-     */
     private $tablesOnly = [];
-    /**
-     * @var array
-     */
     private $databasesOnly = [];
-    /**
-     * @var string
-     */
     private $mariaDbGtid = '';
-    /**
-     * @var int
-     */
     private $tableCacheSize = 128;
-    /**
-     * @var array
-     */
     private $custom = [];
-    /**
-     * @var int
-     */
     private $heartbeatPeriod = 0;
 
-    /**
-     * @param string $user
-     * @return ConfigBuilder
-     */
-    public function withUser($user)
+    public function withUser(string $user): self
     {
         $this->user = $user;
 
         return $this;
     }
 
-    /**
-     * @param string $host
-     * @return ConfigBuilder
-     */
-    public function withHost($host)
+    public function withHost(string $host): self
     {
         $this->host = $host;
 
         return $this;
     }
 
-    /**
-     * @param int $port
-     * @return ConfigBuilder
-     */
-    public function withPort($port)
+    public function withPort(int $port): self
     {
         $this->port = $port;
 
         return $this;
     }
 
-    /**
-     * @param string $password
-     * @return ConfigBuilder
-     */
-    public function withPassword($password)
+    public function withPassword(string $password): self
     {
         $this->password = $password;
 
         return $this;
     }
 
-    /**
-     * @param string $charset
-     * @return ConfigBuilder
-     */
-    public function withCharset($charset)
+    public function withCharset(string $charset): self
     {
         $this->charset = $charset;
 
         return $this;
     }
 
-    /**
-     * @param string $gtid
-     * @return ConfigBuilder
-     */
-    public function withGtid($gtid)
+    public function withGtid(string $gtid): self
     {
         $this->gtid = $gtid;
 
         return $this;
     }
 
-    /**
-     * @param int $slaveId
-     * @return ConfigBuilder
-     */
-    public function withSlaveId($slaveId)
+    public function withSlaveId(int $slaveId): self
     {
         $this->slaveId = $slaveId;
 
         return $this;
     }
 
-    /**
-     * @param string $binLogFileName
-     * @return ConfigBuilder
-     */
-    public function withBinLogFileName($binLogFileName)
+    public function withBinLogFileName(string $binLogFileName): self
     {
         $this->binLogFileName = $binLogFileName;
 
         return $this;
     }
 
-    /**
-     * @param int $binLogPosition
-     * @return ConfigBuilder
-     */
-    public function withBinLogPosition($binLogPosition)
+    public function withBinLogPosition(int $binLogPosition): self
     {
         $this->binLogPosition = $binLogPosition;
 
         return $this;
     }
 
-    /**
-     * @see ConstEventType
-     * @param array $eventsOnly
-     * @return ConfigBuilder
-     */
-    public function withEventsOnly(array $eventsOnly)
+    public function withEventsOnly(array $eventsOnly): self
     {
         $this->eventsOnly = $eventsOnly;
 
         return $this;
     }
 
-    /**
-     * @see ConstEventType
-     * @param array $eventsIgnore
-     * @return ConfigBuilder
-     */
-    public function withEventsIgnore(array $eventsIgnore)
+    public function withEventsIgnore(array $eventsIgnore): self
     {
         $this->eventsIgnore = $eventsIgnore;
 
         return $this;
     }
 
-    /**
-     * @param array $tablesOnly
-     * @return ConfigBuilder
-     */
-    public function withTablesOnly(array $tablesOnly)
+    public function withTablesOnly(array $tablesOnly): self
     {
         $this->tablesOnly = $tablesOnly;
 
         return $this;
     }
 
-    /**
-     * @param array $databasesOnly
-     * @return ConfigBuilder
-     */
-    public function withDatabasesOnly(array $databasesOnly)
+    public function withDatabasesOnly(array $databasesOnly): self
     {
         $this->databasesOnly = $databasesOnly;
 
         return $this;
     }
 
-    /**
-     * @param string $mariaDbGtid
-     * @return ConfigBuilder
-     */
-    public function withMariaDbGtid($mariaDbGtid)
+    public function withMariaDbGtid(string $mariaDbGtid): self
     {
         $this->mariaDbGtid = $mariaDbGtid;
 
         return $this;
     }
 
-    /**
-     * @param int $tableCacheSize
-     * @return $this
-     */
-    public function withTableCacheSize($tableCacheSize)
+
+    public function withTableCacheSize(int $tableCacheSize): self
     {
         $this->tableCacheSize = $tableCacheSize;
 
         return $this;
     }
 
-    /**
-     * @param array $custom
-     * @return $this
-     */
-    public function withCustom(array $custom)
+
+    public function withCustom(array $custom): self
     {
         $this->custom = $custom;
 
@@ -257,20 +139,15 @@ class ConfigBuilder
 
     /**
      * @see https://dev.mysql.com/doc/refman/5.6/en/change-master-to.html
-     * @param int $heartbeatPeriod
-     * @return $this
      */
-    public function withHeartbeatPeriod($heartbeatPeriod)
+    public function withHeartbeatPeriod(int $heartbeatPeriod): self
     {
         $this->heartbeatPeriod = $heartbeatPeriod;
 
         return $this;
     }
 
-    /**
-     * @return Config
-     */
-    public function build()
+    public function build(): Config
     {
         return new Config(
             $this->user,

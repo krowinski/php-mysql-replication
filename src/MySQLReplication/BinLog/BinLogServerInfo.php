@@ -1,38 +1,28 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
 
-/**
- * Class BinLogServerInfo
- * @package MySQLReplication\BinLog
- */
 class BinLogServerInfo
 {
-    const MYSQL_VERSION_MARIADB = 'MariaDB';
-    const MYSQL_VERSION_PERCONA = 'Percona';
-    const MYSQL_VERSION_GENERIC = 'MySQL';
-    /**
-     * @var array
-     */
+    private const MYSQL_VERSION_MARIADB = 'MariaDB';
+    private const MYSQL_VERSION_PERCONA = 'Percona';
+    private const MYSQL_VERSION_GENERIC = 'MySQL';
     private static $serverInfo = [];
 
-    /**
-     * @param string $data
-     * @param string $version
-     */
-    public static function parsePackage($data, $version)
+    public static function parsePackage(string $data, string $version): void
     {
         $i = 0;
         $length = strlen($data);
         self::$serverInfo['protocol_version'] = ord($data[$i]);
-        $i++;
+        ++$i;
 
         //version
         self::$serverInfo['server_version'] = '';
         $start = $i;
-        for ($i = $start; $i < $length; $i++) {
+        for ($i = $start; $i < $length; ++$i) {
             if ($data[$i] === chr(0)) {
-                $i++;
+                ++$i;
                 break;
             }
             self::$serverInfo['server_version'] .= $data[$i];
@@ -40,25 +30,25 @@ class BinLogServerInfo
 
         //connection_id 4 bytes
         self::$serverInfo['connection_id'] = unpack('I', $data[$i] . $data[++$i] . $data[++$i] . $data[++$i])[1];
-        $i++;
+        ++$i;
 
         //auth_plugin_data_part_1
         //[len=8] first 8 bytes of the auth-plugin data
         self::$serverInfo['salt'] = '';
-        for ($j = $i; $j < $i + 8; $j++) {
+        for ($j = $i; $j < $i + 8; ++$j) {
             self::$serverInfo['salt'] .= $data[$j];
         }
         $i += 8;
 
         //filler_1 (1) -- 0x00
-        $i++;
+        ++$i;
 
         //capability_flag_1 (2) -- lower 2 bytes of the Protocol::CapabilityFlags (optional)
         $i += 2;
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
         self::$serverInfo['character_set'] = $data[$i];
-        $i++;
+        ++$i;
 
         //status_flags (2) -- Protocol::StatusFlags (optional)
         $i += 2;
@@ -68,7 +58,7 @@ class BinLogServerInfo
 
         //auth_plugin_data_len (1) -- length of the combined auth_plugin_data, if auth_plugin_data_len is > 0
         $salt_len = ord($data[$i]);
-        $i++;
+        ++$i;
 
         $salt_len = max(12, $salt_len - 9);
 
@@ -76,34 +66,29 @@ class BinLogServerInfo
 
         //next salt
         if ($length >= $i + $salt_len) {
-            for ($j = $i; $j < $i + $salt_len; $j++) {
+            for ($j = $i; $j < $i + $salt_len; ++$j) {
                 self::$serverInfo['salt'] .= $data[$j];
             }
 
         }
         self::$serverInfo['auth_plugin_name'] = '';
         $i += $salt_len + 1;
-        for ($j = $i; $j < $length - 1; $j++) {
+        for ($j = $i; $j < $length - 1; ++$j) {
             self::$serverInfo['auth_plugin_name'] .= $data[$j];
         }
 
         self::$serverInfo['version_name'] = self::parseVersion($version);
     }
 
-    /**
-     * @return string
-     */
-    public static function getSalt()
+    public static function getSalt(): string
     {
         return self::$serverInfo['salt'];
     }
 
     /**
      * @see http://stackoverflow.com/questions/37317869/determine-if-mysql-or-percona-or-mariadb
-     * @param string $version
-     * @return string
      */
-    private static function parseVersion($version)
+    private static function parseVersion(string $version): string
     {
         if ('' !== $version) {
             if (false !== strpos($version, self::MYSQL_VERSION_MARIADB)) {
@@ -117,34 +102,22 @@ class BinLogServerInfo
         return self::MYSQL_VERSION_GENERIC;
     }
 
-    /**
-     * @return string
-     */
-    public static function getVersion()
+    public static function getVersion(): string
     {
         return self::$serverInfo['version_name'];
     }
 
-    /**
-     * @return bool
-     */
-    public static function isMariaDb()
+    public static function isMariaDb(): bool
     {
         return self::MYSQL_VERSION_MARIADB === self::getVersion();
     }
 
-    /**
-     * @return bool
-     */
-    public static function isPercona()
+    public static function isPercona(): bool
     {
         return self::MYSQL_VERSION_PERCONA === self::getVersion();
     }
 
-    /**
-     * @return bool
-     */
-    public static function isGeneric()
+    public static function isGeneric(): bool
     {
         return self::MYSQL_VERSION_GENERIC === self::getVersion();
     }

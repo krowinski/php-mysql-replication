@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -17,16 +18,9 @@ use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Class EventSubscribers
- * @package MySQLReplication\Event
- */
 class EventSubscribers implements EventSubscriberInterface
 {
-    /**
-     * @inheritdoc
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             ConstEventsNames::TABLE_MAP => 'onTableMap',
@@ -43,97 +37,61 @@ class EventSubscribers implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param UpdateRowsDTO $event
-     */
-    public function onUpdate(UpdateRowsDTO $event)
+    public function onUpdate(UpdateRowsDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param EventDTO $event
-     */
-    protected function allEvents(EventDTO $event)
+    protected function allEvents(EventDTO $event): void
     {
     }
 
-    /**
-     * @param TableMapDTO $event
-     */
-    public function onTableMap(TableMapDTO $event)
+    public function onTableMap(TableMapDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param DeleteRowsDTO $event
-     */
-    public function onDelete(DeleteRowsDTO $event)
+    public function onDelete(DeleteRowsDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param GTIDLogDTO $event
-     */
-    public function onGTID(GTIDLogDTO $event)
+    public function onGTID(GTIDLogDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param QueryDTO $event
-     */
-    public function onQuery(QueryDTO $event)
+    public function onQuery(QueryDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param RotateDTO $event
-     */
-    public function onRotate(RotateDTO $event)
+    public function onRotate(RotateDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param XidDTO $event
-     */
-    public function onXID(XidDTO $event)
+    public function onXID(XidDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param WriteRowsDTO $event
-     */
-    public function onWrite(WriteRowsDTO $event)
+    public function onWrite(WriteRowsDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param MariaDbGtidLogDTO $event
-     */
-    public function onMariaDbGtid(MariaDbGtidLogDTO $event)
+    public function onMariaDbGtid(MariaDbGtidLogDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param FormatDescriptionEventDTO $event
-     */
-    public function onFormatDescription(FormatDescriptionEventDTO $event)
+    public function onFormatDescription(FormatDescriptionEventDTO $event): void
     {
         $this->allEvents($event);
     }
 
-    /**
-     * @param HeartbeatDTO $event
-     */
-    public function onHeartbeat(HeartbeatDTO $event)
+    public function onHeartbeat(HeartbeatDTO $event): void
     {
         $this->allEvents($event);
     }

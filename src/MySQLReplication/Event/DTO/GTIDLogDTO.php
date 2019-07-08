@@ -1,27 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
-/**
- * Class GTIDLogDTO
- * @package MySQLReplication\Event\DTO
- */
 class GTIDLogDTO extends EventDTO
 {
-    /**
-     * @var bool
-     */
     private $commit;
-    /**
-     * @var string
-     */
     private $gtid;
-    /**
-     * @var string
-     */
     private $type = ConstEventsNames::GTID;
 
     /**
@@ -32,8 +20,8 @@ class GTIDLogDTO extends EventDTO
      */
     public function __construct(
         EventInfo $eventInfo,
-        $commit,
-        $gtid
+        bool $commit,
+        string $gtid
     ) {
         parent::__construct($eventInfo);
 
@@ -41,34 +29,22 @@ class GTIDLogDTO extends EventDTO
         $this->gtid = $gtid;
     }
 
-    /**
-     * @return boolean
-     */
-    public function isCommit()
+    public function isCommit(): bool
     {
         return $this->commit;
     }
 
-    /**
-     * @return string
-     */
-    public function getGtid()
+    public function getGtid(): string
     {
         return $this->gtid;
     }
 
-    /**
-     * @return string
-     */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -79,9 +55,6 @@ class GTIDLogDTO extends EventDTO
             'GTID NEXT: ' . $this->gtid . PHP_EOL;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

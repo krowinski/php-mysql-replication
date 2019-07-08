@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
@@ -21,39 +22,16 @@ use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
-/**
- * Class Event
- * @package MySQLReplication\Event
- */
 class Event
 {
-    const MARIADB_DUMMY_QUERY = '# Dum';
-    const EOF_HEADER_VALUE = 254;
+    private const MARIADB_DUMMY_QUERY = '# Dum';
+    private const EOF_HEADER_VALUE = 254;
 
-    /**
-     * @var BinLogSocketConnect
-     */
     private $binLogSocketConnect;
-    /**
-     * @var RowEventFactory
-     */
     private $rowEventFactory;
-    /**
-     * @var EventDispatcher
-     */
     private $eventDispatcher;
-    /**
-     * @var CacheInterface
-     */
     private $cache;
 
-    /**
-     * BinLogPack constructor.
-     * @param BinLogSocketConnect $binLogSocketConnect
-     * @param RowEventFactory $rowEventFactory
-     * @param EventDispatcher $eventDispatcher
-     * @param CacheInterface $cache
-     */
     public function __construct(
         BinLogSocketConnect $binLogSocketConnect,
         RowEventFactory $rowEventFactory,
@@ -74,7 +52,7 @@ class Event
      * @throws InvalidArgumentException
      * @throws SocketException
      */
-    public function consume()
+    public function consume(): void
     {
         $binaryDataReader = new BinaryDataReader($this->binLogSocketConnect->getResponse());
 
@@ -108,24 +86,16 @@ class Event
             return;
         }
 
-        if (in_array(
-            $eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true
-        )) {
+        if (in_array($eventInfo->getType(), [ConstEventType::UPDATE_ROWS_EVENT_V1, ConstEventType::UPDATE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeUpdateRowsDTO();
-        } else if (in_array(
-            $eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true
-        )) {
+        } else if (in_array($eventInfo->getType(), [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeWriteRowsDTO();
-        } else if (in_array(
-            $eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true
-        )) {
+        } else if (in_array($eventInfo->getType(), [ConstEventType::DELETE_ROWS_EVENT_V1, ConstEventType::DELETE_ROWS_EVENT_V2], true)) {
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeDeleteRowsDTO();
         } else if (ConstEventType::XID_EVENT === $eventInfo->getType()) {
             $eventDTO = (new XidEvent($eventInfo, $binaryDataReader))->makeXidDTO();
         } else if (ConstEventType::QUERY_EVENT === $eventInfo->getType()) {
-            $eventDTO = $this->filterDummyMariaDbEvents(
-                (new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO()
-            );
+            $eventDTO = $this->filterDummyMariaDbEvents((new QueryEvent($eventInfo, $binaryDataReader))->makeQueryDTO());
         } else if (ConstEventType::FORMAT_DESCRIPTION_EVENT === $eventInfo->getType()) {
             $eventDTO = new FormatDescriptionEventDTO($eventInfo);
         }
@@ -133,11 +103,7 @@ class Event
         $this->dispatch($eventDTO);
     }
 
-    /**
-     * @param BinaryDataReader $binaryDataReader
-     * @return EventInfo
-     */
-    private function createEventInfo(BinaryDataReader $binaryDataReader)
+    private function createEventInfo(BinaryDataReader $binaryDataReader): EventInfo
     {
         return new EventInfo(
             $binaryDataReader->readInt32(),
@@ -151,11 +117,7 @@ class Event
         );
     }
 
-    /**
-     * @param QueryDTO $queryDTO
-     * @return QueryDTO|null
-     */
-    private function filterDummyMariaDbEvents(QueryDTO $queryDTO)
+    private function filterDummyMariaDbEvents(QueryDTO $queryDTO): ?QueryDTO
     {
         if (BinLogServerInfo::isMariaDb() && false !== strpos($queryDTO->getQuery(), self::MARIADB_DUMMY_QUERY)) {
             return null;
@@ -164,10 +126,7 @@ class Event
         return $queryDTO;
     }
 
-    /**
-     * @param EventDTO $eventDTO
-     */
-    private function dispatch(EventDTO $eventDTO = null)
+    private function dispatch(EventDTO $eventDTO = null): void
     {
         if (null !== $eventDTO) {
             $this->eventDispatcher->dispatch($eventDTO->getType(), $eventDTO);

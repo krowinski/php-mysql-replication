@@ -1,99 +1,60 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
-/**
- * Class TableMap
- * @package MySQLReplication\Event\RowEvent
- */
-class TableMap implements \JsonSerializable
-{
-    /**
-     * @var string
-     */
-    private $database;
-    /**
-     * @var string
-     */
-    private $table;
-    /**
-     * @var int
-     */
-    private $tableId;
-    /**
-     * @var int
-     */
-    private $columnsAmount;
-    /**
-     * @var array
-     */
-    private $fields;
+use JsonSerializable;
 
-    /**
-     * TableMap constructor.
-     * @param string $database
-     * @param string $table
-     * @param int $tableId
-     * @param int $columnsAmount
-     * @param array $fields
-     */
+class TableMap implements JsonSerializable
+{
+    private $database;
+    private $table;
+    private $tableId;
+    private $columnsAmount;
+    private $columnDTOCollection;
+
     public function __construct(
-        $database,
-        $table,
-        $tableId,
-        $columnsAmount,
-        array $fields
+        string $database,
+        string $table,
+        string $tableId,
+        int $columnsAmount,
+        ColumnDTOCollection $columnDTOCollection
     ) {
         $this->database = $database;
         $this->table = $table;
         $this->tableId = $tableId;
         $this->columnsAmount = $columnsAmount;
-        $this->fields = $fields;
+        $this->columnDTOCollection = $columnDTOCollection;
     }
 
-    /**
-     * @return string
-     */
-    public function getDatabase()
+    public function getDatabase(): string
     {
         return $this->database;
     }
 
-    /**
-     * @return string
-     */
-    public function getTable()
+    public function getTable(): string
     {
         return $this->table;
     }
 
-    /**
-     * @return int
-     */
-    public function getTableId()
+    public function getTableId(): string
     {
         return $this->tableId;
     }
 
-    /**
-     * @return int
-     */
-    public function getColumnsAmount()
+    public function getColumnsAmount(): int
     {
         return $this->columnsAmount;
     }
 
     /**
-     * @return array
+     * @return ColumnDTOCollection|ColumnDTO[]
      */
-    public function getFields()
+    public function getColumnDTOCollection(): ColumnDTOCollection
     {
-        return $this->fields;
+        return $this->columnDTOCollection;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

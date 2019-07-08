@@ -1,20 +1,19 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
-/**
- * Class TypesTest
- * @package Tests\Integration
- */
+use MySQLReplication\BinLog\BinLogServerInfo;
+
 class TypesTest extends BaseTest
 {
     /**
      * @test
      */
-    public function shouldBeDecimal()
+    public function shouldBeDecimal(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(2,1))";
-        $insert_query = "INSERT INTO test VALUES(4.2)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(2,1))';
+        $insert_query = 'INSERT INTO test VALUES(4.2)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -24,23 +23,23 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDecimalLongValues()
+    public function shouldBeDecimalLongValues(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(20,10))";
-        $insert_query = "INSERT INTO test VALUES(9000000123.123456)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
+        $insert_query = 'INSERT INTO test VALUES(9000000123.123456)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('9000000123.123456', $event->getValues()[0]['test']);
+        self::assertEquals('9000000123.1234560000', $event->getValues()[0]['test']);
     }
 
     /**
      * @test
      */
-    public function shouldBeDecimalLongValues2()
+    public function shouldBeDecimalLongValues2(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(20,10))";
-        $insert_query = "INSERT INTO test VALUES(9000000123.0000012345)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
+        $insert_query = 'INSERT INTO test VALUES(9000000123.0000012345)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -50,37 +49,37 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDecimalNegativeValues()
+    public function shouldBeDecimalNegativeValues(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(20,10))";
-        $insert_query = "INSERT INTO test VALUES(-42000.123456)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
+        $insert_query = 'INSERT INTO test VALUES(-42000.123456)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('-42000.123456', $event->getValues()[0]['test']);
+        self::assertEquals('-42000.1234560000', $event->getValues()[0]['test']);
     }
 
     /**
      * @test
      */
-    public function shouldBeDecimalTwoValues()
+    public function shouldBeDecimalTwoValues(): void
     {
-        $create_query = "CREATE TABLE test ( test DECIMAL(2,1), test2 DECIMAL(20,10) )";
-        $insert_query = "INSERT INTO test VALUES(4.2, 42000.123456)";
+        $create_query = 'CREATE TABLE test ( test DECIMAL(2,1), test2 DECIMAL(20,10) )';
+        $insert_query = 'INSERT INTO test VALUES(4.2, 42000.123456)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals('4.2', $event->getValues()[0]['test']);
-        self::assertEquals('42000.123456', $event->getValues()[0]['test2']);
+        self::assertEquals('42000.1234560000', $event->getValues()[0]['test2']);
     }
 
     /**
      * @test
      */
-    public function shouldBeDecimalZeroScale1()
+    public function shouldBeDecimalZeroScale1(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(23,0))";
-        $insert_query = "INSERT INTO test VALUES(10)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
+        $insert_query = 'INSERT INTO test VALUES(10)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -90,10 +89,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDecimalZeroScale2()
+    public function shouldBeDecimalZeroScale2(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(23,0))";
-        $insert_query = "INSERT INTO test VALUES(12345678912345678912345)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
+        $insert_query = 'INSERT INTO test VALUES(12345678912345678912345)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -103,10 +102,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDecimalZeroScale3()
+    public function shouldBeDecimalZeroScale3(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(23,0))";
-        $insert_query = "INSERT INTO test VALUES(100000.0)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
+        $insert_query = 'INSERT INTO test VALUES(100000.0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -116,23 +115,23 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDecimalZeroScale4()
+    public function shouldBeDecimalZeroScale4(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(23,0))";
-        $insert_query = "INSERT INTO test VALUES(-100000.0)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
+        $insert_query = 'INSERT INTO test VALUES(-100000.0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('-100000.0', $event->getValues()[0]['test']);
+        self::assertEquals('-100000', $event->getValues()[0]['test']);
     }
 
     /**
      * @test
      */
-    public function shouldBeDecimalZeroScale5()
+    public function shouldBeDecimalZeroScale5(): void
     {
-        $create_query = "CREATE TABLE test (test DECIMAL(23,0))";
-        $insert_query = "INSERT INTO test VALUES(-1234567891234567891234)";
+        $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
+        $insert_query = 'INSERT INTO test VALUES(-1234567891234567891234)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -142,10 +141,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeTinyInt()
+    public function shouldBeTinyInt(): void
     {
-        $create_query = "CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test TINYINT)";
-        $insert_query = "INSERT INTO test VALUES(255, -128)";
+        $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test TINYINT)';
+        $insert_query = 'INSERT INTO test VALUES(255, -128)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -156,10 +155,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeMapsToBooleanTrue()
+    public function shouldBeMapsToBooleanTrue(): void
     {
-        $create_query = "CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)";
-        $insert_query = "INSERT INTO test VALUES(1, TRUE)";
+        $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
+        $insert_query = 'INSERT INTO test VALUES(1, TRUE)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -170,10 +169,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeMapsToBooleanFalse()
+    public function shouldBeMapsToBooleanFalse(): void
     {
-        $create_query = "CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)";
-        $insert_query = "INSERT INTO test VALUES(1, FALSE)";
+        $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
+        $insert_query = 'INSERT INTO test VALUES(1, FALSE)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -184,10 +183,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeMapsToNone()
+    public function shouldBeMapsToNone(): void
     {
-        $create_query = "CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)";
-        $insert_query = "INSERT INTO test VALUES(1, NULL)";
+        $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
+        $insert_query = 'INSERT INTO test VALUES(1, NULL)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -198,10 +197,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeMapsToShort()
+    public function shouldBeMapsToShort(): void
     {
-        $create_query = "CREATE TABLE test (id SMALLINT UNSIGNED NOT NULL, test SMALLINT)";
-        $insert_query = "INSERT INTO test VALUES(65535, -32768)";
+        $create_query = 'CREATE TABLE test (id SMALLINT UNSIGNED NOT NULL, test SMALLINT)';
+        $insert_query = 'INSERT INTO test VALUES(65535, -32768)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -212,10 +211,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeLong()
+    public function shouldBeLong(): void
     {
-        $create_query = "CREATE TABLE test (id INT UNSIGNED NOT NULL, test INT)";
-        $insert_query = "INSERT INTO test VALUES(4294967295, -2147483648)";
+        $create_query = 'CREATE TABLE test (id INT UNSIGNED NOT NULL, test INT)';
+        $insert_query = 'INSERT INTO test VALUES(4294967295, -2147483648)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -226,10 +225,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeFloat()
+    public function shouldBeFloat(): void
     {
-        $create_query = "CREATE TABLE test (id FLOAT NOT NULL, test FLOAT)";
-        $insert_query = "INSERT INTO test VALUES(42.42, -84.84)";
+        $create_query = 'CREATE TABLE test (id FLOAT NOT NULL, test FLOAT)';
+        $insert_query = 'INSERT INTO test VALUES(42.42, -84.84)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -240,10 +239,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDouble()
+    public function shouldBeDouble(): void
     {
-        $create_query = "CREATE TABLE test (id DOUBLE NOT NULL, test DOUBLE)";
-        $insert_query = "INSERT INTO test VALUES(42.42, -84.84)";
+        $create_query = 'CREATE TABLE test (id DOUBLE NOT NULL, test DOUBLE)';
+        $insert_query = 'INSERT INTO test VALUES(42.42, -84.84)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -254,10 +253,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeTimestamp()
+    public function shouldBeTimestamp(): void
     {
-        $create_query = "CREATE TABLE test (test TIMESTAMP);";
-        $insert_query = "INSERT INTO test VALUES('1984-12-03 12:33:07')";
+        $create_query = 'CREATE TABLE test (test TIMESTAMP);';
+        $insert_query = 'INSERT INTO test VALUES("1984-12-03 12:33:07")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -267,42 +266,46 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeTimestampMySQL56()
+    public function shouldBeTimestampMySQL56(): void
     {
-        $create_query = "CREATE TABLE test (test0 TIMESTAMP(0),
+        if ($this->checkForVersion(5.6)) {
+            $this->markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
+        $create_query = 'CREATE TABLE test (test0 TIMESTAMP(0),
             test1 TIMESTAMP(1),
             test2 TIMESTAMP(2),
             test3 TIMESTAMP(3),
             test4 TIMESTAMP(4),
             test5 TIMESTAMP(5),
-            test6 TIMESTAMP(6));";
-        $insert_query = "INSERT INTO test VALUES(
-            '1984-12-03 12:33:07',
-            '1984-12-03 12:33:07.1',
-            '1984-12-03 12:33:07.12',
-            '1984-12-03 12:33:07.123',
-            '1984-12-03 12:33:07.1234',
-            '1984-12-03 12:33:07.12345',
-            '1984-12-03 12:33:07.123456')";
+            test6 TIMESTAMP(6));';
+        $insert_query = 'INSERT INTO test VALUES(
+            "1984-12-03 12:33:07",
+            "1984-12-03 12:33:07.1",
+            "1984-12-03 12:33:07.12",
+            "1984-12-03 12:33:07.123",
+            "1984-12-03 12:33:07.1234",
+            "1984-12-03 12:33:07.12345",
+            "1984-12-03 12:33:07.123456")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test0']);
-        self::assertEquals('1984-12-03 12:33:07.1', $event->getValues()[0]['test1']);
-        self::assertEquals('1984-12-03 12:33:07.12', $event->getValues()[0]['test2']);
-        self::assertEquals('1984-12-03 12:33:07.123', $event->getValues()[0]['test3']);
-        self::assertEquals('1984-12-03 12:33:07.1234', $event->getValues()[0]['test4']);
-        self::assertEquals('1984-12-03 12:33:07.12345', $event->getValues()[0]['test5']);
+        self::assertEquals('1984-12-03 12:33:07.100000', $event->getValues()[0]['test1']);
+        self::assertEquals('1984-12-03 12:33:07.120000', $event->getValues()[0]['test2']);
+        self::assertEquals('1984-12-03 12:33:07.123000', $event->getValues()[0]['test3']);
+        self::assertEquals('1984-12-03 12:33:07.123400', $event->getValues()[0]['test4']);
+        self::assertEquals('1984-12-03 12:33:07.123450', $event->getValues()[0]['test5']);
         self::assertEquals('1984-12-03 12:33:07.123456', $event->getValues()[0]['test6']);
     }
 
     /**
      * @test
      */
-    public function shouldBeLongLong()
+    public function shouldBeLongLong(): void
     {
-        $create_query = "CREATE TABLE test (id BIGINT UNSIGNED NOT NULL, test BIGINT)";
-        $insert_query = "INSERT INTO test VALUES(18446744073709551615, -9223372036854775808)";
+        $create_query = 'CREATE TABLE test (id BIGINT UNSIGNED NOT NULL, test BIGINT)';
+        $insert_query = 'INSERT INTO test VALUES(18446744073709551615, -9223372036854775808)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -313,10 +316,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeInt24()
+    public function shouldBeInt24(): void
     {
-        $create_query = "CREATE TABLE test (id MEDIUMINT UNSIGNED NOT NULL, test MEDIUMINT, test2 MEDIUMINT, test3 MEDIUMINT, test4 MEDIUMINT, test5 MEDIUMINT)";
-        $insert_query = "INSERT INTO test VALUES(16777215, 8388607, -8388608, 8, -8, 0)";
+        $create_query = 'CREATE TABLE test (id MEDIUMINT UNSIGNED NOT NULL, test MEDIUMINT, test2 MEDIUMINT, test3 MEDIUMINT, test4 MEDIUMINT, test5 MEDIUMINT)';
+        $insert_query = 'INSERT INTO test VALUES(16777215, 8388607, -8388608, 8, -8, 0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -331,10 +334,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDate()
+    public function shouldBeDate(): void
     {
-        $create_query = "CREATE TABLE test (test DATE);";
-        $insert_query = "INSERT INTO test VALUES('1984-12-03')";
+        $create_query = 'CREATE TABLE test (test DATE);';
+        $insert_query = 'INSERT INTO test VALUES("1984-12-03")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -344,10 +347,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeZeroDate()
+    public function shouldBeZeroDate(): void
     {
-        $create_query = "CREATE TABLE test (id INTEGER, test DATE, test2 DATE);";
-        $insert_query = "INSERT INTO test (id, test2) VALUES(1, '0000-01-21')";
+        $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
+        $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "0000-01-21")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -358,10 +361,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeZeroMonth()
+    public function shouldBeZeroMonth(): void
     {
-        $create_query = "CREATE TABLE test (id INTEGER, test DATE, test2 DATE);";
-        $insert_query = "INSERT INTO test (id, test2) VALUES(1, '2015-00-21')";
+        $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
+        $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "2015-00-21")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -372,10 +375,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeZeroDay()
+    public function shouldBeZeroDay(): void
     {
-        $create_query = "CREATE TABLE test (id INTEGER, test DATE, test2 DATE);";
-        $insert_query = "INSERT INTO test (id, test2) VALUES(1, '2015-05-00')";
+        $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
+        $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "2015-05-00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -386,10 +389,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeTime()
+    public function shouldBeTime(): void
     {
-        $create_query = "CREATE TABLE test (test TIME);";
-        $insert_query = "INSERT INTO test VALUES('12:33:18')";
+        $create_query = 'CREATE TABLE test (test TIME);';
+        $insert_query = 'INSERT INTO test VALUES("12:33:18")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -400,10 +403,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeZeroTime()
+    public function shouldBeZeroTime(): void
     {
-        $create_query = "CREATE TABLE test (id INTEGER, test TIME NOT NULL DEFAULT 0);";
-        $insert_query = "INSERT INTO test (id) VALUES(1)";
+        $create_query = 'CREATE TABLE test (id INTEGER, test TIME NOT NULL DEFAULT 0);';
+        $insert_query = 'INSERT INTO test (id) VALUES(1)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -413,10 +416,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeDateTime()
+    public function shouldBeDateTime(): void
     {
-        $create_query = "CREATE TABLE test (test DATETIME);";
-        $insert_query = "INSERT INTO test VALUES('1984-12-03 12:33:07')";
+        $create_query = 'CREATE TABLE test (test DATETIME);';
+        $insert_query = 'INSERT INTO test VALUES("1984-12-03 12:33:07")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -426,10 +429,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeZeroDateTime()
+    public function shouldBeZeroDateTime(): void
     {
-        $create_query = "CREATE TABLE test (id INTEGER, test DATETIME NOT NULL DEFAULT 0);";
-        $insert_query = "INSERT INTO test (id) VALUES(1)";
+        $create_query = 'CREATE TABLE test (id INTEGER, test DATETIME NOT NULL DEFAULT 0);';
+        $insert_query = 'INSERT INTO test (id) VALUES(1)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -439,10 +442,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeBrokenDateTime()
+    public function shouldBeBrokenDateTime(): void
     {
-        $create_query = "CREATE TABLE test (test DATETIME NOT NULL);";
-        $insert_query = "INSERT INTO test VALUES('2013-00-00 00:00:00')";
+        $create_query = 'CREATE TABLE test (test DATETIME NOT NULL);';
+        $insert_query = 'INSERT INTO test VALUES("2013-00-00 00:00:00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -452,10 +455,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldReturnNullOnZeroDateDateTime()
+    public function shouldReturnNullOnZeroDateDateTime(): void
     {
-        $create_query = "CREATE TABLE test (test DATETIME NOT NULL);";
-        $insert_query = "INSERT INTO test VALUES('0000-00-00 00:00:00')";
+        $create_query = 'CREATE TABLE test (test DATETIME NOT NULL);';
+        $insert_query = 'INSERT INTO test VALUES("0000-00-00 00:00:00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -465,10 +468,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeYear()
+    public function shouldBeYear(): void
     {
-        $create_query = "CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)";
-        $insert_query = "INSERT INTO test VALUES(1984, 1984, 0000)";
+        $create_query = 'CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)';
+        $insert_query = 'INSERT INTO test VALUES(1984, 1984, 0000)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -480,10 +483,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeVarChar()
+    public function shouldBeVarChar(): void
     {
-        $create_query = "CREATE TABLE test (test VARCHAR(242)) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello')";
+        $create_query = 'CREATE TABLE test (test VARCHAR(242)) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -493,12 +496,12 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBe1024CharsLongVarChar()
+    public function shouldBe1024CharsLongVarChar(): void
     {
         $expected = str_repeat('-', 1024);
 
-        $create_query = "CREATE TABLE test (test VARCHAR(1024)) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('" . $expected . "')";
+        $create_query = 'CREATE TABLE test (test VARCHAR(1024)) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("' . $expected . '")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -508,15 +511,15 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeBit()
+    public function shouldBeBit(): void
     {
-        $create_query = "CREATE TABLE test (
+        $create_query = 'CREATE TABLE test (
             test BIT(6),
             test2 BIT(16),
             test3 BIT(12),
             test4 BIT(9),
             test5 BIT(64)
-         );";
+         );';
         $insert_query = "INSERT INTO test VALUES(
             b'100010',
             b'1000101010111000',
@@ -539,16 +542,16 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeEnum()
+    public function shouldBeEnum(): void
     {
-        $create_query = "CREATE TABLE test
+        $create_query = 'CREATE TABLE test
             (
-                test ENUM('a', 'ba', 'c'),
-                test2 ENUM('a', 'ba', 'c'),
-                test3 ENUM('foo', 'bar')
+                test ENUM("a", "ba", "c"),
+                test2 ENUM("a", "ba", "c"),
+                test3 ENUM("foo", "bar")
             )
-            CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('ba', 'a', 'not_exists')";
+            CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("ba", "a", "not_exists")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -560,10 +563,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeSet()
+    public function shouldBeSet(): void
     {
-        $create_query = "CREATE TABLE test (test SET('a', 'ba', 'c'), test2 SET('a', 'ba', 'c')) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('ba,a,c', 'a,c')";
+        $create_query = 'CREATE TABLE test (test SET("a", "ba", "c"), test2 SET("a", "ba", "c")) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("ba,a,c", "a,c")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -574,10 +577,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeTinyBlob()
+    public function shouldBeTinyBlob(): void
     {
-        $create_query = "CREATE TABLE test (test TINYBLOB, test2 TINYTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+        $create_query = 'CREATE TABLE test (test TINYBLOB, test2 TINYTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -588,10 +591,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeMediumBlob()
+    public function shouldBeMediumBlob(): void
     {
-        $create_query = "CREATE TABLE test (test MEDIUMBLOB, test2 MEDIUMTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+        $create_query = 'CREATE TABLE test (test MEDIUMBLOB, test2 MEDIUMTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -602,10 +605,23 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeLongBlob()
+    public function shouldBeNullOnBooleanType(): void
     {
-        $create_query = "CREATE TABLE test (test LONGBLOB, test2 LONGTEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+        $create_query = 'CREATE TABLE test (test BOOLEAN);';
+        $insert_query = 'INSERT INTO test VALUES(NULL)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->getValues()[0]['test']);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeLongBlob(): void
+    {
+        $create_query = 'CREATE TABLE test (test LONGBLOB, test2 LONGTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -616,28 +632,30 @@ class TypesTest extends BaseTest
     /**
      * https://dev.mysql.com/doc/internals/en/mysql-packet.html
      * https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
-     * @test
+     *
      */
-    public function shouldBeLongerTextThan16Mb()
+    public function shouldBeLongerTextThan16Mb(): void
     {
         $long_text_data = '';
-        for ($i = 0; $i < 40000000; $i++) {
+        for ($i = 0; $i < 40000000; ++$i) {
             $long_text_data .= 'a';
         }
-        $create_query = "CREATE TABLE test (data LONGTEXT);";
-        $insert_query = "INSERT INTO test (data) VALUES ('{$long_text_data}')";
+        $create_query = 'CREATE TABLE test (data LONGTEXT);';
+        $insert_query = 'INSERT INTO test (data) VALUES ("' . $long_text_data . '")';
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals(strlen($long_text_data), strlen($event->getValues()[0]['data']));
+
+        $long_text_data = null;
     }
 
     /**
      * @test
      */
-    public function shouldBeBlob()
+    public function shouldBeBlob(): void
     {
-        $create_query = "CREATE TABLE test (test BLOB, test2 TEXT) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello', 'World')";
+        $create_query = 'CREATE TABLE test (test BLOB, test2 TEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -648,10 +666,10 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeString()
+    public function shouldBeString(): void
     {
-        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('Hello')";
+        $create_query = 'CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("Hello")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -661,10 +679,15 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeGeometry()
+    public function shouldBeGeometry(): void
     {
-        $create_query = "CREATE TABLE test (test GEOMETRY);";
-        $insert_query = "INSERT INTO test VALUES(GeomFromText('POINT(1 1)'))";
+        $prefix = 'ST_';
+        if ($this->checkForVersion(5.6)) {
+            $prefix = '';
+        }
+
+        $create_query = 'CREATE TABLE test (test GEOMETRY);';
+        $insert_query = 'INSERT INTO test VALUES(' . $prefix . 'GeomFromText("POINT(1 1)"))';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -676,9 +699,9 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeNull()
+    public function shouldBeNull(): void
     {
-        $create_query = "CREATE TABLE test (
+        $create_query = 'CREATE TABLE test (
             test TINYINT NULL DEFAULT NULL,
             test2 TINYINT NULL DEFAULT NULL,
             test3 TINYINT NULL DEFAULT NULL,
@@ -699,8 +722,8 @@ class TypesTest extends BaseTest
             test18 TINYINT NULL DEFAULT NULL,
             test19 TINYINT NULL DEFAULT NULL,
             test20 TINYINT NULL DEFAULT NULL
-            )";
-        $insert_query = "INSERT INTO test (test, test2, test3, test7, test20) VALUES(NULL, -128, NULL, 42, 84)";
+            )';
+        $insert_query = 'INSERT INTO test (test, test2, test3, test7, test20) VALUES(NULL, -128, NULL, 42, 84)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -715,14 +738,14 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeEncodedLatin1()
+    public function shouldBeEncodedLatin1(): void
     {
-        $this->connection->exec("SET CHARSET latin1");
+        $this->connection->exec('SET CHARSET latin1');
 
         $string = "\00e9";
 
-        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;";
-        $insert_query = "INSERT INTO test VALUES('" . $string . "');";
+        $create_query = 'CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;';
+        $insert_query = 'INSERT INTO test VALUES("' . $string . '");';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -732,14 +755,14 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeEncodedUTF8()
+    public function shouldBeEncodedUTF8(): void
     {
-        $this->connection->exec("SET CHARSET utf8");
+        $this->connection->exec('SET CHARSET utf8');
 
         $string = "\20ac";
 
-        $create_query = "CREATE TABLE test (test CHAR(12)) CHARACTER SET utf8 COLLATE utf8_bin;";
-        $insert_query = "INSERT INTO test VALUES('" . $string . "');";
+        $create_query = 'CREATE TABLE test (test CHAR(12)) CHARACTER SET utf8 COLLATE utf8_bin;';
+        $insert_query = 'INSERT INTO test VALUES("' . $string . '");';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
@@ -749,13 +772,13 @@ class TypesTest extends BaseTest
     /**
      * @test
      */
-    public function shouldBeJson()
+    public function shouldBeJson(): void
     {
-        if (false === strpos($this->connection->fetchColumn('SELECT VERSION()'), '5.7')) {
-            $this->markTestIncomplete('Only for mysql 5.7');
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+            $this->markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
-        $create_query = "create table t1 (i INT, j JSON)";
+        $create_query = 'create table t1 (i INT, j JSON)';
         $insert_query = "INSERT INTO t1 VALUES 
             (0, NULL) , 
             (1, '{\"a\": 2}'),

@@ -1,102 +1,78 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
-/**
- * Class JsonBinaryDecoderFormatter
- * @package MySQLReplication\JsonBinaryDecoder
- */
 class JsonBinaryDecoderFormatter
 {
-    /**
-     * @var string
-     */
     public $jsonString = '';
 
-    /**
-     * @param bool $bool
-     */
-    public function formatValueBool($bool)
+    public function formatValueBool(bool $bool): void
     {
         $this->jsonString .= var_export($bool, true);
     }
 
-    /**
-     * @param int $val
-     */
-    public function formatValueNumeric($val)
+    public function formatValueNumeric(int $val): void
     {
         $this->jsonString .= $val;
     }
 
-    /**
-     * @param string $val
-     */
-    public function formatValue($val)
+    public function formatValue($val): void
     {
         $this->jsonString .= '"' . self::escapeJsonString($val) . '"';
-    }
-
-    public function formatEndObject()
-    {
-        $this->jsonString .= '}';
-    }
-
-    public function formatBeginArray()
-    {
-        $this->jsonString .= '[';
-    }
-
-    public function formatEndArray()
-    {
-        $this->jsonString .= ']';
-    }
-
-    public function formatBeginObject()
-    {
-        $this->jsonString .= '{';
-    }
-
-    public function formatNextEntry()
-    {
-        $this->jsonString .= ',';
-    }
-
-    /**
-     * @param string $name
-     */
-    public function formatName($name)
-    {
-        $this->jsonString .= '"' . $name . '":';
-    }
-
-    public function formatValueNull()
-    {
-        $this->jsonString .= 'null';
-    }
-
-    /**
-     * @return string
-     */
-    public function getJsonString()
-    {
-        return $this->jsonString;
     }
 
     /**
      * Some characters needs to be escaped
      * @see http://www.json.org/
      * @see https://stackoverflow.com/questions/1048487/phps-json-encode-does-not-escape-all-json-control-characters
-     * @param string $value
-     * @return string
      */
-    private static function escapeJsonString($value)
+    private static function escapeJsonString($value): string
     {
         return str_replace(
             ["\\", '/', '"', "\n", "\r", "\t", "\x08", "\x0c"],
             ["\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b"],
             $value
         );
+    }
+
+    public function formatEndObject(): void
+    {
+        $this->jsonString .= '}';
+    }
+
+    public function formatBeginArray(): void
+    {
+        $this->jsonString .= '[';
+    }
+
+    public function formatEndArray(): void
+    {
+        $this->jsonString .= ']';
+    }
+
+    public function formatBeginObject(): void
+    {
+        $this->jsonString .= '{';
+    }
+
+    public function formatNextEntry(): void
+    {
+        $this->jsonString .= ',';
+    }
+
+    public function formatName(string $name): void
+    {
+        $this->jsonString .= '"' . $name . '":';
+    }
+
+    public function formatValueNull(): void
+    {
+        $this->jsonString .= 'null';
+    }
+
+    public function getJsonString(): string
+    {
+        return $this->jsonString;
     }
 }

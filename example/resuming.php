@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace example;
 
@@ -19,6 +20,7 @@ $binLogStream = new MySQLReplicationFactory(
     BinLogBootstrap::startFromPosition(new ConfigBuilder())
         ->withUser('root')
         ->withHost('127.0.0.1')
+        ->withPort(3306)
         ->withPassword('root')
         ->build()
 );
@@ -32,7 +34,7 @@ class MyEventSubscribers extends EventSubscribers
     /**
      * @param EventDTO $event (your own handler more in EventSubscribers class )
      */
-    public function allEvents(EventDTO $event)
+    public function allEvents(EventDTO $event): void
     {
         // all events got __toString() implementation
         echo $event;
@@ -61,7 +63,7 @@ class BinLogBootstrap
     /**
      * @return string
      */
-    private static function getFileAndPath()
+    private static function getFileAndPath(): string
     {
         if (null === self::$fileAndPath) {
             self::$fileAndPath = sys_get_temp_dir() . '/bin-log-replicator-last-position';
@@ -72,7 +74,7 @@ class BinLogBootstrap
     /**
      * @param BinLogCurrent $binLogCurrent
      */
-    public static function save(BinLogCurrent $binLogCurrent)
+    public static function save(BinLogCurrent $binLogCurrent): void
     {
 
         echo 'saving file:' . $binLogCurrent->getBinFileName() . ', position:' . $binLogCurrent->getBinLogPosition() . ' bin log position' . PHP_EOL;
@@ -87,7 +89,7 @@ class BinLogBootstrap
      * @param ConfigBuilder $builder
      * @return ConfigBuilder
      */
-    public static function startFromPosition(ConfigBuilder $builder)
+    public static function startFromPosition(ConfigBuilder $builder): ConfigBuilder
     {
         if (!is_file(self::getFileAndPath())) {
             return $builder;

@@ -1,20 +1,27 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Gtid;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
-/**
- * Class GtidCollection
- * @package MySQLReplication\Gtid
- */
 class GtidCollection extends ArrayCollection
 {
     /**
-     * @return int
+     * @throws GtidException
      */
-    public function getEncodedLength()
+    public static function makeCollectionFromString(string $gtids): GtidCollection
+    {
+        $collection = new self();
+        foreach (array_filter(explode(',', $gtids)) as $gtid) {
+            $collection->add(new Gtid($gtid));
+        }
+
+        return $collection;
+    }
+
+    public function getEncodedLength(): int
     {
         $l = 8;
         /** @var Gtid $gtid */
@@ -25,10 +32,7 @@ class GtidCollection extends ArrayCollection
         return $l;
     }
 
-    /**
-     * @return string
-     */
-    public function getEncoded()
+    public function getEncoded(): string
     {
         $s = BinaryDataReader::pack64bit($this->count());
         /** @var Gtid $gtid */

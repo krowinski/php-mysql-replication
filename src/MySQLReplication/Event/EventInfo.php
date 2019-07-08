@@ -1,75 +1,32 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
+use JsonSerializable;
 use MySQLReplication\BinLog\BinLogCurrent;
 
-/**
- * Class EventInfo
- * @package MySQLReplication\BinLog
- */
-class EventInfo implements \JsonSerializable
+class EventInfo implements JsonSerializable
 {
-    /**
-     * @var int
-     */
     private $timestamp;
-    /**
-     * @var string
-     */
     private $type;
-    /**
-     * @var int
-     */
     private $id;
-    /**
-     * @var int
-     */
     private $size;
-    /**
-     * @var int
-     */
     private $pos;
-    /**
-     * @var string
-     */
     private $flag;
-    /**
-     * @var bool
-     */
     private $checkSum;
-    /**
-     * @var int
-     */
     private $sizeNoHeader;
-    /**
-     * @var string
-     */
     private $dateTime;
-    /**
-     * @var BinLogCurrent
-     */
     private $binLogCurrent;
 
-    /**
-     * EventInfo constructor.
-     * @param int $timestamp
-     * @param string $type
-     * @param int $id
-     * @param int $size
-     * @param int $pos
-     * @param string $flag
-     * @param bool $checkSum
-     * @param BinLogCurrent $binLogCurrent
-     */
     public function __construct(
-        $timestamp,
-        $type,
-        $id,
-        $size,
-        $pos,
-        $flag,
-        $checkSum,
+        int $timestamp,
+        int $type,
+        int $id,
+        int $size,
+        int $pos,
+        int $flag,
+        bool $checkSum,
         BinLogCurrent $binLogCurrent
     ) {
         $this->timestamp = $timestamp;
@@ -86,18 +43,12 @@ class EventInfo implements \JsonSerializable
         }
     }
 
-    /**
-     * @return BinLogCurrent
-     */
-    public function getBinLogCurrent()
+    public function getBinLogCurrent(): BinLogCurrent
     {
         return $this->binLogCurrent;
     }
 
-    /**
-     * @return string
-     */
-    public function getDateTime()
+    public function getDateTime(): string
     {
         if (empty($this->dateTime)) {
             $this->dateTime = date('c', $this->timestamp);
@@ -106,10 +57,7 @@ class EventInfo implements \JsonSerializable
         return $this->dateTime;
     }
 
-    /**
-     * @return string
-     */
-    public function getSizeNoHeader()
+    public function getSizeNoHeader(): int
     {
         if (empty($this->sizeNoHeader)) {
             $this->sizeNoHeader = (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
@@ -118,57 +66,37 @@ class EventInfo implements \JsonSerializable
         return $this->sizeNoHeader;
     }
 
-    /**
-     * @return int
-     */
-    public function getTimestamp()
+    public function getTimestamp(): int
     {
         return $this->timestamp;
     }
 
-    /**
-     * @return string
-     */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
 
-    /**
-     * @return int
-     */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
 
-    /**
-     * @return int
-     */
-    public function getSize()
+
+    public function getSize(): int
     {
         return $this->size;
     }
 
-    /**
-     * @return int
-     */
-    public function getPos()
+    public function getPos(): int
     {
         return $this->pos;
     }
 
-    /**
-     * @return string
-     */
-    public function getFlag()
+    public function getFlag(): int
     {
         return $this->flag;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication;
 
@@ -27,31 +28,13 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Class MySQLReplicationFactory
- * @package MySQLReplication
- */
 class MySQLReplicationFactory
 {
-    /**
-     * @var Connection
-     */
     private $connection;
-    /**
-     * @var EventDispatcher
-     */
     private $eventDispatcher;
-    /**
-     * @var Event
-     */
     private $event;
 
     /**
-     * @param Config $config
-     * @param RepositoryInterface|null $repository
-     * @param CacheInterface|null $cache
-     * @param EventDispatcherInterface|null $eventDispatcher
-     * @param SocketInterface|null $socket
      * @throws BinLogException
      * @throws ConfigException
      * @throws DBALException
@@ -104,44 +87,22 @@ class MySQLReplicationFactory
         );
     }
 
-    /**
-     * @param EventSubscriberInterface $eventSubscribers
-     */
-    public function registerSubscriber(EventSubscriberInterface $eventSubscribers)
+    public function registerSubscriber(EventSubscriberInterface $eventSubscribers): void
     {
         $this->eventDispatcher->addSubscriber($eventSubscribers);
     }
 
-    /**
-     * @param EventSubscriberInterface $eventSubscribers
-     */
-    public function unregisterSubscriber(EventSubscriberInterface $eventSubscribers)
+    public function unregisterSubscriber(EventSubscriberInterface $eventSubscribers): void
     {
         $this->eventDispatcher->removeSubscriber($eventSubscribers);
     }
 
-    /**
-     * @return Connection
-     */
-    public function getDbConnection()
+    public function getDbConnection(): Connection
     {
         return $this->connection;
     }
 
     /**
-     * @throws MySQLReplicationException
-     * @throws InvalidArgumentException
-     * @throws BinLogException
-     * @throws BinaryDataReaderException
-     * @throws JsonBinaryDecoderException
-     * @throws SocketException
-     */
-    public function consume()
-    {
-        $this->event->consume();
-    }
-
-    /**
      * @throws SocketException
      * @throws JsonBinaryDecoderException
      * @throws BinaryDataReaderException
@@ -149,10 +110,23 @@ class MySQLReplicationFactory
      * @throws InvalidArgumentException
      * @throws MySQLReplicationException
      */
-    public function run()
+    public function run(): void
     {
         while (1) {
             $this->consume();
         }
+    }
+
+    /**
+     * @throws MySQLReplicationException
+     * @throws InvalidArgumentException
+     * @throws BinLogException
+     * @throws BinaryDataReaderException
+     * @throws JsonBinaryDecoderException
+     * @throws SocketException
+     */
+    public function consume(): void
+    {
+        $this->event->consume();
     }
 }

@@ -2,10 +2,12 @@
 
 namespace MySQLReplication\Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Class BaseTest
  * @package MySQLReplication\Unit
  */
-abstract class BaseTest extends \PHPUnit_Framework_TestCase
+abstract class BaseTest extends TestCase
 {
 }

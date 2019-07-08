@@ -1,25 +1,17 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
+use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\Exception\MySQLReplicationException;
 
-/**
- * Class MySQLRepository
- * @package MySQLReplication\Repository
- */
 class MySQLRepository implements RepositoryInterface
 {
-    /**
-     * @var Connection
-     */
     private $connection;
 
-    /**
-     * MySQLRepository constructor.
-     * @param Connection $connection
-     */
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
@@ -30,12 +22,7 @@ class MySQLRepository implements RepositoryInterface
         $this->connection->close();
     }
 
-    /**
-     * @param string $database
-     * @param string $table
-     * @return array
-     */
-    public function getFields($database, $table)
+    public function getFields(string $database, string $table): FieldDTOCollection
     {
         $sql = '
              SELECT
@@ -51,15 +38,14 @@ class MySQLRepository implements RepositoryInterface
                     `TABLE_SCHEMA` = ?
                 AND
                     `TABLE_NAME` = ?
+            ORDER BY 
+                ORDINAL_POSITION        
        ';
 
-        return $this->getConnection()->fetchAll($sql, [$database, $table]);
+        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAll($sql, [$database, $table]));
     }
 
-    /**
-     * @return Connection
-     */
-    private function getConnection()
+    private function getConnection(): Connection
     {
         if (false === $this->connection->ping()) {
             $this->connection->close();
@@ -70,20 +56,16 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * @return bool
      * @throws DBALException
      */
-    public function isCheckSum()
+    public function isCheckSum(): bool
     {
         $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
         return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
 
-    /**
-     * @return string
-     */
-    public function getVersion()
+    public function getVersion(): string
     {
         $r = '';
         $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
@@ -97,17 +79,20 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * File
-     * Position
-     * Binlog_Do_DB
-     * Binlog_Ignore_DB
-     * Executed_Gtid_Set
-     *
-     * @return array
+     * @inheritDoc
      * @throws DBALException
+     * @throws BinLogException
      */
-    public function getMasterStatus()
+    public function getMasterStatus(): MasterStatusDTO
     {
-        return $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        $data = $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        if (empty($data)) {
+            throw new BinLogException(
+                MySQLReplicationException::BINLOG_NOT_ENABLED,
+                MySQLReplicationException::BINLOG_NOT_ENABLED_CODE
+            );
+        }
+
+        return MasterStatusDTO::makeFromArray($data);
     }
 }

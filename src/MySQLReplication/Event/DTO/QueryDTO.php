@@ -1,45 +1,23 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
 
 use MySQLReplication\Definitions\ConstEventsNames;
 use MySQLReplication\Event\EventInfo;
 
-/**
- * Class QueryDTO
- * @package MySQLReplication\Event\DTO
- */
 class QueryDTO extends EventDTO
 {
-    /**
-     * @var int
-     */
     private $executionTime;
-    /**
-     * @var string
-     */
     private $query;
-    /**
-     * @var string
-     */
     private $database;
-    /**
-     * @var string
-     */
     private $type = ConstEventsNames::QUERY;
 
-    /**
-     * QueryEventDTO constructor.
-     * @param EventInfo $eventInfo
-     * @param string $database
-     * @param int $executionTime
-     * @param string $query
-     */
     public function __construct(
         EventInfo $eventInfo,
-        $database,
-        $executionTime,
-        $query
+        string $database,
+        int $executionTime,
+        string $query
     ) {
         parent::__construct($eventInfo);
 
@@ -48,42 +26,27 @@ class QueryDTO extends EventDTO
         $this->database = $database;
     }
 
-    /**
-     * @return string
-     */
-    public function getDatabase()
+    public function getDatabase(): string
     {
         return $this->database;
     }
 
-    /**
-     * @return int
-     */
-    public function getExecutionTime()
+    public function getExecutionTime(): int
     {
         return $this->executionTime;
     }
 
-    /**
-     * @return string
-     */
-    public function getQuery()
+    public function getQuery(): string
     {
         return $this->query;
     }
 
-    /**
-     * @return string
-     */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
@@ -95,12 +58,8 @@ class QueryDTO extends EventDTO
             'Query: ' . $this->query . PHP_EOL;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);
     }
 }
-

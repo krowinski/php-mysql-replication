@@ -6,17 +6,9 @@ use MySQLReplication\Gtid\Gtid;
 use MySQLReplication\Gtid\GtidException;
 use MySQLReplication\Tests\Unit\BaseTest;
 
-/**
- * Class GtidTest
- * @package Unit\Gtid
- */
 class GtidTest extends BaseTest
 {
-    /**
-     * @param string $data
-     * @return Gtid
-     */
-    private function getGtid($data)
+    private function getGtid(string $data): Gtid
     {
         return new Gtid($data);
     }

@@ -1,41 +1,34 @@
 <?php
+declare(strict_types=1);
 
 namespace BinaryDataReader\Unit;
 
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Config\ConfigException;
-use MySQLReplication\Config\ConfigFactory;
 use MySQLReplication\Tests\Unit\BaseTest;
 
-/**
- * Class ConfigTest
- * @package BinaryDataReader\Unit
- */
 class ConfigTest extends BaseTest
 {
-    /**
-     * @test
-     */
-    public function shouldMakeConfig()
+    public function shouldMakeConfig(): void
     {
         $expected = [
-            'user'            => 'foo',
-            'host'            => '127.0.0.1',
-            'port'            => 3308,
-            'password'        => 'secret',
-            'charset'         => 'utf8',
-            'gtid'            => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
-            'slaveId'         => 1,
-            'binLogFileName'  => 'binfile1.bin',
-            'binLogPosition'  => 666,
-            'eventsOnly'      => [],
-            'eventsIgnore'    => [],
-            'tablesOnly'      => ['test_table'],
-            'databasesOnly'   => ['test_database'],
-            'mariaDbGtid'     => '123:123',
-            'tableCacheSize'  => 777,
-            'custom'          => [['random' => 'data']],
+            'user' => 'foo',
+            'host' => '127.0.0.1',
+            'port' => 3308,
+            'password' => 'secret',
+            'charset' => 'utf8',
+            'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
+            'slaveId' => 1,
+            'binLogFileName' => 'binfile1.bin',
+            'binLogPosition' => 666,
+            'eventsOnly' => [],
+            'eventsIgnore' => [],
+            'tablesOnly' => ['test_table'],
+            'databasesOnly' => ['test_database'],
+            'mariaDbGtid' => '123:123',
+            'tableCacheSize' => 777,
+            'custom' => [['random' => 'data']],
             'heartbeatPeriod' => 69,
         ];
 
@@ -83,8 +76,9 @@ class ConfigTest extends BaseTest
     /**
      * @test
      */
-    public function shouldCheckDataBasesOnly()
+    public function shouldCheckDataBasesOnly(): void
     {
+        (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();
         self::assertTrue(Config::checkDataBasesOnly('foo'));
 
         (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
@@ -100,7 +94,7 @@ class ConfigTest extends BaseTest
     /**
      * @test
      */
-    public function shouldCheckTablesOnly()
+    public function shouldCheckTablesOnly(): void
     {
         self::assertFalse(Config::checkTablesOnly('foo'));
 
@@ -117,58 +111,47 @@ class ConfigTest extends BaseTest
     /**
      * @test
      */
-    public function shouldCheckEvent()
+    public function shouldCheckEvent(): void
     {
-        self::assertTrue(Config::checkEvent('foo'));
+        self::assertTrue(Config::checkEvent(1));
 
-        (new ConfigBuilder())->withEventsOnly(['bar'])->build();
-        self::assertTrue(Config::checkEvent('bar'));
+        (new ConfigBuilder())->withEventsOnly([2])->build();
+        self::assertTrue(Config::checkEvent(2));
 
-        (new ConfigBuilder())->withEventsOnly(['foo1'])->build();
-        self::assertFalse(Config::checkEvent('bar1'));
+        (new ConfigBuilder())->withEventsOnly([3])->build();
+        self::assertFalse(Config::checkEvent(4));
 
-        (new ConfigBuilder())->withEventsIgnore(['foo2'])->build();
-        self::assertFalse(Config::checkEvent('foo2'));
+        (new ConfigBuilder())->withEventsIgnore([4])->build();
+        self::assertFalse(Config::checkEvent(4));
+    }
+
+    public function shouldValidateProvider(): array
+    {
+        return [
+            ['host', 'aaa', ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE],
+            ['port', -1, ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE],
+            ['slaveId', -1, ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE],
+            ['gtid', '-1', ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE],
+            ['binLogPosition', -1, ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE],
+            ['tableCacheSize', -1, ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE],
+            ['heartbeatPeriod', 4294968, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
+            ['heartbeatPeriod', -1, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
+        ];
     }
 
     /**
      * @test
      * @dataProvider shouldValidateProvider
-     * @param string $configKey
-     * @param mixed $configValue
-     * @param string $expectedMessage
-     * @param int $expectedCode
      */
-    public function shouldValidate($configKey, $configValue, $expectedMessage, $expectedCode)
+    public function shouldValidate(string $configKey, $configValue, string $expectedMessage, int $expectedCode): void
     {
         $this->expectException(ConfigException::class);
         $this->expectExceptionMessage($expectedMessage);
         $this->expectExceptionCode($expectedCode);
 
-        $config = ConfigFactory::makeConfigFromArray([$configKey => $configValue]);
+        /** @var Config $config */
+        $config = (new ConfigBuilder())->{'with' . strtoupper($configKey)}($configValue)->build();
         $config::validate();
     }
 
-    /**
-     * @return array
-     */
-    public function shouldValidateProvider()
-    {
-        return [
-            ['user', 1, ConfigException::USER_ERROR_MESSAGE, ConfigException::USER_ERROR_CODE],
-            ['host', 'aaa', ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE],
-            ['port', -1, ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE],
-            ['password', new \stdClass(), ConfigException::PASSWORD_ERROR_MESSAGE, ConfigException::PASSWORD_ERROR_CODE],
-            ['charset', -1, ConfigException::CHARSET_ERROR_MESSAGE, ConfigException::CHARSET_ERROR_CODE],
-            ['gtid', -1, ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE],
-            ['slaveId', -1, ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE],
-            ['binLogFileName', -1, ConfigException::BIN_LOG_FILE_NAME_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_NAME_ERROR_CODE],
-            ['binLogPosition', -1, ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE],
-            ['mariaDbGtid', -1, ConfigException::MARIADBGTID_ERROR_MESSAGE, ConfigException::MARIADBGTID_ERROR_CODE],
-            ['tableCacheSize', -1, ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE],
-            ['heartbeatPeriod', 0.5, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
-            ['heartbeatPeriod', 4294968, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
-            ['heartbeatPeriod', -1, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
-        ];
-    }
 }

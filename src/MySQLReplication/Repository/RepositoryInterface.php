@@ -1,38 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Repository;
 
-/**
- * Interface RepositoryInterface
- * @package MySQLReplication\Repository
- */
 interface RepositoryInterface
 {
-    /**
-     * @param string $database
-     * @param string $table
-     * @return array
-     */
-    public function getFields($database, $table);
+    public function getFields(string $database, string $table): FieldDTOCollection;
 
-    /**
-     * @return bool
-     */
-    public function isCheckSum();
+    public function isCheckSum(): bool;
 
-    /**
-     * @return string
-     */
-    public function getVersion();
+    public function getVersion(): string;
 
-    /**
-     * File
-     * Position
-     * Binlog_Do_DB
-     * Binlog_Ignore_DB
-     * Executed_Gtid_Set
-     *
-     * @return array
-     */
-    public function getMasterStatus();
+    public function getMasterStatus(): MasterStatusDTO;
 }

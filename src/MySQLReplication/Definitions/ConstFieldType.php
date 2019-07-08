@@ -1,47 +1,44 @@
 <?php
+declare(strict_types=1);
 
 namespace MySQLReplication\Definitions;
 
-/**
- * Class ConstFieldType
- * @package MySQLReplication\Definitions
- */
 class ConstFieldType
 {
-    const DECIMAL = 0;
-    const TINY = 1;
-    const SHORT = 2;
-    const LONG = 3;
-    const FLOAT = 4;
-    const DOUBLE = 5;
-    const NULL = 6;
-    const TIMESTAMP = 7;
-    const LONGLONG = 8;
-    const INT24 = 9;
-    const DATE = 10;
-    const TIME = 11; // MySQL 5.5
-    const DATETIME = 12;
-    const YEAR = 13;
-    const NEWDATE = 14;
-    const VARCHAR = 15;
-    const BIT = 16;
-    const TIMESTAMP2 = 17;
-    const DATETIME2 = 18;
-    const TIME2 = 19;
-    const JSON = 245;
-    const NEWDECIMAL = 246;
-    const ENUM = 247;
-    const SET = 248;
-    const TINY_BLOB = 249;
-    const MEDIUM_BLOB = 250;
-    const LONG_BLOB = 251;
-    const BLOB = 252;
-    const VAR_STRING = 253;
-    const STRING = 254;
-    const GEOMETRY = 255;
+    public const DECIMAL = 0;
+    public const TINY = 1;
+    public const SHORT = 2;
+    public const LONG = 3;
+    public const FLOAT = 4;
+    public const DOUBLE = 5;
+    public const NULL = 6;
+    public const TIMESTAMP = 7;
+    public const LONGLONG = 8;
+    public const INT24 = 9;
+    public const DATE = 10;
+    public const TIME = 11; // MySQL 5.5
+    public const DATETIME = 12;
+    public const YEAR = 13;
+    public const NEWDATE = 14;
+    public const VARCHAR = 15;
+    public const BIT = 16;
+    public const TIMESTAMP2 = 17;
+    public const DATETIME2 = 18;
+    public const TIME2 = 19;
+    public const JSON = 245;
+    public const NEWDECIMAL = 246;
+    public const ENUM = 247;
+    public const SET = 248;
+    public const TINY_BLOB = 249;
+    public const MEDIUM_BLOB = 250;
+    public const LONG_BLOB = 251;
+    public const BLOB = 252;
+    public const VAR_STRING = 253;
+    public const STRING = 254;
+    public const GEOMETRY = 255;
 
-    const CHAR = self::TINY;
-    const INTERVAL = self::ENUM;
+    public const CHAR = self::TINY;
+    public const INTERVAL = self::ENUM;
 
-    const IGNORE = 666;
+    public const IGNORE = 666;
 }
