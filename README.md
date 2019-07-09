@@ -106,8 +106,6 @@ Similar projects
 =========
 Kodoma: Ruby-binlog based MySQL replication listener https://github.com/y310/kodama
 
-MySQL Hadoop Applier: C++ version http://dev.mysql.com/tech-resources/articles/mysql-hadoop-applier.html
-
 Java: https://github.com/shyiko/mysql-binlog-connector-java
 
 GO: https://github.com/siddontang/go-mysql
