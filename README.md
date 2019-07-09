@@ -44,8 +44,8 @@ MySQL server settings
 In your MySQL server configuration file you need to enable replication:
 
     [mysqld]
-    server-id		      = 1
-    log_bin			       = /var/log/mysql/mysql-bin.log
+    server-id        = 1
+    log_bin          = /var/log/mysql/mysql-bin.log
     expire_logs_days = 10
     max_binlog_size  = 100M
     binlog-format    = row #Very important if you want to receive write, update and delete row events
