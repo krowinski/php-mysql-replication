@@ -13,7 +13,7 @@ use MySQLReplication\MySQLReplicationFactory;
 /**
  * Your db configuration
  * @see ConfigBuilder
- * @link https://github.com/krowinski/bcmath-extended/blob/master/README.md
+ * @link https://github.com/krowinski/php-mysql-replication/blob/master/README.md
  */
 $binLogStream = new MySQLReplicationFactory(
     (new ConfigBuilder())
