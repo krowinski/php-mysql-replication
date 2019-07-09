@@ -104,7 +104,7 @@ Available options:
 
 Similar projects
 =========
-Kodoma: Ruby-binlog based MySQL replication listener https://github.com/y310/kodama
+Ruby: https://github.com/y310/kodama
 
 Java: https://github.com/shyiko/mysql-binlog-connector-java
 
