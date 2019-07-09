@@ -29,6 +29,7 @@ composer install -o
 
 Compatibility (based on integration tests) 
 =========
+
  - mysql 5.5
  - mysql 5.6
  - mysql 5.7
@@ -100,6 +101,18 @@ Available options:
 'custom' - if some params must be set in extended/implemented own classes
 
 'heartbeatPeriod' - sets the interval in seconds between replication heartbeats. Whenever the master's binary log is updated with an event, the waiting period for the next heartbeat is reset. interval is a decimal value having the range 0 to 4294967 seconds and a resolution in milliseconds; the smallest nonzero value is 0.001. Heartbeats are sent by the master only if there are no unsent events in the binary log file for a period longer than interval.
+
+Similar projects
+=========
+Kodoma: Ruby-binlog based MySQL replication listener https://github.com/y310/kodama
+
+MySQL Hadoop Applier: C++ version http://dev.mysql.com/tech-resources/articles/mysql-hadoop-applier.html
+
+Java: https://github.com/shyiko/mysql-binlog-connector-java
+
+GO: https://github.com/siddontang/go-mysql
+
+Python: https://github.com/noplay/python-mysql-replication
 
 Examples
 =========
@@ -346,6 +359,7 @@ Output will be similar to this (depends on configuration for example GTID off/on
 
 Benchmarks
 =========
+
 Tested on VM
 
     Debian 8.7
@@ -379,7 +393,7 @@ FAQ
 =========
 
 1. ### Why and when need php-mysql-replication ?
- Well first of all mysql don't give you async calls. You usually need to program this in your application (by event dispaching and adding to some queue system and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication protocol you can lisen on write events and process then asynchronously (best combo it's to add item to some queue system like rabbitmq, redis or kafka).
+ Well first of all mysql don't give you async calls. You usually need to program this in your application (by event dispaching and adding to some queue system and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication protocol you can lisen on write events and process then asynchronously (best combo it's to add item to some queue system like rabbitmq, redis or kafka). Also in invalidate cache,  search engine replication, real time analytics and audits.
 
 2. ### It's awsome ! but what is the catch ?
  Well first of all you need to know that a lot of events may come through, like if you update 1 000 000  records in table   "bar" and you need this one insert from your table "foo" Then all must be processed by script and you need to wait for your data. This is normal and this how it's work. You can speed up using [config options](https://github.com/krowinski/php-mysql-replication#configuration).
