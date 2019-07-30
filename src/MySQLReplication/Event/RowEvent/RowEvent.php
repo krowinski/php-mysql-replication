@@ -708,6 +708,7 @@ class RowEvent extends EventCommon
         $hour = $this->binaryDataReader->getBinarySlice($data, 23, 5, 40);
         $minute = $this->binaryDataReader->getBinarySlice($data, 28, 6, 40);
         $second = $this->binaryDataReader->getBinarySlice($data, 34, 6, 40);
+        $fsp = $this->getFSP($columnDTO);
 
         try {
             $date = new DateTime($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
@@ -718,7 +719,7 @@ class RowEvent extends EventCommon
             return null;
         }
 
-        return $date->format('Y-m-d H:i:s') . $this->getFSP($columnDTO);
+        return $date->format('Y-m-d H:i:s') . $fsp;
     }
 
     /**
