@@ -1,6 +1,9 @@
 # Release Notes
 
-## v6.0.0 (2019-?????)
+## v6.0.1 (2019-07-30)
+ - Fixed: getDatetime2 not reads fsp when date is wrong (#54)
+ 
+## v6.0.0 (2019-07-08)
 - Removed: support for lesser then php7
 - Added: strong and string types 
 - Changed: ConfigFactory removed and method make form array moved to Config
