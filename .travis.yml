@@ -18,6 +18,12 @@ matrix:
         - DB=mariadb:5.5
       php: "7.1"
     - env:
+        - DB=mariadb:10.0
+      php: "7.1"
+    - env:
+        - DB=mariadb:10.1
+      php: "7.1"
+    - env:
         - DB=mysql:5.5
       php: "7.1"
     - env:
@@ -32,6 +38,12 @@ matrix:
       php: "7.1"
     - env:
         - DB=mariadb:5.5
+      php: "7.2"
+    - env:
+        - DB=mariadb:10.0
+      php: "7.2"
+    - env:
+        - DB=mariadb:10.1
       php: "7.2"
     - env:
         - DB=mysql:5.5

@@ -35,7 +35,8 @@ Compatibility (based on integration tests)
  - mysql 5.7
  - mysql 8.0 (ONLY with mysql_native_password)
  - mariadb 5.5
- - mariadb 10.0 (partaily, problem with some cases of TIMESTAMP)
+ - mariadb 10.0
+ - mariadb 10.1
  - probably percona versions as is based on native mysql
 
 MySQL server settings

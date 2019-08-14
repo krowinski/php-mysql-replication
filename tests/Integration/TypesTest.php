@@ -268,7 +268,14 @@ class TypesTest extends BaseTest
      */
     public function shouldBeTimestampMySQL56(): void
     {
-        if ($this->checkForVersion(5.6)) {
+        /*
+         * https://mariadb.com/kb/en/library/microseconds-in-mariadb/
+         * MySQL 5.6 introduced microseconds using a slightly different implementation to MariaDB 5.3.
+         * Since MariaDB 10.1, MariaDB has defaulted to the MySQL format ...
+         */
+        if (BinLogServerInfo::isMariaDb() && $this->checkForVersion(10.1)) {
+            $this->markTestIncomplete('Only for mariadb 10.1 or higher');
+        } elseif ($this->checkForVersion(5.6)) {
             $this->markTestIncomplete('Only for mysql 5.6 or higher');
         }
 
