@@ -1,7 +1,10 @@
 # Release Notes
 
+## v6.0.2 (2019-08-14)
+- Added: travis mariadb 10 and 10.1 tests  
+
 ## v6.0.1 (2019-07-30)
- - Fixed: getDatetime2 not reads fsp when date is wrong (#54)
+- Fixed: getDatetime2 not reads fsp when date is wrong (#54)
  
 ## v6.0.0 (2019-07-08)
 - Removed: support for lesser then php7
