@@ -406,3 +406,7 @@ Also if script crashes you need to save from time to time position form binlog (
 
 5. ### How much its give overhead to mysql server ?
  It work like any other mysql in slave mode and its giving same overhead.
+ 
+6. ### Socket timeouts error
+ To fix this best is to increase db configurations "net_read_timeout" and "net_write_timeout" to 3600.  (tx Bijimon)
+
