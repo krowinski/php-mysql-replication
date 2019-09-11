@@ -410,6 +410,6 @@ Also if script crashes you need to save from time to time position form binlog (
 6. ### Socket timeouts error
  To fix this best is to increase db configurations "net_read_timeout" and "net_write_timeout" to 3600.  (tx Bijimon)
  
-7. ### Partial updates fix (#57)
+7. ### Partial updates fix
  Set in my.conf ```binlog_row_image=full``` to fix reciving only partial updates.  
 
