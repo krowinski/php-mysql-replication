@@ -113,6 +113,8 @@ GO: https://github.com/siddontang/go-mysql
 
 Python: https://github.com/noplay/python-mysql-replication
 
+.NET: https://github.com/rusuly/MySqlCdc
+
 Examples
 =========
 
