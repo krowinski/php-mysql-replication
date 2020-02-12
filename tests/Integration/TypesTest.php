@@ -785,7 +785,7 @@ class TypesTest extends BaseTest
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
-        $create_query = 'create table t1 (i INT, j JSON)';
+        $create_query = 'CREATE TABLE t1 (i INT, j JSON)';
         $insert_query = "INSERT INTO t1 VALUES 
             (0, NULL) , 
             (1, '{\"a\": 2}'),

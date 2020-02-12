@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
+use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
@@ -179,9 +180,15 @@ class BasicTest extends BaseTest
 
         $this->connect();
 
-        $this->connection->exec('CREATE TABLE test_2 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
-        $this->connection->exec('CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
-        $this->connection->exec('CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))');
+        $this->connection->exec(
+            'CREATE TABLE test_2 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+        $this->connection->exec(
+            'CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+        $this->connection->exec(
+            'CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
 
         $this->connection->exec('INSERT INTO test_4 (data) VALUES (\'foo\')');
         $this->connection->exec('INSERT INTO test_3 (data) VALUES (\'bar\')');
@@ -219,5 +226,105 @@ class BasicTest extends BaseTest
         self::assertSame('BEGIN', $event->getQuery());
         $event = $this->getEvent();
         self::assertSame('TRUNCATE TABLE test_truncate_column', $event->getQuery());
+    }
+
+    public function testMysql8JsonSetPartialUpdateWithHoles(): void
+    {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+        }
+
+        $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8 - C299"}},"name":"Alice"}';
+
+        $create_query = 'CREATE TABLE t1 (j JSON)';
+        $insert_query = "INSERT INTO t1 VALUES ('" . $expected . "')";
+
+        $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->connection->exec('UPDATE t1 SET j = JSON_SET(j, \'$.addr.detail.ab\', \'970785C8\')');
+
+        self::assertInstanceOf(XidDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
+
+        /** @var UpdateRowsDTO $event */
+        $event = $this->getEvent();
+
+        self::assertInstanceOf(UpdateRowsDTO::class, $event);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
+        self::assertEquals(
+            '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8"}},"name":"Alice"}',
+            $event->getValues()[0]['after']['j']
+        );
+    }
+
+    public function testMysql8JsonRemovePartialUpdateWithHoles(): void
+    {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+        }
+
+        $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8-C299"}},"name":"Alice"}';
+
+        $create_query = 'CREATE TABLE t1 (j JSON)';
+        $insert_query = "INSERT INTO t1 VALUES ('" . $expected . "')";
+
+        $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->connection->exec('UPDATE t1 SET j = JSON_REMOVE(j, \'$.addr.detail.ab\')');
+
+        self::assertInstanceOf(XidDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
+
+        /** @var UpdateRowsDTO $event */
+        $event = $this->getEvent();
+
+        self::assertInstanceOf(UpdateRowsDTO::class, $event);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
+        self::assertEquals(
+            '{"age":22,"addr":{"code":100,"detail":{}},"name":"Alice"}',
+            $event->getValues()[0]['after']['j']
+        );
+    }
+
+    public function testMysql8JsonReplacePartialUpdateWithHoles(): void
+    {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+        }
+
+        $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8-C299"}},"name":"Alice"}';
+
+        $create_query = 'CREATE TABLE t1 (j JSON)';
+        $insert_query = "INSERT INTO t1 VALUES ('" . $expected . "')";
+
+        $this->createAndInsertValue($create_query, $insert_query);
+
+        $this->connection->exec('UPDATE t1 SET j = JSON_REPLACE(j, \'$.addr.detail.ab\', \'9707\')');
+
+        self::assertInstanceOf(XidDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
+
+        /** @var UpdateRowsDTO $event */
+        $event = $this->getEvent();
+
+        self::assertInstanceOf(UpdateRowsDTO::class, $event);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
+        self::assertEquals(
+            '{"age":22,"addr":{"code":100,"detail":{"ab":"9707"}},"name":"Alice"}',
+            $event->getValues()[0]['after']['j']
+        );
+
     }
 }

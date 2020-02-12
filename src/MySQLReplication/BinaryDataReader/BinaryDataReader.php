@@ -43,8 +43,7 @@ class BinaryDataReader
 
     public function advance(int $length): void
     {
-        $this->readBytes += $length;
-        $this->data = substr($this->data, $length);
+        $this->read($length);
     }
 
     public function readInt16(): int
