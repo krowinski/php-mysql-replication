@@ -1,5 +1,8 @@
 # Release Notes
 
+## v6.1.0 (2020-02-12)
+- Added: more support for json data like JSON_REPLACE, JSON_SET, JSON_REMOVE
+
 ## v6.0.2 (2019-08-14)
 - Added: travis mariadb 10 and 10.1 tests  
 
