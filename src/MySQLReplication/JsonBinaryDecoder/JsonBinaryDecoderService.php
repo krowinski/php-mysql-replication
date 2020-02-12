@@ -85,6 +85,7 @@ class JsonBinaryDecoderService
      */
     private function parseJson(int $type): void
     {
+        $results = [];
         if (self::SMALL_OBJECT === $type) {
             $results[self::OBJECT] = $this->parseArrayOrObject(self::OBJECT, self::SMALL_OFFSET_SIZE);
         } else if (self::LARGE_OBJECT === $type) {

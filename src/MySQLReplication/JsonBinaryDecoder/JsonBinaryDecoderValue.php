@@ -22,7 +22,7 @@ class JsonBinaryDecoderValue
         $this->offset = $offset;
     }
 
-    public function getOffset(): int
+    public function getOffset(): ?int
     {
         return $this->offset;
     }
