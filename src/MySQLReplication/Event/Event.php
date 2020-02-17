@@ -129,7 +129,7 @@ class Event
     private function dispatch(EventDTO $eventDTO = null): void
     {
         if (null !== $eventDTO) {
-            $this->eventDispatcher->dispatch($eventDTO->getType(), $eventDTO);
+            $this->eventDispatcher->dispatch($eventDTO, $eventDTO->getType());
         }
     }
 }
