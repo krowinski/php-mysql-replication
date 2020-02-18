@@ -1,5 +1,9 @@
 # Release Notes
 
+## v6.2.0 (2020-02-18)
+- Added symfony 5 support #61
+- Removed support for symfony 2.3
+
 ## v6.1.0 (2020-02-12)
 - Added: more support for json data like JSON_REPLACE, JSON_SET, JSON_REMOVE
 
