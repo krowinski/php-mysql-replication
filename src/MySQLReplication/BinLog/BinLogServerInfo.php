@@ -78,6 +78,7 @@ class BinLogServerInfo
         }
 
         self::$serverInfo['version_name'] = self::parseVersion($version);
+        self::$serverInfo['version_revision'] = self::parseRevision($version);
     }
 
     public static function getSalt(): string
@@ -102,6 +103,11 @@ class BinLogServerInfo
         return self::MYSQL_VERSION_GENERIC;
     }
 
+    public static function getRevision(): float
+    {
+        return self::$serverInfo['version_revision'];
+    }
+
     public static function getVersion(): string
     {
         return self::$serverInfo['version_name'];
@@ -120,5 +126,10 @@ class BinLogServerInfo
     public static function isGeneric(): bool
     {
         return self::MYSQL_VERSION_GENERIC === self::getVersion();
+    }
+
+    private static function parseRevision(string $version): float
+    {
+        return (float)$version;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
@@ -7,6 +8,7 @@ use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
+use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
@@ -228,7 +230,10 @@ class BasicTest extends BaseTest
         self::assertSame('TRUNCATE TABLE test_truncate_column', $event->getQuery());
     }
 
-    public function testMysql8JsonSetPartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonSetPartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
@@ -261,7 +266,10 @@ class BasicTest extends BaseTest
         );
     }
 
-    public function testMysql8JsonRemovePartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonRemovePartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
@@ -294,7 +302,10 @@ class BasicTest extends BaseTest
         );
     }
 
-    public function testMysql8JsonReplacePartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonReplacePartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             $this->markTestIncomplete('Only for mysql 5.7 or higher');
@@ -325,6 +336,20 @@ class BasicTest extends BaseTest
             '{"age":22,"addr":{"code":100,"detail":{"ab":"9707"}},"name":"Alice"}',
             $event->getValues()[0]['after']['j']
         );
+    }
 
+    /**
+     * @test
+     */
+    public function shouldRoteLog(): void
+    {
+        $this->connection->exec('FLUSH LOGS');
+
+        self::assertInstanceOf(RotateDTO::class, $this->getEvent());
+
+        self::assertRegExp(
+            '/^[a-z-]+\.[\d]+$/',
+            $this->getEvent()->getEventInfo()->getBinLogCurrent()->getBinFileName()
+        );
     }
 }

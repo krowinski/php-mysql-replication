@@ -1,5 +1,9 @@
 # Release Notes
 
+## v6.2.1 (2020-03-24)
+- Fixed: maraidb bad binlog when parsing event (#62)
+- Added: BinLogServerInfo::getRevision()
+
 ## v6.2.0 (2020-02-18)
 - Added symfony 5 support #61
 - Removed support for symfony 2.3
