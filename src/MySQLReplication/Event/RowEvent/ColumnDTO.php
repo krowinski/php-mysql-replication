@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
@@ -59,18 +60,18 @@ class ColumnDTO
         $bytes = 0;
 
         if ($columnType === ConstFieldType::VARCHAR) {
-            $maxLength = $binaryDataReader->readInt16();
-        } else if ($columnType === ConstFieldType::DOUBLE) {
+            $maxLength = $binaryDataReader->readUInt16();
+        } elseif ($columnType === ConstFieldType::DOUBLE) {
             $size = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::FLOAT) {
+        } elseif ($columnType === ConstFieldType::FLOAT) {
             $size = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::TIMESTAMP2) {
+        } elseif ($columnType === ConstFieldType::TIMESTAMP2) {
             $fsp = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::DATETIME2) {
+        } elseif ($columnType === ConstFieldType::DATETIME2) {
             $fsp = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::TIME2) {
+        } elseif ($columnType === ConstFieldType::TIME2) {
             $fsp = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::VAR_STRING || $columnType === ConstFieldType::STRING) {
+        } elseif ($columnType === ConstFieldType::VAR_STRING || $columnType === ConstFieldType::STRING) {
             $metadata = ($binaryDataReader->readUInt8() << 8) + $binaryDataReader->readUInt8();
             $realType = $metadata >> 8;
             if ($realType === ConstFieldType::SET || $realType === ConstFieldType::ENUM) {
@@ -79,16 +80,16 @@ class ColumnDTO
             } else {
                 $maxLength = ((($metadata >> 4) & 0x300) ^ 0x300) + ($metadata & 0x00ff);
             }
-        } else if ($columnType === ConstFieldType::BLOB || $columnType === ConstFieldType::IGNORE) {
+        } elseif ($columnType === ConstFieldType::BLOB || $columnType === ConstFieldType::IGNORE) {
             $lengthSize = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::GEOMETRY) {
+        } elseif ($columnType === ConstFieldType::GEOMETRY) {
             $lengthSize = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::JSON) {
+        } elseif ($columnType === ConstFieldType::JSON) {
             $lengthSize = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::NEWDECIMAL) {
+        } elseif ($columnType === ConstFieldType::NEWDECIMAL) {
             $precision = $binaryDataReader->readUInt8();
             $decimals = $binaryDataReader->readUInt8();
-        } else if ($columnType === ConstFieldType::BIT) {
+        } elseif ($columnType === ConstFieldType::BIT) {
             $bits = $binaryDataReader->readUInt8();
             $bytes = $binaryDataReader->readUInt8();
 

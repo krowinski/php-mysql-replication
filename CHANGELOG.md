@@ -1,5 +1,8 @@
 # Release Notes
 
+## v6.2.2 (2020-04-15)
+- Fixed: varchars table length should be read as unsigned int (#63)
+
 ## v6.2.1 (2020-03-24)
 - Fixed: maraidb bad binlog when parsing event (#62)
 - Added: BinLogServerInfo::getRevision()
