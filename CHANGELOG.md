@@ -1,5 +1,8 @@
 # Release Notes
 
+## v6.2.3 (2020-09-03)
+- Fixed: use provided event dispatcher (#67)
+
 ## v6.2.2 (2020-04-15)
 - Fixed: varchars table length should be read as unsigned int (#63)
 
