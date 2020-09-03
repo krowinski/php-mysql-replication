@@ -66,9 +66,9 @@ class MySQLReplicationFactory
         if (null === $cache) {
             $cache = new ArrayCache();
         }
-        if (null === $eventDispatcher) {
-            $this->eventDispatcher = new EventDispatcher();
-        }
+
+        $this->eventDispatcher = $eventDispatcher ?: new EventDispatcher();
+
         if (null === $socket) {
             $socket = new Socket();
         }

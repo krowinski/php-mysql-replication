@@ -7,12 +7,16 @@ namespace MySQLReplication\Tests\Integration;
 use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
+use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
+use MySQLReplication\MySQLReplicationFactory;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class BasicTest extends BaseTest
 {
@@ -351,5 +355,51 @@ class BasicTest extends BaseTest
             '/^[a-z-]+\.[\d]+$/',
             $this->getEvent()->getEventInfo()->getBinLogCurrent()->getBinFileName()
         );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldUseProvidedEventDispatcher(): void
+    {
+        $this->disconnect();
+
+        $testEventSubscribers = new TestEventSubscribers($this);
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addSubscriber($testEventSubscribers);
+
+        $this->connectWithProvidedEventDispatcher($eventDispatcher);
+
+        $this->connection->exec(
+            $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+
+        /** @var QueryDTO $event */
+        $event = $this->getEvent();
+        self::assertInstanceOf(QueryDTO::class, $event);
+        self::assertEquals($createExpected, $event->getQuery());
+    }
+
+    private function connectWithProvidedEventDispatcher(EventDispatcherInterface $eventDispatcher): void
+    {
+        $this->mySQLReplicationFactory = new MySQLReplicationFactory(
+            $this->configBuilder->build(),
+            null,
+            null,
+            $eventDispatcher
+        );
+
+        $this->connection = $this->mySQLReplicationFactory->getDbConnection();
+
+        $this->connection->exec('SET SESSION time_zone = "UTC"');
+        $this->connection->exec('DROP DATABASE IF EXISTS ' . $this->database);
+        $this->connection->exec('CREATE DATABASE ' . $this->database);
+        $this->connection->exec('USE ' . $this->database);
+        $this->connection->exec('SET SESSION sql_mode = \'\';');
+
+        self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
     }
 }
