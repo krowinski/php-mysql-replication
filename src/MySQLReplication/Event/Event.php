@@ -20,7 +20,7 @@ use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
 use MySQLReplication\Socket\SocketException;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Event
 {
@@ -35,7 +35,7 @@ class Event
     public function __construct(
         BinLogSocketConnect $binLogSocketConnect,
         RowEventFactory $rowEventFactory,
-        EventDispatcher $eventDispatcher,
+        EventDispatcherInterface $eventDispatcher,
         CacheInterface $cache
     ) {
         $this->binLogSocketConnect = $binLogSocketConnect;
