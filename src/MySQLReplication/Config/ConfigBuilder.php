@@ -21,7 +21,7 @@ class ConfigBuilder
     private $mariaDbGtid = '';
     private $tableCacheSize = 128;
     private $custom = [];
-    private $heartbeatPeriod = 0;
+    private $heartbeatPeriod = 0.0;
 
     public function withUser(string $user): self
     {
@@ -140,7 +140,7 @@ class ConfigBuilder
     /**
      * @see https://dev.mysql.com/doc/refman/5.6/en/change-master-to.html
      */
-    public function withHeartbeatPeriod(int $heartbeatPeriod): self
+    public function withHeartbeatPeriod(float $heartbeatPeriod): self
     {
         $this->heartbeatPeriod = $heartbeatPeriod;
 

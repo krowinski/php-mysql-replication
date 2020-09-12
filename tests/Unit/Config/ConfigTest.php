@@ -125,6 +125,29 @@ class ConfigTest extends BaseTest
         self::assertFalse(Config::checkEvent(4));
     }
 
+    public function shouldCheckHeartbeatPeriodProvider(): array
+    {
+        return [
+            [0],
+            [0.0],
+            [0.001],
+            [4294967],
+            [2],
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider shouldCheckHeartbeatPeriodProvider
+     */
+    public function shouldCheckHeartbeatPeriod($heartbeatPeriod): void
+    {
+        $config = (new ConfigBuilder())->withHeartbeatPeriod($heartbeatPeriod)->build();
+        $config::validate();
+
+        self::assertSame((float) $heartbeatPeriod, $config::getHeartbeatPeriod());
+    }
+
     public function shouldValidateProvider(): array
     {
         return [

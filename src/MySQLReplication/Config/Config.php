@@ -42,7 +42,7 @@ class Config implements JsonSerializable
         array $databasesOnly,
         int $tableCacheSize,
         array $custom,
-        int $heartbeatPeriod
+        float $heartbeatPeriod
     ) {
         self::$user = $user;
         self::$host = $host;
@@ -103,8 +103,8 @@ class Config implements JsonSerializable
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
             );
         }
-        if (0 !== self::$heartbeatPeriod && false === filter_var(
-                self::$heartbeatPeriod, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 4294967]]
+        if (0.0 !== self::$heartbeatPeriod && false === (
+                self::$heartbeatPeriod >= 0.001 && self::$heartbeatPeriod <= 4294967.0
             )) {
             throw new ConfigException(
                 ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE
@@ -215,7 +215,7 @@ class Config implements JsonSerializable
         return self::$eventsIgnore;
     }
 
-    public static function getHeartbeatPeriod(): int
+    public static function getHeartbeatPeriod(): float
     {
         return self::$heartbeatPeriod;
     }
