@@ -1,5 +1,9 @@
 # Release Notes
 
+## v6.2.4 (2020-09-12)
+ - Change: type from int to float for heartbeat period (#70)
+ - Fixed: event dispatcher interface in Event.php #(69)
+
 ## v6.2.3 (2020-09-03)
 - Fixed: use provided event dispatcher (#67)
 
