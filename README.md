@@ -414,4 +414,7 @@ Also if script crashes you need to save from time to time position form binlog (
  
 7. ### Partial updates fix
  Set in my.conf ```binlog_row_image=full``` to fix reciving only partial updates.  
+ 
+8. ### No replication events when connected to replica server   
+ Set in my.conf ```log_slave_updates=in``` to fix reciving only partial updates. (#71)(#66)
 
