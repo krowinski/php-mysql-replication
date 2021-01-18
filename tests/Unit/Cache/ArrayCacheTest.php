@@ -11,7 +11,7 @@ class ArrayCacheTest extends BaseTest
 {
     private $arrayCache;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->arrayCache = new ArrayCache();

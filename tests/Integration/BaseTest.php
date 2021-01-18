@@ -71,11 +71,11 @@ abstract class BaseTest extends TestCase
 
         $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
-        $this->connection->exec('SET SESSION time_zone = "UTC"');
-        $this->connection->exec('DROP DATABASE IF EXISTS ' . $this->database);
-        $this->connection->exec('CREATE DATABASE ' . $this->database);
-        $this->connection->exec('USE ' . $this->database);
-        $this->connection->exec('SET SESSION sql_mode = \'\';');
+        $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
+        $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
+        $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
+        $this->connection->executeStatement('USE ' . $this->database);
+        $this->connection->executeStatement('SET SESSION sql_mode = \'\';');
     }
 
     protected function getEvent(): EventDTO
@@ -101,7 +101,7 @@ abstract class BaseTest extends TestCase
 
     protected function checkForVersion(float $version): bool
     {
-        return (float)$this->connection->fetchColumn('SELECT VERSION()') < $version;
+        return (float)$this->connection->fetchOne('SELECT VERSION()') < $version;
     }
 
     protected function disconnect(): void
@@ -113,8 +113,8 @@ abstract class BaseTest extends TestCase
 
     protected function createAndInsertValue(string $createQuery, string $insertQuery): EventDTO
     {
-        $this->connection->exec($createQuery);
-        $this->connection->exec($insertQuery);
+        $this->connection->executeStatement($createQuery);
+        $this->connection->executeStatement($insertQuery);
 
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());

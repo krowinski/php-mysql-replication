@@ -747,7 +747,7 @@ class TypesTest extends BaseTest
      */
     public function shouldBeEncodedLatin1(): void
     {
-        $this->connection->exec('SET CHARSET latin1');
+        $this->connection->executeStatement('SET CHARSET latin1');
 
         $string = "\00e9";
 
@@ -764,7 +764,7 @@ class TypesTest extends BaseTest
      */
     public function shouldBeEncodedUTF8(): void
     {
-        $this->connection->exec('SET CHARSET utf8');
+        $this->connection->executeStatement('SET CHARSET utf8');
 
         $string = "\20ac";
 
