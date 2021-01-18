@@ -662,7 +662,7 @@ class RowEvent extends EventCommon
             $res .= sprintf('%0' . $compFractional . 'd', $value);
         }
 
-        return bcmul($res, '1', $columnDTO->getPrecision());
+        return bcmul($res, '1', $columnDTO->getDecimals());
     }
 
     protected function getDatetime(): ?string
