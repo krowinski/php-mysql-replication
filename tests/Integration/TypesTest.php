@@ -30,7 +30,8 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('9000000123.1234560000', $event->getValues()[0]['test']);
+        self::assertSame($expect = '9000000123.1234560000', $value = $event->getValues()[0]['test']);
+        self::assertSame(strlen($expect), strlen($value));
     }
 
     /**
