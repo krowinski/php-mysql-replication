@@ -12,7 +12,7 @@
   ],
   "type": "library",
   "require": {
-    "php": ">=7.1",
+    "php": ">=7.3",
     "ext-sockets": "*",
     "ext-json": "*",
     "ext-bcmath": "*",
