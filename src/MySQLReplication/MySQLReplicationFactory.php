@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace MySQLReplication;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\DriverManager;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogException;
@@ -37,7 +37,7 @@ class MySQLReplicationFactory
     /**
      * @throws BinLogException
      * @throws ConfigException
-     * @throws DBALException
+     * @throws Exception
      * @throws SocketException
      * @throws GtidException
      */

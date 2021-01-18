@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace MySQLReplication\Repository;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Exception\MySQLReplicationException;
 
@@ -56,7 +56,7 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * @throws DBALException
+     * @throws Exception
      */
     public function isCheckSum(): bool
     {
@@ -80,7 +80,7 @@ class MySQLRepository implements RepositoryInterface
 
     /**
      * @inheritDoc
-     * @throws DBALException
+     * @throws Exception
      * @throws BinLogException
      */
     public function getMasterStatus(): MasterStatusDTO
