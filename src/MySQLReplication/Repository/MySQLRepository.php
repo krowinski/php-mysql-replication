@@ -42,7 +42,7 @@ class MySQLRepository implements RepositoryInterface
                 ORDINAL_POSITION        
        ';
 
-        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAll($sql, [$database, $table]));
+        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAllAssociative($sql, [$database, $table]));
     }
 
     private function getConnection(): Connection
@@ -60,7 +60,7 @@ class MySQLRepository implements RepositoryInterface
      */
     public function isCheckSum(): bool
     {
-        $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
+        $res = $this->getConnection()->fetchAssociative('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
         return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
@@ -68,7 +68,7 @@ class MySQLRepository implements RepositoryInterface
     public function getVersion(): string
     {
         $r = '';
-        $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
+        $versions = $this->getConnection()->fetchAllAssociative('SHOW VARIABLES LIKE "version%"');
         if (is_array($versions) && 0 !== count($versions)) {
             foreach ($versions as $version) {
                 $r .= $version['Value'];
@@ -85,7 +85,7 @@ class MySQLRepository implements RepositoryInterface
      */
     public function getMasterStatus(): MasterStatusDTO
     {
-        $data = $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        $data = $this->getConnection()->fetchAssociative('SHOW MASTER STATUS');
         if (empty($data)) {
             throw new BinLogException(
                 MySQLReplicationException::BINLOG_NOT_ENABLED,
