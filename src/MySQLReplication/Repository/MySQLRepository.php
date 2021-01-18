@@ -8,7 +8,7 @@ use Doctrine\DBAL\Exception;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Exception\MySQLReplicationException;
 
-class MySQLRepository implements RepositoryInterface
+class MySQLRepository implements RepositoryInterface, PingableConnection
 {
     private $connection;
 
@@ -47,7 +47,7 @@ class MySQLRepository implements RepositoryInterface
 
     private function getConnection(): Connection
     {
-        if (false === $this->connection->ping()) {
+        if (false === $this->ping($this->connection)) {
             $this->connection->close();
             $this->connection->connect();
         }
@@ -94,5 +94,15 @@ class MySQLRepository implements RepositoryInterface
         }
 
         return MasterStatusDTO::makeFromArray($data);
+    }
+
+    public function ping(Connection $connection): bool
+    {
+        try {
+            $connection->executeQuery($connection->getDatabasePlatform()->getDummySelectSQL());
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }
