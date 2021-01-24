@@ -23,13 +23,15 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Start mysql service
-        run: mysqld \
-          --datadir=/tmp \
-          --user=mysql \
-          --server-id=1 \
-          --log-bin=/tmp/mysql-bin.log \
-          --binlog-format=row \
-          --max_allowed_packet=64M
+        run: |
+          sudo chmod 777 /var/lib/mysql/
+          mysqld \
+            --datadir=/var/lib/mysql/ \
+            --user=mysql \
+            --server-id=1 \
+            --log-bin=/var/lib/mysql/mysql-bin.log \
+            --binlog-format=row \
+            --max_allowed_packet=64M
         
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
