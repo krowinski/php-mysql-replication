@@ -30,7 +30,7 @@ class BasicTest extends BaseTest
             'INSERT INTO test (data) VALUES(\'Hello World\')'
         );
 
-        $this->connection->exec('DELETE FROM test WHERE id = 1');
+        $this->connection->executeStatement('DELETE FROM test WHERE id = 1');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -53,7 +53,7 @@ class BasicTest extends BaseTest
             'INSERT INTO test (data) VALUES(\'Hello\')'
         );
 
-        $this->connection->exec('UPDATE test SET data = \'World\', id = 2 WHERE id = 1');
+        $this->connection->executeStatement('UPDATE test SET data = \'World\', id = 2 WHERE id = 1');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -73,9 +73,9 @@ class BasicTest extends BaseTest
      */
     public function shouldGetWriteEventDropTable(): void
     {
-        $this->connection->exec($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
-        $this->connection->exec('INSERT INTO `test` VALUES (1)');
-        $this->connection->exec($dropExpected = 'DROP TABLE `test`');
+        $this->connection->executeStatement($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
+        $this->connection->executeStatement('INSERT INTO `test` VALUES (1)');
+        $this->connection->executeStatement($dropExpected = 'DROP TABLE `test`');
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
@@ -101,7 +101,7 @@ class BasicTest extends BaseTest
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertContains($dropExpected, $event->getQuery());
+        self::assertStringContainsString($dropExpected, $event->getQuery());
     }
 
     /**
@@ -109,7 +109,7 @@ class BasicTest extends BaseTest
      */
     public function shouldGetQueryEventCreateTable(): void
     {
-        $this->connection->exec(
+        $this->connection->executeStatement(
             $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
 
@@ -132,10 +132,10 @@ class BasicTest extends BaseTest
 
         $this->connect();
 
-        $this->connection->exec('CREATE TABLE test_drop_column (id INTEGER(11), data VARCHAR(50))');
-        $this->connection->exec('INSERT INTO test_drop_column VALUES (1, \'A value\')');
-        $this->connection->exec('ALTER TABLE test_drop_column DROP COLUMN data');
-        $this->connection->exec('INSERT INTO test_drop_column VALUES (2)');
+        $this->connection->executeStatement('CREATE TABLE test_drop_column (id INTEGER(11), data VARCHAR(50))');
+        $this->connection->executeStatement('INSERT INTO test_drop_column VALUES (1, \'A value\')');
+        $this->connection->executeStatement('ALTER TABLE test_drop_column DROP COLUMN data');
+        $this->connection->executeStatement('INSERT INTO test_drop_column VALUES (2)');
 
         /** @var WriteRowsDTO $event */
         $event = $this->getEvent();
@@ -161,7 +161,7 @@ class BasicTest extends BaseTest
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
 
-        $this->connection->exec($createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))');
+        $this->connection->executeStatement($createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))');
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
@@ -186,19 +186,19 @@ class BasicTest extends BaseTest
 
         $this->connect();
 
-        $this->connection->exec(
+        $this->connection->executeStatement(
             'CREATE TABLE test_2 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
-        $this->connection->exec(
+        $this->connection->executeStatement(
             'CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
-        $this->connection->exec(
+        $this->connection->executeStatement(
             'CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
 
-        $this->connection->exec('INSERT INTO test_4 (data) VALUES (\'foo\')');
-        $this->connection->exec('INSERT INTO test_3 (data) VALUES (\'bar\')');
-        $this->connection->exec('INSERT INTO test_2 (data) VALUES (\'' . $expectedValue . '\')');
+        $this->connection->executeStatement('INSERT INTO test_4 (data) VALUES (\'foo\')');
+        $this->connection->executeStatement('INSERT INTO test_3 (data) VALUES (\'bar\')');
+        $this->connection->executeStatement('INSERT INTO test_2 (data) VALUES (\'' . $expectedValue . '\')');
 
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
@@ -222,9 +222,9 @@ class BasicTest extends BaseTest
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
 
-        $this->connection->exec('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))');
-        $this->connection->exec('INSERT INTO test_truncate_column VALUES (1, \'A value\')');
-        $this->connection->exec('TRUNCATE TABLE test_truncate_column');
+        $this->connection->executeStatement('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))');
+        $this->connection->executeStatement('INSERT INTO test_truncate_column VALUES (1, \'A value\')');
+        $this->connection->executeStatement('TRUNCATE TABLE test_truncate_column');
 
         $event = $this->getEvent();
         self::assertSame('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))', $event->getQuery());
@@ -250,7 +250,7 @@ class BasicTest extends BaseTest
 
         $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->connection->exec('UPDATE t1 SET j = JSON_SET(j, \'$.addr.detail.ab\', \'970785C8\')');
+        $this->connection->executeStatementuteStatement('UPDATE t1 SET j = JSON_SET(j, \'$.addr.detail.ab\', \'970785C8\')');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -286,7 +286,7 @@ class BasicTest extends BaseTest
 
         $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->connection->exec('UPDATE t1 SET j = JSON_REMOVE(j, \'$.addr.detail.ab\')');
+        $this->connection->executeStatement('UPDATE t1 SET j = JSON_REMOVE(j, \'$.addr.detail.ab\')');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -322,7 +322,7 @@ class BasicTest extends BaseTest
 
         $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->connection->exec('UPDATE t1 SET j = JSON_REPLACE(j, \'$.addr.detail.ab\', \'9707\')');
+        $this->connection->executeStatement('UPDATE t1 SET j = JSON_REPLACE(j, \'$.addr.detail.ab\', \'9707\')');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -347,11 +347,11 @@ class BasicTest extends BaseTest
      */
     public function shouldRoteLog(): void
     {
-        $this->connection->exec('FLUSH LOGS');
+        $this->connection->executeStatement('FLUSH LOGS');
 
         self::assertInstanceOf(RotateDTO::class, $this->getEvent());
 
-        self::assertRegExp(
+        self::assertMatchesRegularExpression(
             '/^[a-z-]+\.[\d]+$/',
             $this->getEvent()->getEventInfo()->getBinLogCurrent()->getBinFileName()
         );
@@ -371,7 +371,7 @@ class BasicTest extends BaseTest
 
         $this->connectWithProvidedEventDispatcher($eventDispatcher);
 
-        $this->connection->exec(
+        $this->connection->executeStatement(
             $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );
 
@@ -392,11 +392,11 @@ class BasicTest extends BaseTest
 
         $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
-        $this->connection->exec('SET SESSION time_zone = "UTC"');
-        $this->connection->exec('DROP DATABASE IF EXISTS ' . $this->database);
-        $this->connection->exec('CREATE DATABASE ' . $this->database);
-        $this->connection->exec('USE ' . $this->database);
-        $this->connection->exec('SET SESSION sql_mode = \'\';');
+        $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
+        $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
+        $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
+        $this->connection->executeStatement('USE ' . $this->database);
+        $this->connection->executeStatement('SET SESSION sql_mode = \'\';');
 
         self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());

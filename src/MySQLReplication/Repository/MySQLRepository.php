@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace MySQLReplication\Repository;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Exception\MySQLReplicationException;
 
-class MySQLRepository implements RepositoryInterface
+class MySQLRepository implements RepositoryInterface, PingableConnection
 {
     private $connection;
 
@@ -42,12 +42,12 @@ class MySQLRepository implements RepositoryInterface
                 ORDINAL_POSITION        
        ';
 
-        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAll($sql, [$database, $table]));
+        return FieldDTOCollection::makeFromArray($this->getConnection()->fetchAllAssociative($sql, [$database, $table]));
     }
 
     private function getConnection(): Connection
     {
-        if (false === $this->connection->ping()) {
+        if (false === $this->ping($this->connection)) {
             $this->connection->close();
             $this->connection->connect();
         }
@@ -56,11 +56,11 @@ class MySQLRepository implements RepositoryInterface
     }
 
     /**
-     * @throws DBALException
+     * @throws Exception
      */
     public function isCheckSum(): bool
     {
-        $res = $this->getConnection()->fetchAssoc('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
+        $res = $this->getConnection()->fetchAssociative('SHOW GLOBAL VARIABLES LIKE "BINLOG_CHECKSUM"');
 
         return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
@@ -68,7 +68,7 @@ class MySQLRepository implements RepositoryInterface
     public function getVersion(): string
     {
         $r = '';
-        $versions = $this->getConnection()->fetchAll('SHOW VARIABLES LIKE "version%"');
+        $versions = $this->getConnection()->fetchAllAssociative('SHOW VARIABLES LIKE "version%"');
         if (is_array($versions) && 0 !== count($versions)) {
             foreach ($versions as $version) {
                 $r .= $version['Value'];
@@ -80,12 +80,12 @@ class MySQLRepository implements RepositoryInterface
 
     /**
      * @inheritDoc
-     * @throws DBALException
+     * @throws Exception
      * @throws BinLogException
      */
     public function getMasterStatus(): MasterStatusDTO
     {
-        $data = $this->getConnection()->fetchAssoc('SHOW MASTER STATUS');
+        $data = $this->getConnection()->fetchAssociative('SHOW MASTER STATUS');
         if (empty($data)) {
             throw new BinLogException(
                 MySQLReplicationException::BINLOG_NOT_ENABLED,
@@ -94,5 +94,15 @@ class MySQLRepository implements RepositoryInterface
         }
 
         return MasterStatusDTO::makeFromArray($data);
+    }
+
+    public function ping(Connection $connection): bool
+    {
+        try {
+            $connection->executeQuery($connection->getDatabasePlatform()->getDummySelectSQL());
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }
