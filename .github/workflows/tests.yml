@@ -23,11 +23,9 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Start mysql service
-        run: |
-          sudo chmod 777 /var/lib/mysql/
-          mysqld \
+        run: sudo mysqld \
             --datadir=/var/lib/mysql/ \
-            --user=mysql \
+            --user=root \
             --server-id=1 \
             --log-bin=/var/lib/mysql/mysql-bin.log \
             --binlog-format=row \
