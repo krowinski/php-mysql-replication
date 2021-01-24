@@ -24,10 +24,10 @@ jobs:
         
       - name: Start mysql service
         run: mysqld \
-          --datadir=/var/lib/mysql \
+          --datadir=/tmp \
           --user=mysql \
           --server-id=1 \
-          --log-bin=/var/lib/mysql/mysql-bin.log \
+          --log-bin=/tmp/mysql-bin.log \
           --binlog-format=row \
           --max_allowed_packet=64M
         
