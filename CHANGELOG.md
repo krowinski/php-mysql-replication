@@ -1,13 +1,23 @@
 # Release Notes
 
+## v7.0.0 (2021-01-24)
+
+- Change: added support doctrine/dbal to ^3.0 (#75)(#73)
+- Change: dropped support for <= 7.2 (#75)
+- Change: test cases for PHP 7.3 and 7.4 (#75)
+- Fixed: scale length in decimals values (#76)
+
 ## v6.2.4 (2020-09-12)
- - Change: type from int to float for heartbeat period (#70)
- - Fixed: event dispatcher interface in Event.php #(69)
+
+- Change: type from int to float for heartbeat period (#70)
+- Fixed: event dispatcher interface in Event.php #(69)
 
 ## v6.2.3 (2020-09-03)
+
 - Fixed: use provided event dispatcher (#67)
 
 ## v6.2.2 (2020-04-15)
+
 - Fixed: varchars table length should be read as unsigned int (#63)
 
 ## v6.2.1 (2020-03-24)
