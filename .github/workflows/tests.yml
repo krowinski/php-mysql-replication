@@ -24,14 +24,9 @@ jobs:
         
       - name: Start mysql service
         run: |
-          sudo chmod 777 /var/lib/mysql /var/log/mysql/*
-          mysqld \
-          --datadir=/var/lib/mysql \
-          --server-id=1 \
-          --log-bin=/var/lib/mysql/mysql-bin.log \
-          --binlog-format=row \
-          --max_allowed_packet=64M
-        
+          echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log" | sudo tee -a /etc/mysql/my.cnf
+          sudo /etc/init.d/mysql start
+
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
         with:
