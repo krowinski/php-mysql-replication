@@ -32,7 +32,7 @@ class JsonBinaryDecoderFormatter
         return str_replace(
             ["\\", '/', '"', "\n", "\r", "\t", "\x08", "\x0c"],
             ["\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b"],
-            $value
+            (string)$value
         );
     }
 
