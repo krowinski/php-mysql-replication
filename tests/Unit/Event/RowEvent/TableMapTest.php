@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Unit\Event\RowEvent;
 
@@ -38,6 +39,7 @@ class TableMapTest extends BaseTest
         self::assertSame($expected['columnDTOCollection'], $tableMap->getColumnDTOCollection());
 
         self::assertInstanceOf(\JsonSerializable::class, $tableMap);
+        /** @noinspection JsonEncodingApiUsageInspection */
         self::assertSame(json_encode($expected), json_encode($tableMap));
     }
 }

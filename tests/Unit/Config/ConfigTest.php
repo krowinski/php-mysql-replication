@@ -1,7 +1,9 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
+
 declare(strict_types=1);
 
-namespace BinaryDataReader\Unit;
+namespace MySQLReplication\Tests\Unit\Config;
 
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigBuilder;
@@ -145,7 +147,7 @@ class ConfigTest extends BaseTest
         $config = (new ConfigBuilder())->withHeartbeatPeriod($heartbeatPeriod)->build();
         $config::validate();
 
-        self::assertSame((float) $heartbeatPeriod, $config::getHeartbeatPeriod());
+        self::assertSame((float)$heartbeatPeriod, $config::getHeartbeatPeriod());
     }
 
     public function shouldValidateProvider(): array

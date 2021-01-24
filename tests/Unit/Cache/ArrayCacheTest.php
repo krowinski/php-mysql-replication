@@ -1,7 +1,9 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
+
 declare(strict_types=1);
 
-namespace BinaryDataReader\Unit;
+namespace MySQLReplication\Tests\Unit\Cache;
 
 use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\ConfigBuilder;

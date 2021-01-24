@@ -1,4 +1,7 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
+
+declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
@@ -60,7 +63,6 @@ abstract class BaseTest extends TestCase
         self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
-
     }
 
     public function connect(): void
@@ -88,8 +90,6 @@ abstract class BaseTest extends TestCase
                 return $this->currentEvent;
             }
         }
-
-        return $this->currentEvent;
     }
 
     protected function tearDown(): void
@@ -99,16 +99,16 @@ abstract class BaseTest extends TestCase
         $this->disconnect();
     }
 
-    protected function checkForVersion(float $version): bool
-    {
-        return (float)$this->connection->fetchOne('SELECT VERSION()') < $version;
-    }
-
     protected function disconnect(): void
     {
         $this->mySQLReplicationFactory->unregisterSubscriber($this->testEventSubscribers);
         $this->mySQLReplicationFactory = null;
         $this->connection = null;
+    }
+
+    protected function checkForVersion(float $version): bool
+    {
+        return (float)$this->connection->fetchOne('SELECT VERSION()') < $version;
     }
 
     protected function createAndInsertValue(string $createQuery, string $insertQuery): EventDTO

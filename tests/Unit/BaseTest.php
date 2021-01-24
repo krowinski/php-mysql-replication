@@ -1,13 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MySQLReplication\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * Class BaseTest
- * @package MySQLReplication\Unit
- */
 abstract class BaseTest extends TestCase
 {
 }

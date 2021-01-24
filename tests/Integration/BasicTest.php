@@ -1,4 +1,7 @@
 <?php
+/** @noinspection PhpPossiblePolymorphicInvocationInspection */
+
+/** @noinspection PhpUnhandledExceptionInspection */
 
 declare(strict_types=1);
 
@@ -39,8 +42,8 @@ class BasicTest extends BaseTest
         /** @var DeleteRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(DeleteRowsDTO::class, $event);
-        self::assertEquals($event->getValues()[0]['id'], 1);
-        self::assertEquals($event->getValues()[0]['data'], 'Hello World');
+        self::assertEquals(1, $event->getValues()[0]['id']);
+        self::assertEquals('Hello World', $event->getValues()[0]['data']);
     }
 
     /**
@@ -62,10 +65,10 @@ class BasicTest extends BaseTest
         /** @var UpdateRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
-        self::assertEquals($event->getValues()[0]['before']['id'], 1);
-        self::assertEquals($event->getValues()[0]['before']['data'], 'Hello');
-        self::assertEquals($event->getValues()[0]['after']['id'], 2);
-        self::assertEquals($event->getValues()[0]['after']['data'], 'World');
+        self::assertEquals(1, $event->getValues()[0]['before']['id']);
+        self::assertEquals('Hello', $event->getValues()[0]['before']['data']);
+        self::assertEquals(2, $event->getValues()[0]['after']['id']);
+        self::assertEquals('World', $event->getValues()[0]['after']['data']);
     }
 
     /**
@@ -240,7 +243,7 @@ class BasicTest extends BaseTest
     public function shouldJsonSetPartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
-            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+            self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
         $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8 - C299"}},"name":"Alice"}';
@@ -250,7 +253,7 @@ class BasicTest extends BaseTest
 
         $this->createAndInsertValue($create_query, $insert_query);
 
-        $this->connection->executeStatementuteStatement('UPDATE t1 SET j = JSON_SET(j, \'$.addr.detail.ab\', \'970785C8\')');
+        $this->connection->executeQuery('UPDATE t1 SET j = JSON_SET(j, \'$.addr.detail.ab\', \'970785C8\')');
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
@@ -276,7 +279,7 @@ class BasicTest extends BaseTest
     public function shouldJsonRemovePartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
-            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+            self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
         $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8-C299"}},"name":"Alice"}';
@@ -312,7 +315,7 @@ class BasicTest extends BaseTest
     public function shouldJsonReplacePartialUpdateWithHoles(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
-            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+            self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
         $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8-C299"}},"name":"Alice"}';

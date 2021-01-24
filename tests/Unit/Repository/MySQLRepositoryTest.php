@@ -1,22 +1,19 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
 
+declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Unit\Repository;
 
-
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use MySQLReplication\Repository\FieldDTOCollection;
 use MySQLReplication\Repository\MasterStatusDTO;
 use MySQLReplication\Repository\MySQLRepository;
 use MySQLReplication\Tests\Unit\BaseTest;
+use PHPUnit\Framework\MockObject\MockObject;
 
-/**
- * Class MySQLRepositoryTest
- * @package MySQLReplication\Tests\Unit\Repository
- */
 class MySQLRepositoryTest extends BaseTest
 {
     /**
@@ -24,7 +21,7 @@ class MySQLRepositoryTest extends BaseTest
      */
     private $mySQLRepositoryTest;
     /**
-     * @var Connection|\PHPUnit_Framework_MockObject_MockObject
+     * @var Connection|MockObject
      */
     private $connection;
 
@@ -60,7 +57,6 @@ class MySQLRepositoryTest extends BaseTest
 
     /**
      * @test
-     * @throws DBALException
      */
     public function shouldIsCheckSum(): void
     {
@@ -124,9 +120,11 @@ class MySQLRepositoryTest extends BaseTest
     public function shouldReconnect(): void
     {
         // just to cover private getConnection
-        $this->connection->method('executeQuery')->willReturnCallback(function(){
-            throw new Exception();
-        });
+        $this->connection->method('executeQuery')->willReturnCallback(
+            static function () {
+                throw new Exception('');
+            }
+        );
         $this->mySQLRepositoryTest->isCheckSum();
         self::assertTrue(true);
     }

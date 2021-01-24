@@ -1,4 +1,8 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
+
+/** @noinspection PhpPossiblePolymorphicInvocationInspection */
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
@@ -275,9 +279,9 @@ class TypesTest extends BaseTest
          * Since MariaDB 10.1, MariaDB has defaulted to the MySQL format ...
          */
         if (BinLogServerInfo::isMariaDb() && $this->checkForVersion(10.1)) {
-            $this->markTestIncomplete('Only for mariadb 10.1 or higher');
+            self::markTestIncomplete('Only for mariadb 10.1 or higher');
         } elseif ($this->checkForVersion(5.6)) {
-            $this->markTestIncomplete('Only for mysql 5.6 or higher');
+            self::markTestIncomplete('Only for mysql 5.6 or higher');
         }
 
         $create_query = 'CREATE TABLE test (test0 TIMESTAMP(0),
@@ -543,7 +547,8 @@ class TypesTest extends BaseTest
         self::assertEquals('100010101101', $event->getValues()[0]['test3']);
         self::assertEquals('101100111', $event->getValues()[0]['test4']);
         self::assertEquals(
-            '1101011010110100100111100011010100010100101110111011101011011010', $event->getValues()[0]['test5']
+            '1101011010110100100111100011010100010100101110111011101011011010',
+            $event->getValues()[0]['test5']
         );
     }
 
@@ -700,7 +705,8 @@ class TypesTest extends BaseTest
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals(
-            '000000000101000000000000000000f03f000000000000f03f', bin2hex($event->getValues()[0]['test'])
+            '000000000101000000000000000000f03f000000000000f03f',
+            bin2hex($event->getValues()[0]['test'])
         );
     }
 
@@ -740,7 +746,6 @@ class TypesTest extends BaseTest
         self::assertNull($event->getValues()[0]['test3']);
         self::assertEquals(42, $event->getValues()[0]['test7']);
         self::assertEquals(84, $event->getValues()[0]['test20']);
-
     }
 
     /**
@@ -783,7 +788,7 @@ class TypesTest extends BaseTest
     public function shouldBeJson(): void
     {
         if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
-            $this->markTestIncomplete('Only for mysql 5.7 or higher');
+            self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
         $create_query = 'CREATE TABLE t1 (i INT, j JSON)';

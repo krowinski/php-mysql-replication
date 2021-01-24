@@ -1,7 +1,9 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
+
 declare(strict_types=1);
 
-namespace BinaryDataReader\Unit;
+namespace MySQLReplication\Tests\Unit\BinaryDataReader;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
@@ -167,7 +169,8 @@ class BinaryDataReaderTest extends BaseTest
     {
         $expected = 255;
         self::assertSame(
-            $expected, hexdec(
+            $expected,
+            hexdec(
                 bin2hex(
                     $this->getBinaryRead(pack('cc', 1, $expected))->readLengthString(1)
                 )
@@ -209,7 +212,8 @@ class BinaryDataReaderTest extends BaseTest
     public function shouldReadTableId(): void
     {
         self::assertSame(
-            '7456176998088', $this->getBinaryRead(pack('v3', 2570258120, 2570258120, 2570258120))->readTableId()
+            '7456176998088',
+            $this->getBinaryRead(pack('v3', 2570258120, 2570258120, 2570258120))->readTableId()
         );
     }
 
