@@ -23,9 +23,8 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Start mysql service
-        run: sudo mysqld \
+        run: mysqld \
             --datadir=/var/lib/mysql/ \
-            --user=root \
             --server-id=1 \
             --log-bin=/var/lib/mysql/mysql-bin.log \
             --binlog-format=row \
