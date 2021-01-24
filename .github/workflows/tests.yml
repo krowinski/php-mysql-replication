@@ -24,10 +24,10 @@ jobs:
         
       - name: Start mysql service
         run: |
-          sudo chmod 777 /var/lib/mysql /var/log/mysql
+          sudo chmod 777 /var/lib/mysql /var/log/mysql/*
           mysqld \
           --datadir=/var/lib/mysql \
-          --user=mysql \
+          --user=root \
           --server-id=1 \
           --log-bin=/var/lib/mysql/mysql-bin.log \
           --binlog-format=row \
