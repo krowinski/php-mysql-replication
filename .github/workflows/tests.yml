@@ -24,6 +24,7 @@ jobs:
         
       - name: Start mysql service
         run: mysqld \
+            --user=root
             --datadir=/var/lib/mysql/ \
             --server-id=1 \
             --log-bin=/var/lib/mysql/mysql-bin.log \
