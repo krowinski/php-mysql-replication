@@ -24,7 +24,6 @@ jobs:
         
       - name: Start mysql service
         run: |
-          whoiam
           sudo chmod 777 /var/lib/mysql /var/log/mysql
           mysqld \
           --datadir=/var/lib/mysql \
