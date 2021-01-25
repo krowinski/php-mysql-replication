@@ -4,8 +4,9 @@
 
 - Change: added support doctrine/dbal to ^3.0 (#75)(#73)
 - Change: dropped support for <= 7.2 (#75)
-- Change: test cases for PHP 7.3 and 7.4 (#75)
+- Added: test cases for PHP 7.3 and 7.4 (#75)
 - Fixed: scale length in decimals values (#76)
+- Added: added tests for php 8.0 
 
 ## v6.2.4 (2020-09-12)
 
