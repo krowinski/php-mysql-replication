@@ -245,5 +245,4 @@ class BinaryDataReaderTest extends BaseTest
     {
         self::assertSame(3, $this->getBinaryRead('foo')->getBinaryDataLength());
     }
-
 }
