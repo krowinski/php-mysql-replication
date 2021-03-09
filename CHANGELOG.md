@@ -1,5 +1,8 @@
 # Release Notes
 
+## v7.0.1 (2021-03-09)
+ - Fixed negative number handling (#80)
+
 ## v7.0.0 (2021-01-24)
 
 - Change: added support doctrine/dbal to ^3.0 (#75)(#73)
