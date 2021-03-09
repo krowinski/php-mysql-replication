@@ -229,28 +229,27 @@ class BinaryDataReader
 
     public function readInt8(): int
     {
-        return unpack('c', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $re = unpack('c', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        return $re >= 0x80 ? $re - 0x100 : $re;
     }
 
     public function readInt16Be(): int
     {
-        return unpack('n', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $re = unpack('n', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        return $re >= 0x8000 ? $re - 0x10000 : $re;
     }
 
     public function readInt24Be(): int
     {
         $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
-        $res = ($data[1] << 16) | ($data[2] << 8) | $data[3];
-        if ($res >= 0x800000) {
-            $res -= 0x1000000;
-        }
-
-        return $res;
+        $re = ($data[1] << 16) | ($data[2] << 8) | $data[3];
+        return $re >= 0x800000 ? $re - 0x1000000 : $re;
     }
 
     public function readInt32Be(): int
     {
-        return unpack('i', strrev($this->read(self::UNSIGNED_INT32_LENGTH)))[1];
+        $re = unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        return $re >= 0x80000000 ? $re - 0x100000000 : $re;
     }
 
     public function readInt40Be(): int

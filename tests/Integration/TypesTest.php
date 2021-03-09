@@ -56,12 +56,14 @@ class TypesTest extends BaseTest
      */
     public function shouldBeDecimalNegativeValues(): void
     {
-        $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
-        $insert_query = 'INSERT INTO test VALUES(-42000.123456)';
+        $create_query = 'CREATE TABLE test (test DECIMAL(20,10), test2 DECIMAL(11,4), test3 DECIMAL(40,30))';
+        $insert_query = 'INSERT INTO test VALUES(-42000.123456, -51.1234, -51.123456789098765432123456789)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals('-42000.1234560000', $event->getValues()[0]['test']);
+        self::assertEquals('-51.1234', $event->getValues()[0]['test2']);
+        self::assertEquals('-51.123456789098765432123456789000', $event->getValues()[0]['test3']);
     }
 
     /**
