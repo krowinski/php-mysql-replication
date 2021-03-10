@@ -404,7 +404,7 @@ Also if script crashes you need to save from time to time position form binlog (
  Like I mention in 1 point use queue system like rabbitmq, redis or kafka, they will give you ability to process data in multiple scripts.
 
 4. ### I have a problem ? you script is missing something ! I have found a bug !
- Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to workon it in my free time :)
+ Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to work on it in my free time :)
 
 5. ### How much its give overhead to mysql server ?
  It work like any other mysql in slave mode and its giving same overhead.
