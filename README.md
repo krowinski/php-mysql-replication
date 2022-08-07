@@ -1,6 +1,6 @@
 php-mysql-replication
 =========
-[![Build Status](https://travis-ci.org/moln/php-mysql-replication.svg?branch=master)](https://travis-ci.org/moln/php-mysql-replication)
+[![PHP Tests](https://github.com/Moln/php-mysql-replication/actions/workflows/tests.yml/badge.svg)](https://github.com/Moln/php-mysql-replication/actions/workflows/tests.yml)
 [![Latest Stable Version](https://poser.pugx.org/moln/php-mysql-replication/v/stable)](https://packagist.org/packages/moln/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/moln/php-mysql-replication/downloads)](https://packagist.org/packages/moln/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/moln/php-mysql-replication/v/unstable)](https://packagist.org/packages/moln/php-mysql-replication) 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d/mini.png)](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d) [![License](https://poser.pugx.org/moln/php-mysql-replication/license)](https://packagist.org/packages/moln/php-mysql-replication)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/moln/php-mysql-replication/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/moln/php-mysql-replication/?branch=master)
