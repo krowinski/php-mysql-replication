@@ -1,14 +1,21 @@
 php-mysql-replication
 =========
-[![Build Status](https://travis-ci.org/krowinski/php-mysql-replication.svg?branch=master)](https://travis-ci.org/krowinski/php-mysql-replication)
-[![Latest Stable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/stable)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/krowinski/php-mysql-replication/downloads)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/unstable)](https://packagist.org/packages/krowinski/php-mysql-replication) 
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d/mini.png)](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d) [![License](https://poser.pugx.org/krowinski/php-mysql-replication/license)](https://packagist.org/packages/krowinski/php-mysql-replication)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
+[![Build Status](https://travis-ci.org/moln/php-mysql-replication.svg?branch=master)](https://travis-ci.org/moln/php-mysql-replication)
+[![Latest Stable Version](https://poser.pugx.org/moln/php-mysql-replication/v/stable)](https://packagist.org/packages/moln/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/moln/php-mysql-replication/downloads)](https://packagist.org/packages/moln/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/moln/php-mysql-replication/v/unstable)](https://packagist.org/packages/moln/php-mysql-replication) 
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d/mini.png)](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d) [![License](https://poser.pugx.org/moln/php-mysql-replication/license)](https://packagist.org/packages/moln/php-mysql-replication)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/moln/php-mysql-replication/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/moln/php-mysql-replication/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/moln/php-mysql-replication/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/moln/php-mysql-replication/?branch=master)
 
 Pure PHP Implementation of MySQL replication protocol. This allow you to receive event like insert, update, delete with their data and raw SQL queries.
 
 Based on a great work of creators：https://github.com/noplay/python-mysql-replication and https://github.com/fengxiangyun/mysql-replication
+
+--------------------------------------------------
+
+**Note:** Resolve [krowinski/php-mysql-replication#94](https://github.com/krowinski/php-mysql-replication/issues/94),  change static config properties to non-static.
+
+--------------------------------------------------
+
 
 Installation
 =========
@@ -16,13 +23,13 @@ Installation
 In you project
 
 ```sh
-composer require krowinski/php-mysql-replication
+composer require moln/php-mysql-replication
 ```
 
 or standalone 
 
 ```sh
-git clone https://github.com/krowinski/php-mysql-replication.git
+git clone https://github.com/moln/php-mysql-replication.git
 
 composer install -o
 ```
@@ -89,9 +96,9 @@ Available options:
 
 'binLogPosition' - bin log position to start from 
 
-'eventsOnly' - array  to listen on events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file)
+'eventsOnly' - array  to listen on events (full list in [ConstEventType.php](https://github.com/moln/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file)
 
-'eventsIgnore' - array to ignore events (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file) 
+'eventsIgnore' - array to ignore events (full list in [ConstEventType.php](https://github.com/moln/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php) file) 
 
 'tablesOnly' - array to only listen on given tables (default all tables) 
 
@@ -118,7 +125,7 @@ Python: https://github.com/noplay/python-mysql-replication
 Examples
 =========
 
-All examples are available in the [examples directory](https://github.com/krowinski/php-mysql-replication/tree/master/example)
+All examples are available in the [examples directory](https://github.com/moln/php-mysql-replication/tree/master/example)
 
 This example will dump all replication events to the console:
 
@@ -397,14 +404,14 @@ FAQ
  Well first of all mysql don't give you async calls. You usually need to program this in your application (by event dispaching and adding to some queue system and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication protocol you can lisen on write events and process then asynchronously (best combo it's to add item to some queue system like rabbitmq, redis or kafka). Also in invalidate cache,  search engine replication, real time analytics and audits.
 
 2. ### It's awsome ! but what is the catch ?
- Well first of all you need to know that a lot of events may come through, like if you update 1 000 000  records in table   "bar" and you need this one insert from your table "foo" Then all must be processed by script and you need to wait for your data. This is normal and this how it's work. You can speed up using [config options](https://github.com/krowinski/php-mysql-replication#configuration).
+ Well first of all you need to know that a lot of events may come through, like if you update 1 000 000  records in table   "bar" and you need this one insert from your table "foo" Then all must be processed by script and you need to wait for your data. This is normal and this how it's work. You can speed up using [config options](https://github.com/moln/php-mysql-replication#configuration).
 Also if script crashes you need to save from time to time position form binlog (or gtid) to start from this position when  you run this script again to avoid duplicates.
 
 3. ### I need to process 1 000 000 records and its taking forever!!
  Like I mention in 1 point use queue system like rabbitmq, redis or kafka, they will give you ability to process data in multiple scripts.
 
 4. ### I have a problem ? you script is missing something ! I have found a bug !
- Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to work on it in my free time :)
+ Create an [issue](https://github.com/moln/php-mysql-replication/issues) I will try to work on it in my free time :)
 
 5. ### How much its give overhead to mysql server ?
  It work like any other mysql in slave mode and its giving same overhead.

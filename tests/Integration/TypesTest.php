@@ -280,7 +280,7 @@ class TypesTest extends BaseTest
          * MySQL 5.6 introduced microseconds using a slightly different implementation to MariaDB 5.3.
          * Since MariaDB 10.1, MariaDB has defaulted to the MySQL format ...
          */
-        if (BinLogServerInfo::isMariaDb() && $this->checkForVersion(10.1)) {
+        if ($this->getBinLogServerInfo()->isMariaDb() && $this->checkForVersion(10.1)) {
             self::markTestIncomplete('Only for mariadb 10.1 or higher');
         } elseif ($this->checkForVersion(5.6)) {
             self::markTestIncomplete('Only for mysql 5.6 or higher');
@@ -789,7 +789,7 @@ class TypesTest extends BaseTest
      */
     public function shouldBeJson(): void
     {
-        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || $this->getBinLogServerInfo()->isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 

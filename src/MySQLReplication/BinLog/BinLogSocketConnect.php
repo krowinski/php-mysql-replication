@@ -29,22 +29,41 @@ class BinLogSocketConnect
     private $binLogCurrent;
 
     /**
+     * @var Config
+     */
+    private $config;
+    /**
+     * @var BinLogServerInfo
+     */
+    private $binLogServerInfo;
+
+    /**
      * @throws BinLogException
      * @throws GtidException
      * @throws SocketException
      */
     public function __construct(
+        Config $config,
         RepositoryInterface $repository,
         SocketInterface $socket
     ) {
+        $this->config = $config;
         $this->repository = $repository;
         $this->socket = $socket;
         $this->binLogCurrent = new BinLogCurrent();
 
-        $this->socket->connectToStream(Config::getHost(), Config::getPort());
-        BinLogServerInfo::parsePackage($this->getResponse(false), $this->repository->getVersion());
+        $this->socket->connectToStream($config->getHost(), $config->getPort());
+        $this->binLogServerInfo = BinLogServerInfo::parsePackage(
+            $this->getResponse(false),
+            $this->repository->getVersion()
+        );
         $this->authenticate();
         $this->getBinlogStream();
+    }
+
+    public function getBinLogServerInfo(): BinLogServerInfo
+    {
+        return $this->binLogServerInfo;
     }
 
     /**
@@ -111,11 +130,11 @@ class BinLogSocketConnect
         for ($i = 0; $i < 23; ++$i) {
             $data .= chr(0);
         }
-        $result = sha1(Config::getPassword(), true) ^ sha1(
-                BinLogServerInfo::getSalt() . sha1(sha1(Config::getPassword(), true), true), true
+        $result = sha1($this->config->getPassword(), true) ^ sha1(
+                $this->binLogServerInfo->getSalt() . sha1(sha1($this->config->getPassword(), true), true), true
             );
 
-        $data = $data . Config::getUser() . chr(0) . chr(strlen($result)) . $result;
+        $data = $data . $this->config->getUser() . chr(0) . chr(strlen($result)) . $result;
         $str = pack('L', strlen($data));
         $s = $str[0] . $str[1] . $str[2];
         $data = $s . chr(1) . $data;
@@ -152,17 +171,17 @@ class BinLogSocketConnect
             $this->execute('SET @master_binlog_checksum = @@global.binlog_checksum');
         }
 
-        if (0 !== Config::getHeartbeatPeriod()) {
+        if (0 !== $this->config->getHeartbeatPeriod()) {
             // master_heartbeat_period is in nanoseconds
-            $this->execute('SET @master_heartbeat_period = ' . Config::getHeartbeatPeriod() * 1000000000);
+            $this->execute('SET @master_heartbeat_period = ' . $this->config->getHeartbeatPeriod() * 1000000000);
         }
 
         $this->registerSlave();
 
-        if ('' !== Config::getMariaDbGtid()) {
+        if ('' !== $this->config->getMariaDbGtid()) {
             $this->setBinLogDumpMariaGtid();
         }
-        if ('' !== Config::getGtid()) {
+        if ('' !== $this->config->getGtid()) {
             $this->setBinLogDumpGtid();
         } else {
             $this->setBinLogDump();
@@ -188,19 +207,19 @@ class BinLogSocketConnect
     {
         $host = gethostname();
         $hostLength = strlen($host);
-        $userLength = strlen(Config::getUser());
-        $passLength = strlen(Config::getPassword());
+        $userLength = strlen($this->config->getUser());
+        $passLength = strlen($this->config->getPassword());
 
         $data = pack('l', 18 + $hostLength + $userLength + $passLength);
         $data .= chr(self::COM_REGISTER_SLAVE);
-        $data .= pack('V', Config::getSlaveId());
+        $data .= pack('V', $this->config->getSlaveId());
         $data .= pack('C', $hostLength);
         $data .= $host;
         $data .= pack('C', $userLength);
-        $data .= Config::getUser();
+        $data .= $this->config->getUser();
         $data .= pack('C', $passLength);
-        $data .= Config::getPassword();
-        $data .= pack('v', Config::getPort());
+        $data .= $this->config->getPassword();
+        $data .= pack('v', $this->config->getPort());
         $data .= pack('V', 0);
         $data .= pack('V', 0);
 
@@ -215,11 +234,11 @@ class BinLogSocketConnect
     private function setBinLogDumpMariaGtid(): void
     {
         $this->execute('SET @mariadb_slave_capability = 4');
-        $this->execute('SET @slave_connect_state = \'' . Config::getMariaDbGtid() . '\'');
+        $this->execute('SET @slave_connect_state = \'' . $this->config->getMariaDbGtid() . '\'');
         $this->execute('SET @slave_gtid_strict_mode = 0');
         $this->execute('SET @slave_gtid_ignore_duplicates = 0');
 
-        $this->binLogCurrent->setMariaDbGtid(Config::getMariaDbGtid());
+        $this->binLogCurrent->setMariaDbGtid($this->config->getMariaDbGtid());
     }
 
     /**
@@ -230,11 +249,11 @@ class BinLogSocketConnect
      */
     private function setBinLogDumpGtid(): void
     {
-        $collection = GtidCollection::makeCollectionFromString(Config::getGtid());
+        $collection = GtidCollection::makeCollectionFromString($this->config->getGtid());
 
         $data = pack('l', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
         $data .= pack('S', 0);
-        $data .= pack('I', Config::getSlaveId());
+        $data .= pack('I', $this->config->getSlaveId());
         $data .= pack('I', 3);
         $data .= chr(0);
         $data .= chr(0);
@@ -246,7 +265,7 @@ class BinLogSocketConnect
         $this->socket->writeToSocket($data);
         $this->getResponse();
 
-        $this->binLogCurrent->setGtid(Config::getGtid());
+        $this->binLogCurrent->setGtid($this->config->getGtid());
     }
 
     /**
@@ -256,8 +275,8 @@ class BinLogSocketConnect
      */
     private function setBinLogDump(): void
     {
-        $binFilePos = Config::getBinLogPosition();
-        $binFileName = Config::getBinLogFileName();
+        $binFilePos = $this->config->getBinLogPosition();
+        $binFileName = $this->config->getBinLogFileName();
         if (0 === $binFilePos && '' === $binFileName) {
             $masterStatusDTO = $this->repository->getMasterStatus();
             $binFilePos = $masterStatusDTO->getPosition();
@@ -267,7 +286,7 @@ class BinLogSocketConnect
         $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
         $data .= pack('I', $binFilePos);
         $data .= pack('v', 0);
-        $data .= pack('I', Config::getSlaveId());
+        $data .= pack('I', $this->config->getSlaveId());
         $data .= $binFileName;
 
         $this->socket->writeToSocket($data);

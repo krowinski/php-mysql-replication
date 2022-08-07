@@ -8,35 +8,38 @@ class BinLogServerInfo
     private const MYSQL_VERSION_MARIADB = 'MariaDB';
     private const MYSQL_VERSION_PERCONA = 'Percona';
     private const MYSQL_VERSION_GENERIC = 'MySQL';
-    private static $serverInfo = [];
+    /**
+     * @var array
+     */
+    private $serverInfo;
 
-    public static function parsePackage(string $data, string $version): void
+    public static function parsePackage(string $data, string $version): BinLogServerInfo
     {
         $i = 0;
         $length = strlen($data);
-        self::$serverInfo['protocol_version'] = ord($data[$i]);
+        $serverInfo['protocol_version'] = ord($data[$i]);
         ++$i;
 
         //version
-        self::$serverInfo['server_version'] = '';
+        $serverInfo['server_version'] = '';
         $start = $i;
         for ($i = $start; $i < $length; ++$i) {
             if ($data[$i] === chr(0)) {
                 ++$i;
                 break;
             }
-            self::$serverInfo['server_version'] .= $data[$i];
+            $serverInfo['server_version'] .= $data[$i];
         }
 
         //connection_id 4 bytes
-        self::$serverInfo['connection_id'] = unpack('I', $data[$i] . $data[++$i] . $data[++$i] . $data[++$i])[1];
+        $serverInfo['connection_id'] = unpack('I', $data[$i] . $data[++$i] . $data[++$i] . $data[++$i])[1];
         ++$i;
 
         //auth_plugin_data_part_1
         //[len=8] first 8 bytes of the auth-plugin data
-        self::$serverInfo['salt'] = '';
+        $serverInfo['salt'] = '';
         for ($j = $i; $j < $i + 8; ++$j) {
-            self::$serverInfo['salt'] .= $data[$j];
+            $serverInfo['salt'] .= $data[$j];
         }
         $i += 8;
 
@@ -47,7 +50,7 @@ class BinLogServerInfo
         $i += 2;
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
-        self::$serverInfo['character_set'] = $data[$i];
+        $serverInfo['character_set'] = $data[$i];
         ++$i;
 
         //status_flags (2) -- Protocol::StatusFlags (optional)
@@ -67,23 +70,30 @@ class BinLogServerInfo
         //next salt
         if ($length >= $i + $salt_len) {
             for ($j = $i; $j < $i + $salt_len; ++$j) {
-                self::$serverInfo['salt'] .= $data[$j];
+                $serverInfo['salt'] .= $data[$j];
             }
 
         }
-        self::$serverInfo['auth_plugin_name'] = '';
+        $serverInfo['auth_plugin_name'] = '';
         $i += $salt_len + 1;
         for ($j = $i; $j < $length - 1; ++$j) {
-            self::$serverInfo['auth_plugin_name'] .= $data[$j];
+            $serverInfo['auth_plugin_name'] .= $data[$j];
         }
 
-        self::$serverInfo['version_name'] = self::parseVersion($version);
-        self::$serverInfo['version_revision'] = self::parseRevision($version);
+        $serverInfo['version_name'] = self::parseVersion($version);
+        $serverInfo['version_revision'] = self::parseRevision($version);
+
+        return new self($serverInfo);
     }
 
-    public static function getSalt(): string
+    public function __construct(array $serverInfo)
     {
-        return self::$serverInfo['salt'];
+        $this->serverInfo = $serverInfo;
+    }
+
+    public function getSalt(): string
+    {
+        return $this->serverInfo['salt'];
     }
 
     /**
@@ -103,29 +113,29 @@ class BinLogServerInfo
         return self::MYSQL_VERSION_GENERIC;
     }
 
-    public static function getRevision(): float
+    public function getRevision(): float
     {
-        return self::$serverInfo['version_revision'];
+        return $this->serverInfo['version_revision'];
     }
 
-    public static function getVersion(): string
+    public function getVersion(): string
     {
-        return self::$serverInfo['version_name'];
+        return $this->serverInfo['version_name'];
     }
 
-    public static function isMariaDb(): bool
+    public function isMariaDb(): bool
     {
-        return self::MYSQL_VERSION_MARIADB === self::getVersion();
+        return self::MYSQL_VERSION_MARIADB === $this->getVersion();
     }
 
-    public static function isPercona(): bool
+    public function isPercona(): bool
     {
-        return self::MYSQL_VERSION_PERCONA === self::getVersion();
+        return self::MYSQL_VERSION_PERCONA === $this->getVersion();
     }
 
-    public static function isGeneric(): bool
+    public function isGeneric(): bool
     {
-        return self::MYSQL_VERSION_GENERIC === self::getVersion();
+        return self::MYSQL_VERSION_GENERIC === $this->getVersion();
     }
 
     private static function parseRevision(string $version): float

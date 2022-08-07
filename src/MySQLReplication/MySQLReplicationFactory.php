@@ -8,6 +8,7 @@ use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\DriverManager;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 use MySQLReplication\BinLog\BinLogException;
+use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\BinLog\BinLogSocketConnect;
 use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\Config;
@@ -33,6 +34,7 @@ class MySQLReplicationFactory
     private $connection;
     private $eventDispatcher;
     private $event;
+    private $binLogServerConnect;
 
     /**
      * @throws BinLogException
@@ -48,23 +50,23 @@ class MySQLReplicationFactory
         EventDispatcherInterface $eventDispatcher = null,
         SocketInterface $socket = null
     ) {
-        $config::validate();
+        $config->validate();
 
         if (null === $repository) {
             $this->connection = DriverManager::getConnection(
                 [
-                    'user' => Config::getUser(),
-                    'password' => Config::getPassword(),
-                    'host' => Config::getHost(),
-                    'port' => Config::getPort(),
+                    'user' => $config->getUser(),
+                    'password' => $config->getPassword(),
+                    'host' => $config->getHost(),
+                    'port' => $config->getPort(),
                     'driver' => 'pdo_mysql',
-                    'charset' => Config::getCharset()
+                    'charset' => $config->getCharset()
                 ]
             );
             $repository = new MySQLRepository($this->connection);
         }
         if (null === $cache) {
-            $cache = new ArrayCache();
+            $cache = new ArrayCache($config->getTableCacheSize());
         }
 
         $this->eventDispatcher = $eventDispatcher ?: new EventDispatcher();
@@ -73,18 +75,28 @@ class MySQLReplicationFactory
             $socket = new Socket();
         }
 
+        $this->binLogServerConnect = new BinLogSocketConnect(
+            $config,
+            $repository,
+            $socket
+        );
+
         $this->event = new Event(
-            new BinLogSocketConnect(
-                $repository,
-                $socket
-            ),
+            $config,
+            $this->binLogServerConnect,
             new RowEventFactory(
+                $config,
                 $repository,
                 $cache
             ),
             $this->eventDispatcher,
             $cache
         );
+    }
+
+    public function getBinLogServerInfo(): BinLogServerInfo
+    {
+        return $this->binLogServerConnect->getBinLogServerInfo();
     }
 
     public function registerSubscriber(EventSubscriberInterface $eventSubscribers): void

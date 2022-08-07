@@ -194,7 +194,7 @@ class BinaryDataReaderTest extends BaseTest
     public function shouldReadFloat(): void
     {
         $expected = 0.001;
-        self::assertSame($expected, $this->getBinaryRead(pack('f', $expected))->readFloat());
+        self::assertSame($expected, round($this->getBinaryRead(pack('f', $expected))->readFloat(), 3));
     }
 
     /**

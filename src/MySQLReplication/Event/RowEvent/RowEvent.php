@@ -292,8 +292,13 @@ class RowEvent extends EventCommon
      * @var TableMap|null
      */
     private $currentTableMap;
+    /**
+     * @var Config
+     */
+    private $config;
 
     public function __construct(
+        Config $config,
         RepositoryInterface $repository,
         BinaryDataReader $binaryDataReader,
         EventInfo $eventInfo,
@@ -303,6 +308,7 @@ class RowEvent extends EventCommon
 
         $this->repository = $repository;
         $this->cache = $cache;
+        $this->config = $config;
     }
 
     /**
@@ -320,7 +326,7 @@ class RowEvent extends EventCommon
         $data['schema_length'] = $this->binaryDataReader->readUInt8();
         $data['schema_name'] = $this->binaryDataReader->read($data['schema_length']);
 
-        if (Config::checkDataBasesOnly($data['schema_name'])) {
+        if ($this->config->checkDataBasesOnly($data['schema_name'])) {
             return null;
         }
 
@@ -328,7 +334,7 @@ class RowEvent extends EventCommon
         $data['table_length'] = $this->binaryDataReader->readUInt8();
         $data['table_name'] = $this->binaryDataReader->read($data['table_length']);
 
-        if (Config::checkTablesOnly($data['table_name'])) {
+        if ($this->config->checkTablesOnly($data['table_name'])) {
             return null;
         }
 

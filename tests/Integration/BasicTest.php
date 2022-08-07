@@ -242,7 +242,7 @@ class BasicTest extends BaseTest
      */
     public function shouldJsonSetPartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || $this->getBinLogServerInfo()->isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -278,7 +278,7 @@ class BasicTest extends BaseTest
      */
     public function shouldJsonRemovePartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || $this->getBinLogServerInfo()->isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -314,7 +314,7 @@ class BasicTest extends BaseTest
      */
     public function shouldJsonReplacePartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || $this->getBinLogServerInfo()->isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -395,7 +395,7 @@ class BasicTest extends BaseTest
 
         $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
-        $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
+        $this->connection->executeStatement('SET SESSION time_zone = "+00:00"');
         $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
         $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
         $this->connection->executeStatement('USE ' . $this->database);

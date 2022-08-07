@@ -54,25 +54,25 @@ class ConfigTest extends BaseTest
             $expected['heartbeatPeriod']
         );
 
-        self::assertSame($expected['user'], $config::getUser());
-        self::assertSame($expected['host'], $config::getHost());
-        self::assertSame($expected['port'], $config::getPort());
-        self::assertSame($expected['password'], $config::getPassword());
-        self::assertSame($expected['charset'], $config::getCharset());
-        self::assertSame($expected['gtid'], $config::getGtid());
-        self::assertSame($expected['slaveId'], $config::getSlaveId());
-        self::assertSame($expected['binLogFileName'], $config::getBinLogFileName());
-        self::assertSame($expected['binLogPosition'], $config::getBinLogPosition());
-        self::assertSame($expected['eventsOnly'], $config::getEventsOnly());
-        self::assertSame($expected['eventsIgnore'], $config::getEventsIgnore());
-        self::assertSame($expected['tablesOnly'], $config::getTablesOnly());
-        self::assertSame($expected['mariaDbGtid'], $config::getMariaDbGtid());
-        self::assertSame($expected['tableCacheSize'], $config::getTableCacheSize());
-        self::assertSame($expected['custom'], $config::getCustom());
-        self::assertSame($expected['heartbeatPeriod'], $config::getHeartbeatPeriod());
-        self::assertSame($expected['databasesOnly'], $config::getDatabasesOnly());
+        self::assertSame($expected['user'], $config->getUser());
+        self::assertSame($expected['host'], $config->getHost());
+        self::assertSame($expected['port'], $config->getPort());
+        self::assertSame($expected['password'], $config->getPassword());
+        self::assertSame($expected['charset'], $config->getCharset());
+        self::assertSame($expected['gtid'], $config->getGtid());
+        self::assertSame($expected['slaveId'], $config->getSlaveId());
+        self::assertSame($expected['binLogFileName'], $config->getBinLogFileName());
+        self::assertSame($expected['binLogPosition'], $config->getBinLogPosition());
+        self::assertSame($expected['eventsOnly'], $config->getEventsOnly());
+        self::assertSame($expected['eventsIgnore'], $config->getEventsIgnore());
+        self::assertSame($expected['tablesOnly'], $config->getTablesOnly());
+        self::assertSame($expected['mariaDbGtid'], $config->getMariaDbGtid());
+        self::assertSame($expected['tableCacheSize'], $config->getTableCacheSize());
+        self::assertSame($expected['custom'], $config->getCustom());
+        self::assertSame($expected['heartbeatPeriod'], $config->getHeartbeatPeriod());
+        self::assertSame($expected['databasesOnly'], $config->getDatabasesOnly());
 
-        $config::validate();
+        $config->validate();
     }
 
     /**
@@ -80,17 +80,17 @@ class ConfigTest extends BaseTest
      */
     public function shouldCheckDataBasesOnly(): void
     {
-        (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();
-        self::assertTrue(Config::checkDataBasesOnly('foo'));
+        $config = (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();
+        self::assertTrue($config->checkDataBasesOnly('foo'));
 
-        (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
-        self::assertFalse(Config::checkDataBasesOnly('foo'));
+        $config = (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
+        self::assertFalse($config->checkDataBasesOnly('foo'));
 
-        (new ConfigBuilder())->withDatabasesOnly(['test'])->build();
-        self::assertFalse(Config::checkDataBasesOnly('test'));
+        $config = (new ConfigBuilder())->withDatabasesOnly(['test'])->build();
+        self::assertFalse($config->checkDataBasesOnly('test'));
 
-        (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
-        self::assertTrue(Config::checkDataBasesOnly('bar'));
+        $config = (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
+        self::assertTrue($config->checkDataBasesOnly('bar'));
     }
 
     /**
@@ -98,16 +98,17 @@ class ConfigTest extends BaseTest
      */
     public function shouldCheckTablesOnly(): void
     {
-        self::assertFalse(Config::checkTablesOnly('foo'));
+        $config = (new ConfigBuilder())->build();
+        self::assertFalse($config->checkTablesOnly('foo'));
 
-        (new ConfigBuilder())->withTablesOnly(['foo'])->build();
-        self::assertFalse(Config::checkTablesOnly('foo'));
+        $config = (new ConfigBuilder())->withTablesOnly(['foo'])->build();
+        self::assertFalse($config->checkTablesOnly('foo'));
 
-        (new ConfigBuilder())->withTablesOnly(['test'])->build();
-        self::assertFalse(Config::checkTablesOnly('test'));
+        $config = (new ConfigBuilder())->withTablesOnly(['test'])->build();
+        self::assertFalse($config->checkTablesOnly('test'));
 
-        (new ConfigBuilder())->withTablesOnly(['foo'])->build();
-        self::assertTrue(Config::checkTablesOnly('bar'));
+        $config = (new ConfigBuilder())->withTablesOnly(['foo'])->build();
+        self::assertTrue($config->checkTablesOnly('bar'));
     }
 
     /**
@@ -115,16 +116,17 @@ class ConfigTest extends BaseTest
      */
     public function shouldCheckEvent(): void
     {
-        self::assertTrue(Config::checkEvent(1));
+        $config = (new ConfigBuilder())->build();
+        self::assertTrue($config->checkEvent(1));
 
-        (new ConfigBuilder())->withEventsOnly([2])->build();
-        self::assertTrue(Config::checkEvent(2));
+        $config = (new ConfigBuilder())->withEventsOnly([2])->build();
+        self::assertTrue($config->checkEvent(2));
 
-        (new ConfigBuilder())->withEventsOnly([3])->build();
-        self::assertFalse(Config::checkEvent(4));
+        $config = (new ConfigBuilder())->withEventsOnly([3])->build();
+        self::assertFalse($config->checkEvent(4));
 
-        (new ConfigBuilder())->withEventsIgnore([4])->build();
-        self::assertFalse(Config::checkEvent(4));
+        $config = (new ConfigBuilder())->withEventsIgnore([4])->build();
+        self::assertFalse($config->checkEvent(4));
     }
 
     public function shouldCheckHeartbeatPeriodProvider(): array
@@ -145,9 +147,9 @@ class ConfigTest extends BaseTest
     public function shouldCheckHeartbeatPeriod($heartbeatPeriod): void
     {
         $config = (new ConfigBuilder())->withHeartbeatPeriod($heartbeatPeriod)->build();
-        $config::validate();
+        $config->validate();
 
-        self::assertSame((float)$heartbeatPeriod, $config::getHeartbeatPeriod());
+        self::assertSame((float)$heartbeatPeriod, $config->getHeartbeatPeriod());
     }
 
     public function shouldValidateProvider(): array
@@ -176,7 +178,7 @@ class ConfigTest extends BaseTest
 
         /** @var Config $config */
         $config = (new ConfigBuilder())->{'with' . strtoupper($configKey)}($configValue)->build();
-        $config::validate();
+        $config->validate();
     }
 
 }

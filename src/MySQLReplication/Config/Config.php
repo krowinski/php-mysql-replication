@@ -7,23 +7,23 @@ use JsonSerializable;
 
 class Config implements JsonSerializable
 {
-    private static $user;
-    private static $host;
-    private static $port;
-    private static $password;
-    private static $charset;
-    private static $gtid;
-    private static $slaveId;
-    private static $binLogFileName;
-    private static $binLogPosition;
-    private static $eventsOnly;
-    private static $eventsIgnore;
-    private static $tablesOnly;
-    private static $databasesOnly;
-    private static $mariaDbGtid;
-    private static $tableCacheSize;
-    private static $custom;
-    private static $heartbeatPeriod;
+    private $user;
+    private $host;
+    private $port;
+    private $password;
+    private $charset;
+    private $gtid;
+    private $slaveId;
+    private $binLogFileName;
+    private $binLogPosition;
+    private $eventsOnly;
+    private $eventsIgnore;
+    private $tablesOnly;
+    private $databasesOnly;
+    private $mariaDbGtid;
+    private $tableCacheSize;
+    private $custom;
+    private $heartbeatPeriod;
 
     public function __construct(
         string $user,
@@ -44,43 +44,43 @@ class Config implements JsonSerializable
         array $custom,
         float $heartbeatPeriod
     ) {
-        self::$user = $user;
-        self::$host = $host;
-        self::$port = $port;
-        self::$password = $password;
-        self::$charset = $charset;
-        self::$gtid = $gtid;
-        self::$slaveId = $slaveId;
-        self::$binLogFileName = $binLogFileName;
-        self::$binLogPosition = $binLogPosition;
-        self::$eventsOnly = $eventsOnly;
-        self::$eventsIgnore = $eventsIgnore;
-        self::$tablesOnly = $tablesOnly;
-        self::$databasesOnly = $databasesOnly;
-        self::$mariaDbGtid = $mariaGtid;
-        self::$tableCacheSize = $tableCacheSize;
-        self::$custom = $custom;
-        self::$heartbeatPeriod = $heartbeatPeriod;
+        $this->user = $user;
+        $this->host = $host;
+        $this->port = $port;
+        $this->password = $password;
+        $this->charset = $charset;
+        $this->gtid = $gtid;
+        $this->slaveId = $slaveId;
+        $this->binLogFileName = $binLogFileName;
+        $this->binLogPosition = $binLogPosition;
+        $this->eventsOnly = $eventsOnly;
+        $this->eventsIgnore = $eventsIgnore;
+        $this->tablesOnly = $tablesOnly;
+        $this->databasesOnly = $databasesOnly;
+        $this->mariaDbGtid = $mariaGtid;
+        $this->tableCacheSize = $tableCacheSize;
+        $this->custom = $custom;
+        $this->heartbeatPeriod = $heartbeatPeriod;
     }
 
     /**
      * @throws ConfigException
      */
-    public static function validate(): void
+    public function validate(): void
     {
-        if (!empty(self::$host)) {
-            $ip = gethostbyname(self::$host);
+        if (!empty($this->host)) {
+            $ip = gethostbyname($this->host);
             if (false === filter_var($ip, FILTER_VALIDATE_IP)) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty(self::$port) && false === filter_var(
-                self::$port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+        if (!empty($this->port) && false === filter_var(
+                $this->port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty(self::$gtid)) {
-            foreach (explode(',', self::$gtid) as $gtid) {
+        if (!empty($this->gtid)) {
+            foreach (explode(',', $this->gtid) as $gtid) {
                 if (!(bool)preg_match(
                     '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches
                 )) {
@@ -88,23 +88,23 @@ class Config implements JsonSerializable
                 }
             }
         }
-        if (!empty(self::$slaveId) && false === filter_var(
-                self::$slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
+        if (!empty($this->slaveId) && false === filter_var(
+                $this->slaveId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]
             )) {
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
-        if (false === filter_var(self::$binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+        if (false === filter_var($this->binLogPosition, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
             );
         }
-        if (false === filter_var(self::$tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+        if (false === filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
             throw new ConfigException(
                 ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
             );
         }
-        if (0.0 !== self::$heartbeatPeriod && false === (
-                self::$heartbeatPeriod >= 0.001 && self::$heartbeatPeriod <= 4294967.0
+        if (0.0 !== $this->heartbeatPeriod && false === (
+                $this->heartbeatPeriod >= 0.001 && $this->heartbeatPeriod <= 4294967.0
             )) {
             throw new ConfigException(
                 ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE
@@ -112,116 +112,116 @@ class Config implements JsonSerializable
         }
     }
 
-    public static function getCustom(): array
+    public function getCustom(): array
     {
-        return self::$custom;
+        return $this->custom;
     }
 
-    public static function getUser(): string
+    public function getUser(): string
     {
-        return self::$user;
+        return $this->user;
     }
 
-    public static function getHost(): string
+    public function getHost(): string
     {
-        return self::$host;
+        return $this->host;
     }
 
-    public static function getPort(): int
+    public function getPort(): int
     {
-        return self::$port;
+        return $this->port;
     }
 
-    public static function getPassword(): string
+    public function getPassword(): string
     {
-        return self::$password;
+        return $this->password;
     }
 
-    public static function getCharset(): string
+    public function getCharset(): string
     {
-        return self::$charset;
+        return $this->charset;
     }
 
-    public static function getGtid(): string
+    public function getGtid(): string
     {
-        return self::$gtid;
+        return $this->gtid;
     }
 
-    public static function getMariaDbGtid(): string
+    public function getMariaDbGtid(): string
     {
-        return self::$mariaDbGtid;
+        return $this->mariaDbGtid;
     }
 
-    public static function getSlaveId(): int
+    public function getSlaveId(): int
     {
-        return self::$slaveId;
+        return $this->slaveId;
     }
 
-    public static function getBinLogFileName(): string
+    public function getBinLogFileName(): string
     {
-        return self::$binLogFileName;
+        return $this->binLogFileName;
     }
 
-    public static function getBinLogPosition(): int
+    public function getBinLogPosition(): int
     {
-        return self::$binLogPosition;
+        return $this->binLogPosition;
     }
 
-    public static function getTableCacheSize(): int
+    public function getTableCacheSize(): int
     {
-        return self::$tableCacheSize;
+        return $this->tableCacheSize;
     }
 
-    public static function checkDataBasesOnly(string $database): bool
+    public function checkDataBasesOnly(string $database): bool
     {
-        return [] !== self::getDatabasesOnly() && !in_array($database, self::getDatabasesOnly(), true);
+        return [] !== $this->getDatabasesOnly() && !in_array($database, $this->getDatabasesOnly(), true);
     }
 
-    public static function getDatabasesOnly(): array
+    public function getDatabasesOnly(): array
     {
-        return self::$databasesOnly;
+        return $this->databasesOnly;
     }
 
-    public static function checkTablesOnly(string $table): bool
+    public function checkTablesOnly(string $table): bool
     {
-        return [] !== self::getTablesOnly() && !in_array($table, self::getTablesOnly(), true);
+        return [] !== $this->getTablesOnly() && !in_array($table, $this->getTablesOnly(), true);
     }
 
-    public static function getTablesOnly(): array
+    public function getTablesOnly(): array
     {
-        return self::$tablesOnly;
+        return $this->tablesOnly;
     }
 
-    public static function checkEvent(int $type): bool
+    public function checkEvent(int $type): bool
     {
-        if ([] !== self::getEventsOnly() && !in_array($type, self::getEventsOnly(), true)) {
+        if ([] !== $this->getEventsOnly() && !in_array($type, $this->getEventsOnly(), true)) {
             return false;
         }
 
-        if (in_array($type, self::getEventsIgnore(), true)) {
+        if (in_array($type, $this->getEventsIgnore(), true)) {
             return false;
         }
 
         return true;
     }
 
-    public static function getEventsOnly(): array
+    public function getEventsOnly(): array
     {
-        return self::$eventsOnly;
+        return $this->eventsOnly;
     }
 
-    public static function getEventsIgnore(): array
+    public function getEventsIgnore(): array
     {
-        return self::$eventsIgnore;
+        return $this->eventsIgnore;
     }
 
-    public static function getHeartbeatPeriod(): float
+    public function getHeartbeatPeriod(): float
     {
-        return self::$heartbeatPeriod;
+        return $this->heartbeatPeriod;
     }
 
     public function jsonSerialize()
     {
-        return get_class_vars(self::class);
+        return get_object_vars($this);
     }
 }

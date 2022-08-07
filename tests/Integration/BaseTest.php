@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace MySQLReplication\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\EventDTO;
@@ -73,7 +74,7 @@ abstract class BaseTest extends TestCase
 
         $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
-        $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
+        $this->connection->executeStatement('SET SESSION time_zone = "+00:00"');
         $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
         $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
         $this->connection->executeStatement('USE ' . $this->database);
@@ -121,5 +122,10 @@ abstract class BaseTest extends TestCase
         self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
 
         return $this->getEvent();
+    }
+
+    protected function getBinLogServerInfo(): BinLogServerInfo
+    {
+        return $this->mySQLReplicationFactory->getBinLogServerInfo();
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
+use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Event\DTO\RotateDTO;
 
@@ -11,6 +12,17 @@ use MySQLReplication\Event\DTO\RotateDTO;
  */
 class RotateEvent extends EventCommon
 {
+    private $binLogServerInfo;
+
+    public function __construct(
+        BinLogServerInfo $binLogServerInfo,
+        EventInfo $eventInfo,
+        BinaryDataReader $binaryDataReader
+    ) {
+        parent::__construct($eventInfo, $binaryDataReader);
+        $this->binLogServerInfo = $binLogServerInfo;
+    }
+
     public function makeRotateEventDTO(): RotateDTO
     {
         $binFilePos = (int)$this->binaryDataReader->readUInt64();
@@ -30,7 +42,7 @@ class RotateEvent extends EventCommon
 
     private function getSizeToRemoveByVersion(): int
     {
-        if (BinLogServerInfo::isMariaDb() && BinLogServerInfo::getRevision() <= 10) {
+        if ($this->binLogServerInfo->isMariaDb() && $this->binLogServerInfo->getRevision() <= 10) {
             return 0;
         }
 

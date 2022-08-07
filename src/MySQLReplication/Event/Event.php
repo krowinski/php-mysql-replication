@@ -31,13 +31,21 @@ class Event
     private $rowEventFactory;
     private $eventDispatcher;
     private $cache;
+    /**
+     * @var Config
+     */
+    private $config;
+    private $binLogServerInfo;
 
     public function __construct(
+        Config $config,
         BinLogSocketConnect $binLogSocketConnect,
         RowEventFactory $rowEventFactory,
         EventDispatcherInterface $eventDispatcher,
         CacheInterface $cache
     ) {
+        $this->config = $config;
+        $this->binLogServerInfo = $binLogSocketConnect->getBinLogServerInfo();
         $this->binLogSocketConnect = $binLogSocketConnect;
         $this->rowEventFactory = $rowEventFactory;
         $this->eventDispatcher = $eventDispatcher;
@@ -72,7 +80,7 @@ class Event
             $eventDTO = $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)->makeTableMapDTO();
         } else if (ConstEventType::ROTATE_EVENT === $eventInfo->getType()) {
             $this->cache->clear();
-            $eventDTO = (new RotateEvent($eventInfo, $binaryDataReader))->makeRotateEventDTO();
+            $eventDTO = (new RotateEvent($this->binLogServerInfo, $eventInfo, $binaryDataReader))->makeRotateEventDTO();
         } else if (ConstEventType::GTID_LOG_EVENT === $eventInfo->getType()) {
             $eventDTO = (new GtidEvent($eventInfo, $binaryDataReader))->makeGTIDLogDTO();
         } else if (ConstEventType::HEARTBEAT_LOG_EVENT === $eventInfo->getType()) {
@@ -82,7 +90,7 @@ class Event
         }
 
         // check for ignore and permitted events
-        if (!Config::checkEvent($eventInfo->getType())) {
+        if (!$this->config->checkEvent($eventInfo->getType())) {
             return;
         }
 
@@ -119,7 +127,7 @@ class Event
 
     private function filterDummyMariaDbEvents(QueryDTO $queryDTO): ?QueryDTO
     {
-        if (BinLogServerInfo::isMariaDb() && false !== strpos($queryDTO->getQuery(), self::MARIADB_DUMMY_QUERY)) {
+        if ($this->binLogServerInfo->isMariaDb() && false !== strpos($queryDTO->getQuery(), self::MARIADB_DUMMY_QUERY)) {
             return null;
         }
 
