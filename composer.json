@@ -12,7 +12,7 @@
   ],
   "type": "library",
   "require": {
-    "php": ">=7.3",
+    "php": ">=8.0",
     "ext-bcmath": "*",
     "ext-json": "*",
     "ext-sockets": "*",
@@ -23,6 +23,7 @@
     "symfony/event-dispatcher": "^3.1|^4.0|^5.0|^6.0"
   },
   "require-dev": {
+    "phpstan/phpstan": "^1.10",
     "phpunit/phpunit": "^9.0"
   },
   "license": "MIT",
