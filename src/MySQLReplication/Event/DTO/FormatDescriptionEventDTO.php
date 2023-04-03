@@ -23,7 +23,7 @@ class FormatDescriptionEventDTO extends EventDTO
             'Event size: ' . $this->eventInfo->getSize() . PHP_EOL;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return get_object_vars($this);
     }

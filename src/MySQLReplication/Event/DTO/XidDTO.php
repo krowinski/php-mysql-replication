@@ -40,7 +40,7 @@ class XidDTO extends EventDTO
         return $this->type;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return get_object_vars($this);
     }

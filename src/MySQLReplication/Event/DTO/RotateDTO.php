@@ -49,7 +49,7 @@ class RotateDTO extends EventDTO
             'Binlog filename: ' . $this->nextBinlog . PHP_EOL;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return get_object_vars($this);
     }

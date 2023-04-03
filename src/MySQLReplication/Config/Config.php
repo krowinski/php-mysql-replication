@@ -220,7 +220,7 @@ class Config implements JsonSerializable
         return self::$heartbeatPeriod;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return get_class_vars(self::class);
     }
