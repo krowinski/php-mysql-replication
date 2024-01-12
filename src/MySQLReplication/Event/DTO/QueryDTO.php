@@ -12,18 +12,21 @@ class QueryDTO extends EventDTO
     private $query;
     private $database;
     private $type = ConstEventsNames::QUERY;
+    private $threadId;
 
     public function __construct(
         EventInfo $eventInfo,
         string $database,
         int $executionTime,
-        string $query
+        string $query,
+        int $threadId
     ) {
         parent::__construct($eventInfo);
 
         $this->executionTime = $executionTime;
         $this->query = $query;
         $this->database = $database;
+        $this->threadId = $threadId;
     }
 
     public function getDatabase(): string
@@ -44,6 +47,11 @@ class QueryDTO extends EventDTO
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getThreadId(): int
+    {
+        return $this->threadId;
     }
 
     public function __toString(): string

@@ -12,7 +12,7 @@ class QueryEvent extends EventCommon
 {
     public function makeQueryDTO(): QueryDTO
     {
-        $this->binaryDataReader->advance(4);
+        $threadId = $this->binaryDataReader->readUInt32();
         $executionTime = $this->binaryDataReader->readUInt32();
         $schemaLength = $this->binaryDataReader->readUInt8();
         $this->binaryDataReader->advance(2);
@@ -26,7 +26,8 @@ class QueryEvent extends EventCommon
             $this->eventInfo,
             $schema,
             $executionTime,
-            $query
+            $query,
+            $threadId
         );
     }
 }
