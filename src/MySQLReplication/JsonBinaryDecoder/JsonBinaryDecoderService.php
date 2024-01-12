@@ -74,6 +74,11 @@ class JsonBinaryDecoderService
      */
     public function parseToString(): string
     {
+        // Sometimes, we can insert a NULL JSON even we set the JSON field as NOT NULL.
+        // If we meet this case, we can return a 'null' value.
+        if($this->binaryDataReader->getBinaryDataLength() === 0) {
+            return 'null';
+        }
         $this->parseJson($this->binaryDataReader->readUInt8());
 
         return $this->jsonBinaryDecoderFormatter->getJsonString();
@@ -198,7 +203,7 @@ class JsonBinaryDecoderService
 
         $entries = [];
         for ($i = 0; $i !== $elementCount; ++$i) {
-            $entries[$i] = $this->getOffsetOrInLinedValue($bytes, $intSize);
+            $entries[$i] = $this->getOffsetOrInLinedValue($bytes, $intSize, $valueEntrySize);
         }
 
         $keys = [];
@@ -238,11 +243,21 @@ class JsonBinaryDecoderService
      * @throws BinaryDataReaderException
      * @throws JsonBinaryDecoderException
      */
-    private function getOffsetOrInLinedValue(int $bytes, int $intSize): JsonBinaryDecoderValue
+    private function getOffsetOrInLinedValue(int $bytes, int $intSize, int $valueEntrySize): JsonBinaryDecoderValue
     {
         $type = $this->binaryDataReader->readUInt8();
+
         if (self::isInLinedType($type, $intSize)) {
-            return $this->parseScalar($type);
+            $scalar = $this->parseScalar($type);
+
+            // In binlog format, JSON arrays are fixed width elements, even though type value can be smaller.
+            // In order to properly process this case, we need to move cursor to the next element, which is on position 1 + $valueEntrySize (1 is length of type)
+            if($type === self::UINT16 || $type === self::INT16) {
+                $readNextBytes = $valueEntrySize - 2 - 1;
+                $this->binaryDataReader->read($readNextBytes);
+            }
+
+            return $scalar;
         }
 
         $offset = $this->binaryDataReader->readUIntBySize($intSize);
