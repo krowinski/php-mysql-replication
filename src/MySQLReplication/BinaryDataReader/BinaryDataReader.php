@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\BinaryDataReader;
@@ -6,38 +7,54 @@ namespace MySQLReplication\BinaryDataReader;
 class BinaryDataReader
 {
     public const NULL_COLUMN = 251;
+
     public const UNSIGNED_CHAR_COLUMN = 251;
+
     public const UNSIGNED_SHORT_COLUMN = 252;
+
     public const UNSIGNED_INT24_COLUMN = 253;
+
     public const UNSIGNED_INT64_COLUMN = 254;
+
     public const UNSIGNED_CHAR_LENGTH = 1;
+
     public const UNSIGNED_SHORT_LENGTH = 2;
+
     public const UNSIGNED_INT24_LENGTH = 3;
+
     public const UNSIGNED_INT32_LENGTH = 4;
+
     public const UNSIGNED_FLOAT_LENGTH = 4;
+
     public const UNSIGNED_DOUBLE_LENGTH = 8;
+
     public const UNSIGNED_INT40_LENGTH = 5;
+
     public const UNSIGNED_INT48_LENGTH = 6;
+
     public const UNSIGNED_INT56_LENGTH = 7;
+
     public const UNSIGNED_INT64_LENGTH = 8;
 
-    private $data;
+    private int $readBytes = 0;
 
-    /**
-     * @var int
-     */
-    private $readBytes = 0;
-
-    public function __construct(string $data)
-    {
-        $this->data = $data;
+    public function __construct(
+        private string $binaryData
+    ) {
     }
 
     public static function pack64bit(int $value): string
     {
         return pack(
-            'C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF,
-            ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF
+            'C8',
+            ($value >> 0) & 0xFF,
+            ($value >> 8) & 0xFF,
+            ($value >> 16) & 0xFF,
+            ($value >> 24) & 0xFF,
+            ($value >> 32) & 0xFF,
+            ($value >> 40) & 0xFF,
+            ($value >> 48) & 0xFF,
+            ($value >> 56) & 0xFF
         );
     }
 
@@ -48,14 +65,14 @@ class BinaryDataReader
 
     public function readInt16(): int
     {
-        return unpack('s', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        return self::unpack('s', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
     }
 
     public function read(int $length): string
     {
-        $return = substr($this->data, 0, $length);
+        $return = substr($this->binaryData, 0, $length);
         $this->readBytes += $length;
-        $this->data = substr($this->data, $length);
+        $this->binaryData = substr($this->binaryData, $length);
 
         return $return;
     }
@@ -63,12 +80,9 @@ class BinaryDataReader
     public function unread(string $data): void
     {
         $this->readBytes -= strlen($data);
-        $this->data = $data . $this->data;
+        $this->binaryData = $data . $this->binaryData;
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     */
     public function readCodedBinary(): ?int
     {
         $c = ord($this->read(self::UNSIGNED_CHAR_LENGTH));
@@ -90,12 +104,12 @@ class BinaryDataReader
 
     public function readUInt16(): int
     {
-        return unpack('v', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        return self::unpack('v', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
     }
 
     public function readUInt24(): int
     {
-        $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
+        $data = self::unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
 
         return $data[1] + ($data[2] << 8) + ($data[3] << 16);
     }
@@ -107,14 +121,14 @@ class BinaryDataReader
 
     public function unpackUInt64(string $binary): string
     {
-        $data = unpack('V*', $binary);
+        $data = self::unpack('V*', $binary);
 
         return bcadd((string)$data[1], bcmul((string)$data[2], bcpow('2', '32')));
     }
 
     public function readInt24(): int
     {
-        $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
+        $data = self::unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
 
         $res = $data[1] | ($data[2] << 8) | ($data[3] << 16);
         if ($res >= 0x800000) {
@@ -126,22 +140,16 @@ class BinaryDataReader
 
     public function readInt64(): string
     {
-        $data = unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
+        $data = self::unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
 
         return bcadd((string)$data[1], (string)($data[2] << 32));
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     */
     public function readLengthString(int $size): string
     {
         return $this->read($this->readUIntBySize($size));
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     */
     public function readUIntBySize(int $size): int
     {
         if ($size === self::UNSIGNED_CHAR_LENGTH) {
@@ -171,41 +179,38 @@ class BinaryDataReader
 
     public function readUInt8(): int
     {
-        return unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        return self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
     }
 
     public function readUInt32(): int
     {
-        return unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        return self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
     }
 
     public function readUInt40(): int
     {
-        $data1 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
-        $data2 = unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $data1 = self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $data2 = self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
 
         return $data1 + ($data2 << 8);
     }
 
     public function readUInt48(): int
     {
-        $data = unpack('v3', $this->read(self::UNSIGNED_INT48_LENGTH));
+        $data = self::unpack('v3', $this->read(self::UNSIGNED_INT48_LENGTH));
 
         return $data[1] + ($data[2] << 16) + ($data[3] << 32);
     }
 
     public function readUInt56(): int
     {
-        $data1 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
-        $data2 = unpack('S', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
-        $data3 = unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $data1 = self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $data2 = self::unpack('S', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $data3 = self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
 
         return $data1 + ($data2 << 8) + ($data3 << 24);
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     */
     public function readIntBeBySize(int $size): int
     {
         if ($size === self::UNSIGNED_CHAR_LENGTH) {
@@ -229,50 +234,54 @@ class BinaryDataReader
 
     public function readInt8(): int
     {
-        $re = unpack('c', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $re = self::unpack('c', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+
         return $re >= 0x80 ? $re - 0x100 : $re;
     }
 
     public function readInt16Be(): int
     {
-        $re = unpack('n', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $re = self::unpack('n', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+
         return $re >= 0x8000 ? $re - 0x10000 : $re;
     }
 
     public function readInt24Be(): int
     {
-        $data = unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
+        $data = self::unpack('C3', $this->read(self::UNSIGNED_INT24_LENGTH));
         $re = ($data[1] << 16) | ($data[2] << 8) | $data[3];
+
         return $re >= 0x800000 ? $re - 0x1000000 : $re;
     }
 
     public function readInt32Be(): int
     {
-        $re = unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $re = self::unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+
         return $re >= 0x80000000 ? $re - 0x100000000 : $re;
     }
 
     public function readInt40Be(): int
     {
-        $data1 = unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
-        $data2 = unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
+        $data1 = self::unpack('N', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $data2 = self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
 
         return $data2 + ($data1 << 8);
     }
 
     public function readInt32(): int
     {
-        return unpack('i', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        return self::unpack('i', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
     }
 
     public function readFloat(): float
     {
-        return unpack('f', $this->read(self::UNSIGNED_FLOAT_LENGTH))[1];
+        return self::unpack('f', $this->read(self::UNSIGNED_FLOAT_LENGTH))[1];
     }
 
     public function readDouble(): float
     {
-        return unpack('d', $this->read(self::UNSIGNED_DOUBLE_LENGTH))[1];
+        return self::unpack('d', $this->read(self::UNSIGNED_DOUBLE_LENGTH))[1];
     }
 
     public function readTableId(): string
@@ -287,12 +296,12 @@ class BinaryDataReader
 
     public function getBinaryDataLength(): int
     {
-        return strlen($this->data);
+        return strlen($this->binaryData);
     }
 
-    public function getData(): string
+    public function getBinaryData(): string
     {
-        return $this->data;
+        return $this->binaryData;
     }
 
     public function getBinarySlice(int $binary, int $start, int $size, int $binaryLength): int
@@ -306,5 +315,14 @@ class BinaryDataReader
     public function getReadBytes(): int
     {
         return $this->readBytes;
+    }
+
+    public static function unpack(string $format, string $string): array
+    {
+        $unpacked = unpack($format, $string);
+        if ($unpacked) {
+            return $unpacked;
+        }
+        return [];
     }
 }

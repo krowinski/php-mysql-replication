@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\BinLog;
@@ -7,22 +8,13 @@ use JsonSerializable;
 
 class BinLogCurrent implements JsonSerializable
 {
-    /**
-     * @var int
-     */
-    private $binLogPosition;
-    /**
-     * @var string
-     */
-    private $binFileName;
-    /**
-     * @var string
-     */
-    private $gtid;
-    /**
-     * @var string
-     */
-    private $mariaDbGtid;
+    private int $binLogPosition;
+
+    private string $binFileName;
+
+    private string $gtid;
+
+    private string $mariaDbGtid;
 
     public function getBinLogPosition(): int
     {
@@ -64,7 +56,7 @@ class BinLogCurrent implements JsonSerializable
         $this->mariaDbGtid = $mariaDbGtid;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return get_object_vars($this);
     }

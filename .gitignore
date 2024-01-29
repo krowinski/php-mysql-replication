@@ -6,3 +6,4 @@ composer.lock
 .php_cs.cache
 /example/profiler.php
 .idea/
+.cache/

@@ -1,4 +1,5 @@
 <?php
+
 /** @noinspection PhpUnhandledExceptionInspection */
 
 /** @noinspection PhpPossiblePolymorphicInvocationInspection */
@@ -7,280 +8,218 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
-use MySQLReplication\BinLog\BinLogServerInfo;
-
-class TypesTest extends BaseTest
+class TypesTest extends BaseCase
 {
-    /**
-     * @test
-     */
-    public function shouldBeDecimal(): void
+    public function testShouldBeDecimal(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(2,1))';
         $insert_query = 'INSERT INTO test VALUES(4.2)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(4.2, $event->getValues()[0]['test']);
+        self::assertEquals(4.2, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalLongValues(): void
+    public function testShouldBeDecimalLongValues(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
         $insert_query = 'INSERT INTO test VALUES(9000000123.123456)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertSame($expect = '9000000123.1234560000', $value = $event->getValues()[0]['test']);
+        self::assertSame($expect = '9000000123.1234560000', $value = $event->values[0]['test']);
         self::assertSame(strlen($expect), strlen($value));
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalLongValues2(): void
+    public function testShouldBeDecimalLongValues2(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(20,10))';
         $insert_query = 'INSERT INTO test VALUES(9000000123.0000012345)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('9000000123.0000012345', $event->getValues()[0]['test']);
+        self::assertEquals('9000000123.0000012345', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalNegativeValues(): void
+    public function testShouldBeDecimalNegativeValues(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(20,10), test2 DECIMAL(11,4), test3 DECIMAL(40,30))';
         $insert_query = 'INSERT INTO test VALUES(-42000.123456, -51.1234, -51.123456789098765432123456789)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('-42000.1234560000', $event->getValues()[0]['test']);
-        self::assertEquals('-51.1234', $event->getValues()[0]['test2']);
-        self::assertEquals('-51.123456789098765432123456789000', $event->getValues()[0]['test3']);
+        self::assertEquals('-42000.1234560000', $event->values[0]['test']);
+        self::assertEquals('-51.1234', $event->values[0]['test2']);
+        self::assertEquals('-51.123456789098765432123456789000', $event->values[0]['test3']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalTwoValues(): void
+    public function testShouldBeDecimalTwoValues(): void
     {
         $create_query = 'CREATE TABLE test ( test DECIMAL(2,1), test2 DECIMAL(20,10) )';
         $insert_query = 'INSERT INTO test VALUES(4.2, 42000.123456)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('4.2', $event->getValues()[0]['test']);
-        self::assertEquals('42000.1234560000', $event->getValues()[0]['test2']);
+        self::assertEquals('4.2', $event->values[0]['test']);
+        self::assertEquals('42000.1234560000', $event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalZeroScale1(): void
+    public function testShouldBeDecimalZeroScale1(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
         $insert_query = 'INSERT INTO test VALUES(10)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('10', $event->getValues()[0]['test']);
+        self::assertEquals('10', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalZeroScale2(): void
+    public function testShouldBeDecimalZeroScale2(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
         $insert_query = 'INSERT INTO test VALUES(12345678912345678912345)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('12345678912345678912345', $event->getValues()[0]['test']);
+        self::assertEquals('12345678912345678912345', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalZeroScale3(): void
+    public function testShouldBeDecimalZeroScale3(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
         $insert_query = 'INSERT INTO test VALUES(100000.0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('100000', $event->getValues()[0]['test']);
+        self::assertEquals('100000', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalZeroScale4(): void
+    public function testShouldBeDecimalZeroScale4(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
         $insert_query = 'INSERT INTO test VALUES(-100000.0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('-100000', $event->getValues()[0]['test']);
+        self::assertEquals('-100000', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDecimalZeroScale5(): void
+    public function testShouldBeDecimalZeroScale5(): void
     {
         $create_query = 'CREATE TABLE test (test DECIMAL(23,0))';
         $insert_query = 'INSERT INTO test VALUES(-1234567891234567891234)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('-1234567891234567891234', $event->getValues()[0]['test']);
+        self::assertEquals('-1234567891234567891234', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeTinyInt(): void
+    public function testShouldBeTinyInt(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test TINYINT)';
         $insert_query = 'INSERT INTO test VALUES(255, -128)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(255, $event->getValues()[0]['id']);
-        self::assertEquals(-128, $event->getValues()[0]['test']);
+        self::assertEquals(255, $event->values[0]['id']);
+        self::assertEquals(-128, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeMapsToBooleanTrue(): void
+    public function testShouldBeMapsToBooleanTrue(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
         $insert_query = 'INSERT INTO test VALUES(1, TRUE)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(1, $event->getValues()[0]['id']);
-        self::assertEquals(1, $event->getValues()[0]['test']);
+        self::assertEquals(1, $event->values[0]['id']);
+        self::assertEquals(1, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeMapsToBooleanFalse(): void
+    public function testShouldBeMapsToBooleanFalse(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
         $insert_query = 'INSERT INTO test VALUES(1, FALSE)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(1, $event->getValues()[0]['id']);
-        self::assertEquals(0, $event->getValues()[0]['test']);
+        self::assertEquals(1, $event->values[0]['id']);
+        self::assertEquals(0, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeMapsToNone(): void
+    public function testShouldBeMapsToNone(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test BOOLEAN)';
         $insert_query = 'INSERT INTO test VALUES(1, NULL)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(1, $event->getValues()[0]['id']);
-        self::assertEquals(null, $event->getValues()[0]['test']);
+        self::assertEquals(1, $event->values[0]['id']);
+        self::assertEquals(null, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeMapsToShort(): void
+    public function testShouldBeMapsToShort(): void
     {
         $create_query = 'CREATE TABLE test (id SMALLINT UNSIGNED NOT NULL, test SMALLINT)';
         $insert_query = 'INSERT INTO test VALUES(65535, -32768)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(65535, $event->getValues()[0]['id']);
-        self::assertEquals(-32768, $event->getValues()[0]['test']);
+        self::assertEquals(65535, $event->values[0]['id']);
+        self::assertEquals(-32768, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeLong(): void
+    public function testShouldBeLong(): void
     {
         $create_query = 'CREATE TABLE test (id INT UNSIGNED NOT NULL, test INT)';
         $insert_query = 'INSERT INTO test VALUES(4294967295, -2147483648)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(4294967295, $event->getValues()[0]['id']);
-        self::assertEquals(-2147483648, $event->getValues()[0]['test']);
+        self::assertEquals(4294967295, $event->values[0]['id']);
+        self::assertEquals(-2147483648, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeFloat(): void
+    public function testShouldBeFloat(): void
     {
         $create_query = 'CREATE TABLE test (id FLOAT NOT NULL, test FLOAT)';
         $insert_query = 'INSERT INTO test VALUES(42.42, -84.84)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(42.42, $event->getValues()[0]['id']);
-        self::assertEquals(-84.84, $event->getValues()[0]['test']);
+        self::assertEquals(42.42, $event->values[0]['id']);
+        self::assertEquals(-84.84, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDouble(): void
+    public function testShouldBeDouble(): void
     {
         $create_query = 'CREATE TABLE test (id DOUBLE NOT NULL, test DOUBLE)';
         $insert_query = 'INSERT INTO test VALUES(42.42, -84.84)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(42.42, $event->getValues()[0]['id']);
-        self::assertEquals(-84.84, $event->getValues()[0]['test']);
+        self::assertEquals(42.42, $event->values[0]['id']);
+        self::assertEquals(-84.84, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeTimestamp(): void
+    public function testShouldBeTimestamp(): void
     {
         $create_query = 'CREATE TABLE test (test TIMESTAMP);';
         $insert_query = 'INSERT INTO test VALUES("1984-12-03 12:33:07")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test']);
+        self::assertEquals('1984-12-03 12:33:07', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeTimestampMySQL56(): void
+    public function testShouldBeTimestampMySQL56(): void
     {
         /*
          * https://mariadb.com/kb/en/library/microseconds-in-mariadb/
          * MySQL 5.6 introduced microseconds using a slightly different implementation to MariaDB 5.3.
          * Since MariaDB 10.1, MariaDB has defaulted to the MySQL format ...
          */
-        if (BinLogServerInfo::isMariaDb() && $this->checkForVersion(10.1)) {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb() && $this->checkForVersion(10.1)) {
             self::markTestIncomplete('Only for mariadb 10.1 or higher');
         } elseif ($this->checkForVersion(5.6)) {
             self::markTestIncomplete('Only for mysql 5.6 or higher');
@@ -304,213 +243,167 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test0']);
-        self::assertEquals('1984-12-03 12:33:07.100000', $event->getValues()[0]['test1']);
-        self::assertEquals('1984-12-03 12:33:07.120000', $event->getValues()[0]['test2']);
-        self::assertEquals('1984-12-03 12:33:07.123000', $event->getValues()[0]['test3']);
-        self::assertEquals('1984-12-03 12:33:07.123400', $event->getValues()[0]['test4']);
-        self::assertEquals('1984-12-03 12:33:07.123450', $event->getValues()[0]['test5']);
-        self::assertEquals('1984-12-03 12:33:07.123456', $event->getValues()[0]['test6']);
+        self::assertEquals('1984-12-03 12:33:07', $event->values[0]['test0']);
+        self::assertEquals('1984-12-03 12:33:07.100000', $event->values[0]['test1']);
+        self::assertEquals('1984-12-03 12:33:07.120000', $event->values[0]['test2']);
+        self::assertEquals('1984-12-03 12:33:07.123000', $event->values[0]['test3']);
+        self::assertEquals('1984-12-03 12:33:07.123400', $event->values[0]['test4']);
+        self::assertEquals('1984-12-03 12:33:07.123450', $event->values[0]['test5']);
+        self::assertEquals('1984-12-03 12:33:07.123456', $event->values[0]['test6']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeLongLong(): void
+    public function testShouldBeLongLong(): void
     {
         $create_query = 'CREATE TABLE test (id BIGINT UNSIGNED NOT NULL, test BIGINT)';
         $insert_query = 'INSERT INTO test VALUES(18446744073709551615, -9223372036854775808)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('18446744073709551615', $event->getValues()[0]['id']);
-        self::assertEquals('-9223372036854775808', $event->getValues()[0]['test']);
+        self::assertEquals('18446744073709551615', $event->values[0]['id']);
+        self::assertEquals('-9223372036854775808', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeInt24(): void
+    public function testShouldBeInt24(): void
     {
         $create_query = 'CREATE TABLE test (id MEDIUMINT UNSIGNED NOT NULL, test MEDIUMINT, test2 MEDIUMINT, test3 MEDIUMINT, test4 MEDIUMINT, test5 MEDIUMINT)';
         $insert_query = 'INSERT INTO test VALUES(16777215, 8388607, -8388608, 8, -8, 0)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(16777215, $event->getValues()[0]['id']);
-        self::assertEquals(8388607, $event->getValues()[0]['test']);
-        self::assertEquals(-8388608, $event->getValues()[0]['test2']);
-        self::assertEquals(8, $event->getValues()[0]['test3']);
-        self::assertEquals(-8, $event->getValues()[0]['test4']);
-        self::assertEquals(0, $event->getValues()[0]['test5']);
+        self::assertEquals(16777215, $event->values[0]['id']);
+        self::assertEquals(8388607, $event->values[0]['test']);
+        self::assertEquals(-8388608, $event->values[0]['test2']);
+        self::assertEquals(8, $event->values[0]['test3']);
+        self::assertEquals(-8, $event->values[0]['test4']);
+        self::assertEquals(0, $event->values[0]['test5']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDate(): void
+    public function testShouldBeDate(): void
     {
         $create_query = 'CREATE TABLE test (test DATE);';
         $insert_query = 'INSERT INTO test VALUES("1984-12-03")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('1984-12-03', $event->getValues()[0]['test']);
+        self::assertEquals('1984-12-03', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeZeroDate(): void
+    public function testShouldBeZeroDate(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
         $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "0000-01-21")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
-        self::assertNull($event->getValues()[0]['test2']);
+        self::assertNull($event->values[0]['test']);
+        self::assertNull($event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeZeroMonth(): void
+    public function testShouldBeZeroMonth(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
         $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "2015-00-21")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
-        self::assertNull($event->getValues()[0]['test2']);
+        self::assertNull($event->values[0]['test']);
+        self::assertNull($event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeZeroDay(): void
+    public function testShouldBeZeroDay(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test DATE, test2 DATE);';
         $insert_query = 'INSERT INTO test (id, test2) VALUES(1, "2015-05-00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
-        self::assertNull($event->getValues()[0]['test2']);
+        self::assertNull($event->values[0]['test']);
+        self::assertNull($event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeTime(): void
+    public function testShouldBeTime(): void
     {
         $create_query = 'CREATE TABLE test (test TIME);';
         $insert_query = 'INSERT INTO test VALUES("12:33:18")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('12:33:18', $event->getValues()[0]['test']);
+        self::assertEquals('12:33:18', $event->values[0]['test']);
     }
 
-
-    /**
-     * @test
-     */
-    public function shouldBeZeroTime(): void
+    public function testShouldBeZeroTime(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test TIME NOT NULL DEFAULT 0);';
         $insert_query = 'INSERT INTO test (id) VALUES(1)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('00:00:00', $event->getValues()[0]['test']);
+        self::assertEquals('00:00:00', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeDateTime(): void
+    public function testShouldBeDateTime(): void
     {
         $create_query = 'CREATE TABLE test (test DATETIME);';
         $insert_query = 'INSERT INTO test VALUES("1984-12-03 12:33:07")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('1984-12-03 12:33:07', $event->getValues()[0]['test']);
+        self::assertEquals('1984-12-03 12:33:07', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeZeroDateTime(): void
+    public function testShouldBeZeroDateTime(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test DATETIME NOT NULL DEFAULT 0);';
         $insert_query = 'INSERT INTO test (id) VALUES(1)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
+        self::assertNull($event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeBrokenDateTime(): void
+    public function testShouldBeBrokenDateTime(): void
     {
         $create_query = 'CREATE TABLE test (test DATETIME NOT NULL);';
         $insert_query = 'INSERT INTO test VALUES("2013-00-00 00:00:00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
+        self::assertNull($event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldReturnNullOnZeroDateDateTime(): void
+    public function testShouldReturnNullOnZeroDateDateTime(): void
     {
         $create_query = 'CREATE TABLE test (test DATETIME NOT NULL);';
         $insert_query = 'INSERT INTO test VALUES("0000-00-00 00:00:00")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
+        self::assertNull($event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeYear(): void
+    public function testShouldBeYear(): void
     {
         $create_query = 'CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)';
         $insert_query = 'INSERT INTO test VALUES(1984, 1984, 0000)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(1984, $event->getValues()[0]['test']);
-        self::assertEquals(1984, $event->getValues()[0]['test2']);
-        self::assertNull($event->getValues()[0]['test3']);
+        self::assertEquals(1984, $event->values[0]['test']);
+        self::assertEquals(1984, $event->values[0]['test2']);
+        self::assertNull($event->values[0]['test3']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeVarChar(): void
+    public function testShouldBeVarChar(): void
     {
         $create_query = 'CREATE TABLE test (test VARCHAR(242)) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
+        self::assertEquals('Hello', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBe1024CharsLongVarChar(): void
+    public function testShouldBe1024CharsLongVarChar(): void
     {
         $expected = str_repeat('-', 1024);
 
@@ -519,13 +412,10 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals($expected, $event->getValues()[0]['test']);
+        self::assertEquals($expected, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeBit(): void
+    public function testShouldBeBit(): void
     {
         $create_query = 'CREATE TABLE test (
             test BIT(6),
@@ -544,20 +434,17 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('100010', $event->getValues()[0]['test']);
-        self::assertEquals('1000101010111000', $event->getValues()[0]['test2']);
-        self::assertEquals('100010101101', $event->getValues()[0]['test3']);
-        self::assertEquals('101100111', $event->getValues()[0]['test4']);
+        self::assertEquals('100010', $event->values[0]['test']);
+        self::assertEquals('1000101010111000', $event->values[0]['test2']);
+        self::assertEquals('100010101101', $event->values[0]['test3']);
+        self::assertEquals('101100111', $event->values[0]['test4']);
         self::assertEquals(
             '1101011010110100100111100011010100010100101110111011101011011010',
-            $event->getValues()[0]['test5']
+            $event->values[0]['test5']
         );
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeEnum(): void
+    public function testShouldBeEnum(): void
     {
         $create_query = 'CREATE TABLE test
             (
@@ -570,84 +457,68 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('ba', $event->getValues()[0]['test']);
-        self::assertEquals('a', $event->getValues()[0]['test2']);
-        self::assertEquals('', $event->getValues()[0]['test3']);
+        self::assertEquals('ba', $event->values[0]['test']);
+        self::assertEquals('a', $event->values[0]['test2']);
+        self::assertEquals('', $event->values[0]['test3']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeSet(): void
+    public function testShouldBeSet(): void
     {
         $create_query = 'CREATE TABLE test (test SET("a", "ba", "c"), test2 SET("a", "ba", "c")) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("ba,a,c", "a,c")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(['a', 'ba', 'c'], $event->getValues()[0]['test']);
-        self::assertEquals(['a', 'c'], $event->getValues()[0]['test2']);
+        self::assertEquals(['a', 'ba', 'c'], $event->values[0]['test']);
+        self::assertEquals(['a', 'c'], $event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeTinyBlob(): void
+    public function testShouldBeTinyBlob(): void
     {
         $create_query = 'CREATE TABLE test (test TINYBLOB, test2 TINYTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
-        self::assertEquals('World', $event->getValues()[0]['test2']);
+        self::assertEquals('Hello', $event->values[0]['test']);
+        self::assertEquals('World', $event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeMediumBlob(): void
+    public function testShouldBeMediumBlob(): void
     {
         $create_query = 'CREATE TABLE test (test MEDIUMBLOB, test2 MEDIUMTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
-        self::assertEquals('World', $event->getValues()[0]['test2']);
+        self::assertEquals('Hello', $event->values[0]['test']);
+        self::assertEquals('World', $event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeNullOnBooleanType(): void
+    public function testShouldBeNullOnBooleanType(): void
     {
         $create_query = 'CREATE TABLE test (test BOOLEAN);';
         $insert_query = 'INSERT INTO test VALUES(NULL)';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
+        self::assertNull($event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeLongBlob(): void
+    public function testShouldBeLongBlob(): void
     {
         $create_query = 'CREATE TABLE test (test LONGBLOB, test2 LONGTEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
-        self::assertEquals('World', $event->getValues()[0]['test2']);
+        self::assertEquals('Hello', $event->values[0]['test']);
+        self::assertEquals('World', $event->values[0]['test2']);
     }
 
     /**
      * https://dev.mysql.com/doc/internals/en/mysql-packet.html
      * https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
-     *
      */
     public function shouldBeLongerTextThan16Mb(): void
     {
@@ -659,42 +530,33 @@ class TypesTest extends BaseTest
         $insert_query = 'INSERT INTO test (data) VALUES ("' . $long_text_data . '")';
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals(strlen($long_text_data), strlen($event->getValues()[0]['data']));
+        self::assertEquals(strlen($long_text_data), strlen($event->values[0]['data']));
 
         $long_text_data = null;
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeBlob(): void
+    public function testShouldBeBlob(): void
     {
         $create_query = 'CREATE TABLE test (test BLOB, test2 TEXT) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello", "World")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
-        self::assertEquals('World', $event->getValues()[0]['test2']);
+        self::assertEquals('Hello', $event->values[0]['test']);
+        self::assertEquals('World', $event->values[0]['test2']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeString(): void
+    public function testShouldBeString(): void
     {
         $create_query = 'CREATE TABLE test (test CHAR(12)) CHARACTER SET latin1 COLLATE latin1_bin;';
         $insert_query = 'INSERT INTO test VALUES("Hello")';
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals('Hello', $event->getValues()[0]['test']);
+        self::assertEquals('Hello', $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeGeometry(): void
+    public function testShouldBeGeometry(): void
     {
         $prefix = 'ST_';
         if ($this->checkForVersion(5.6)) {
@@ -708,14 +570,11 @@ class TypesTest extends BaseTest
 
         self::assertEquals(
             '000000000101000000000000000000f03f000000000000f03f',
-            bin2hex($event->getValues()[0]['test'])
+            bin2hex($event->values[0]['test'])
         );
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeNull(): void
+    public function testShouldBeNull(): void
     {
         $create_query = 'CREATE TABLE test (
             test TINYINT NULL DEFAULT NULL,
@@ -743,17 +602,14 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertNull($event->getValues()[0]['test']);
-        self::assertEquals(-128, $event->getValues()[0]['test2']);
-        self::assertNull($event->getValues()[0]['test3']);
-        self::assertEquals(42, $event->getValues()[0]['test7']);
-        self::assertEquals(84, $event->getValues()[0]['test20']);
+        self::assertNull($event->values[0]['test']);
+        self::assertEquals(-128, $event->values[0]['test2']);
+        self::assertNull($event->values[0]['test3']);
+        self::assertEquals(42, $event->values[0]['test7']);
+        self::assertEquals(84, $event->values[0]['test20']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeEncodedLatin1(): void
+    public function testShouldBeEncodedLatin1(): void
     {
         $this->connection->executeStatement('SET CHARSET latin1');
 
@@ -764,13 +620,10 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals($string, $event->getValues()[0]['test']);
+        self::assertEquals($string, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeEncodedUTF8(): void
+    public function testShouldBeEncodedUTF8(): void
     {
         $this->connection->executeStatement('SET CHARSET utf8');
 
@@ -781,15 +634,12 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        self::assertEquals($string, $event->getValues()[0]['test']);
+        self::assertEquals($string, $event->values[0]['test']);
     }
 
-    /**
-     * @test
-     */
-    public function shouldBeJson(): void
+    public function testShouldBeJson(): void
     {
-        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
+        if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -841,7 +691,7 @@ class TypesTest extends BaseTest
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
-        $results = $event->getValues();
+        $results = $event->values;
 
         self::assertEquals(null, $results[0]['j']);
         self::assertEquals('{"a":2}', $results[1]['j']);

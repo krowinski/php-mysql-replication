@@ -1,6 +1,20 @@
 # Release Notes
 
+## v8.0.0 (2024-01-29)
+
+- Change: drop support for < 8.2
+- Change: moved to enums, promoted properties
+- Added: logger for more socket info
+- Added: slave_uuid support
+- Change: config no longer static
+- Chore: typos in README/code
+- Chore: replace/remove old urls from code
+- Chore: changed variables to underscore
+- Added: support caching_sha2_password
+- Change: BinLogServerInfo static calls removed also added method getServerInfo to MySQLReplicationFactory 
+
 ## v7.0.1 (2021-03-09)
+
  - Fixed negative number handling (#80)
 
 ## v7.0.0 (2021-01-24)

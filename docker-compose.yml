@@ -1,0 +1,22 @@
+services:
+  replication-test-mysql-percona:
+    container_name: replication-test-mysql-percona
+    hostname: replication-test-mysql-percona
+    image: mysql:8.2
+    platform: linux/amd64
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+    #  '--default-authentication-plugin=caching_sha2_password',
+     #'--default-authentication-plugin=mysql_native_password',
+      '--log_bin=binlog',
+      '--max_binlog_size=8M',
+      '--binlog_format=row',
+      '--server-id=1'
+    ]
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=mysqlreplication_test
+    ports:
+      - "3322:3306/tcp"
+    restart: unless-stopped

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
@@ -9,16 +10,13 @@ use MySQLReplication\Event\RowEvent\TableMap;
 
 class TableMapDTO extends EventDTO
 {
-    private $type = ConstEventsNames::TABLE_MAP;
-    private $tableMap;
+    private ConstEventsNames $type = ConstEventsNames::TABLE_MAP;
 
     public function __construct(
         EventInfo $eventInfo,
-        TableMap $tableMap
+        public readonly TableMap $tableMap
     ) {
         parent::__construct($eventInfo);
-
-        $this->tableMap = $tableMap;
     }
 
     public function __toString(): string
@@ -26,26 +24,21 @@ class TableMapDTO extends EventDTO
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
             'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
-            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
-            'Table: ' . $this->tableMap->getTable() . PHP_EOL .
-            'Database: ' . $this->tableMap->getDatabase() . PHP_EOL .
-            'Table Id: ' . $this->tableMap->getTableId() . PHP_EOL .
-            'Columns amount: ' . $this->tableMap->getColumnsAmount() . PHP_EOL;
+            'Log position: ' . $this->eventInfo->pos . PHP_EOL .
+            'Event size: ' . $this->eventInfo->size . PHP_EOL .
+            'Table: ' . $this->tableMap->table . PHP_EOL .
+            'Database: ' . $this->tableMap->database . PHP_EOL .
+            'Table Id: ' . $this->tableMap->tableId . PHP_EOL .
+            'Columns amount: ' . $this->tableMap->columnsAmount . PHP_EOL;
     }
 
     public function getType(): string
     {
-        return $this->type;
+        return $this->type->value;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return get_object_vars($this);
-    }
-
-    public function getTableMap(): TableMap
-    {
-        return $this->tableMap;
     }
 }

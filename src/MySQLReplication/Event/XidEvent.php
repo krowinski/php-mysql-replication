@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
@@ -9,9 +10,6 @@ class XidEvent extends EventCommon
 {
     public function makeXidDTO(): XidDTO
     {
-        return new XidDTO(
-            $this->eventInfo,
-            $this->binaryDataReader->readUInt64()
-        );
+        return new XidDTO($this->eventInfo, $this->binaryDataReader->readUInt64());
     }
 }
