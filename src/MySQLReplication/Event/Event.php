@@ -134,7 +134,7 @@ readonly class Event
             $binaryDataReader->readUInt8(),
             $binaryDataReader->readInt32(),
             $binaryDataReader->readInt32(),
-            $binaryDataReader->readInt32(),
+            (string)$binaryDataReader->readInt32(),
             $binaryDataReader->readUInt16(),
             $this->binLogSocketConnect->getCheckSum(),
             $this->binLogSocketConnect->getBinLogCurrent()

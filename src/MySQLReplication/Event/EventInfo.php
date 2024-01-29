@@ -17,9 +17,9 @@ class EventInfo implements JsonSerializable
     public function __construct(
         public readonly int $timestamp,
         public readonly int $type,
-        public readonly int $id,
+        public readonly int $serverId,
         public readonly int $size,
-        public readonly int $pos,
+        public readonly string $pos,
         public readonly int $flag,
         public readonly bool $checkSum,
         public readonly BinLogCurrent $binLogCurrent

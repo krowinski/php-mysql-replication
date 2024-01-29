@@ -13,7 +13,7 @@ class RotateDTO extends EventDTO
 
     public function __construct(
         EventInfo $eventInfo,
-        public readonly int $position,
+        public readonly string $position,
         public readonly string $nextBinlog
     ) {
         parent::__construct($eventInfo);

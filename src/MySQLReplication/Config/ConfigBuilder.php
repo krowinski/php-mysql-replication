@@ -22,7 +22,7 @@ class ConfigBuilder
 
     private string $binLogFileName = '';
 
-    private int $binLogPosition = 0;
+    private string $binLogPosition = '';
 
     private array $eventsOnly = [];
 
@@ -105,7 +105,7 @@ class ConfigBuilder
         return $this;
     }
 
-    public function withBinLogPosition(int $binLogPosition): self
+    public function withBinLogPosition(string $binLogPosition): self
     {
         $this->binLogPosition = $binLogPosition;
 

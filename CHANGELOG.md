@@ -5,13 +5,15 @@
 - Change: drop support for < 8.2
 - Change: moved to enums, promoted properties
 - Added: logger for more socket info
-- Added: slave_uuid support
-- Change: config no longer static
+- Added: slave_uuid support (#99)
+- Change: EventInfo->id is now EventInfo->serverId (#83)
+- Change: config no longer static (#94)
 - Chore: typos in README/code
-- Chore: replace/remove old urls from code
-- Chore: changed variables to underscore
-- Added: support caching_sha2_password
+- Chore: replace/remove old dead doc urls from code
+- Chore: changed variables to underscore 
+- Added: support caching_sha2_password (#102)
 - Change: BinLogServerInfo static calls removed also added method getServerInfo to MySQLReplicationFactory 
+- Change: type of bin log position is now string as it can be bigger then php can hande 2^64-1 (#84) 
 
 ## v7.0.1 (2021-03-09)
 

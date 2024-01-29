@@ -296,7 +296,7 @@ class BinLogSocketConnect
         $binFilePos = $this->config->binLogPosition;
         $binFileName = $this->config->binLogFileName;
         // if not set start from newest binlog
-        if ($binFilePos === 0 && $binFileName === '') {
+        if ($binFilePos === '' && $binFileName === '') {
             $masterStatusDTO = $this->repository->getMasterStatus();
             $binFilePos = $masterStatusDTO->position;
             $binFileName = $masterStatusDTO->file;

@@ -8,6 +8,7 @@ namespace MySQLReplication\Tests\Unit\BinaryDataReader;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class BinaryDataReaderTest extends TestCase
@@ -62,9 +63,7 @@ class BinaryDataReaderTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider dataProviderForUInt
-     */
+    #[DataProvider('dataProviderForUInt')]
     public function testShouldReadUIntBySize(mixed $size, mixed $data, mixed $expected): void
     {
         self::assertSame($expected, $this->getBinaryRead($data)->readUIntBySize($size));
@@ -89,11 +88,11 @@ class BinaryDataReaderTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataProviderForBeInt
-     */
-    public function testShouldReadIntBeBySize(int $size, string $data, int $expected): void
-    {
+    #[DataProvider('dataProviderForBeInt')] public function testShouldReadIntBeBySize(
+        int $size,
+        string $data,
+        int $expected
+    ): void {
         self::assertSame($expected, $this->getBinaryRead($data)->readIntBeBySize($size));
     }
 

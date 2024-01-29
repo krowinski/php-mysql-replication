@@ -18,7 +18,7 @@ readonly class Config implements JsonSerializable
         public string $mariaDbGtid,
         public int $slaveId,
         public string $binLogFileName,
-        public int $binLogPosition,
+        public string $binLogPosition,
         public array $eventsOnly,
         public array $eventsIgnore,
         public array $tablesOnly,
@@ -74,11 +74,7 @@ readonly class Config implements JsonSerializable
                 ConfigException::SLAVE_ID_ERROR_CODE
             );
         }
-        if (filter_var($this->binLogPosition, FILTER_VALIDATE_INT, [
-            'options' => [
-                'min_range' => 0,
-            ],
-        ]) === false) {
+        if (bccomp($this->binLogPosition, '0') === -1) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE

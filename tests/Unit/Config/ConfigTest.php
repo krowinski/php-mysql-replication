@@ -9,6 +9,7 @@ namespace MySQLReplication\Tests\Unit\Config;
 use MySQLReplication\Config\Config;
 use MySQLReplication\Config\ConfigBuilder;
 use MySQLReplication\Config\ConfigException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ConfigTest extends TestCase
@@ -24,7 +25,7 @@ class ConfigTest extends TestCase
             'gtid' => '9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592',
             'slaveId' => 1,
             'binLogFileName' => 'binfile1.bin',
-            'binLogPosition' => 999,
+            'binLogPosition' => '999',
             'eventsOnly' => [],
             'eventsIgnore' => [],
             'tablesOnly' => ['test_table'],
@@ -133,11 +134,9 @@ class ConfigTest extends TestCase
         return [[0], [0.0], [0.001], [4294967], [2]];
     }
 
-    /**
-     * @dataProvider shouldCheckHeartbeatPeriodProvider
-     */
-    public function testShouldCheckHeartbeatPeriod(int|float $heartbeatPeriod): void
-    {
+    #[DataProvider('shouldCheckHeartbeatPeriodProvider')] public function testShouldCheckHeartbeatPeriod(
+        int|float $heartbeatPeriod
+    ): void {
         $config = (new ConfigBuilder())->withHeartbeatPeriod($heartbeatPeriod)
             ->build();
         $config->validate();
@@ -154,7 +153,7 @@ class ConfigTest extends TestCase
             ['gtid', '-1', ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE],
             [
                 'binLogPosition',
-                -1,
+                '-1',
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE,
             ],
@@ -179,9 +178,7 @@ class ConfigTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider shouldValidateProvider
-     */
+    #[DataProvider('shouldValidateProvider')]
     public function testShouldValidate(
         string $configKey,
         mixed $configValue,
