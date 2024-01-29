@@ -24,7 +24,7 @@ $binLogStream = new MySQLReplicationFactory(
         ->withUser('root')
         ->withHost('0.0.0.0')
         ->withPassword('root')
-        ->withPort(3322)
+        ->withPort(3306)
         ->withHeartbeatPeriod(60)
         ->withEventsIgnore([ConstEventType::HEARTBEAT_LOG_EVENT->value])
         ->build(),

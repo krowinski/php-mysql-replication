@@ -2,7 +2,7 @@ services:
   replication-test-mysql-percona:
     container_name: replication-test-mysql-percona
     hostname: replication-test-mysql-percona
-    image: mysql:8.2
+    image: mysql:8.0
     platform: linux/amd64
     command: [
       '--character-set-server=utf8mb4',
@@ -18,5 +18,5 @@ services:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=mysqlreplication_test
     ports:
-      - "3322:3306/tcp"
+      - "3306:3306/tcp"
     restart: unless-stopped

@@ -366,7 +366,7 @@ class BasicTest extends BaseCase
         $this->connection->executeStatement('USE ' . $this->database);
         $this->connection->executeStatement('SET SESSION sql_mode = \'\';');
 
-        if ($this->checkForVersion(8.4) && $this->mySQLReplicationFactory->getServerInfo()->isGeneric()) {
+        if ($this->mySQLReplicationFactory->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory->getServerInfo()->isGeneric()) {
             self::assertInstanceOf(RotateDTO::class, $this->getEvent());
         }
 

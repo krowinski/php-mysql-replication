@@ -40,12 +40,12 @@ abstract class BaseCase extends TestCase
             ->withUser('root')
             ->withHost('0.0.0.0')
             ->withPassword('root')
-            ->withPort(3322)
+            ->withPort(3306)
             ->withEventsIgnore([ConstEventType::GTID_LOG_EVENT->value]);
 
         $this->connect();
 
-        if ($this->checkForVersion(8.4) && $this->mySQLReplicationFactory?->getServerInfo()->isGeneric()) {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory?->getServerInfo()->isGeneric()) {
             self::assertInstanceOf(RotateDTO::class, $this->getEvent());
         }
         self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
