@@ -16,12 +16,12 @@ jobs:
 
     strategy:
       matrix:
-        php: [ '7.3', '7.4', '8.0' ]
+        php: [ '8.2' ]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        
+
       - name: Start mysql service
         run: |
           echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log" | sudo tee -a /etc/mysql/my.cnf

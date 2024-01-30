@@ -9,11 +9,9 @@ use MySQLReplication\Event\EventSubscribers;
 
 class TestEventSubscribers extends EventSubscribers
 {
-    private $baseTest;
-
-    public function __construct(BaseTest $baseTest)
-    {
-        $this->baseTest = $baseTest;
+    public function __construct(
+        private readonly BaseCase $baseTest
+    ) {
     }
 
     public function allEvents(EventDTO $event): void

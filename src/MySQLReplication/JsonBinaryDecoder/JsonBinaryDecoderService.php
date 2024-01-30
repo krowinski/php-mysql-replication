@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
@@ -6,77 +7,84 @@ namespace MySQLReplication\JsonBinaryDecoder;
 use InvalidArgumentException;
 use LengthException;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
-use MySQLReplication\BinaryDataReader\BinaryDataReaderException;
 
 /**
  * @see https://github.com/mysql/mysql-server/blob/5.7/sql/json_binary.cc
  * @see https://github.com/mysql/mysql-server/blob/8.0/sql/json_binary.cc
  * @see https://github.com/shyiko/mysql-binlog-connector-java/blob/master/src/main/java/com/github/shyiko/mysql/binlog/event/deserialization/json/JsonBinary.java
  */
-class JsonBinaryDecoderService
+readonly class JsonBinaryDecoderService
 {
     public const SMALL_OBJECT = 0;
+
     public const LARGE_OBJECT = 1;
+
     public const SMALL_ARRAY = 2;
+
     public const LARGE_ARRAY = 3;
+
     public const LITERAL = 4;
+
     public const INT16 = 5;
+
     public const UINT16 = 6;
+
     public const INT32 = 7;
+
     public const UINT32 = 8;
+
     public const INT64 = 9;
+
     public const UINT64 = 10;
+
     public const DOUBLE = 11;
+
     public const STRING = 12;
     //public const OPAQUE = 15;
 
     public const LITERAL_NULL = 0;
+
     public const LITERAL_TRUE = 1;
+
     public const LITERAL_FALSE = 2;
 
     public const SMALL_OFFSET_SIZE = 2;
+
     public const LARGE_OFFSET_SIZE = 4;
 
     public const KEY_ENTRY_SIZE_SMALL = 2 + self::SMALL_OFFSET_SIZE;
+
     public const KEY_ENTRY_SIZE_LARGE = 2 + self::LARGE_OFFSET_SIZE;
 
     public const VALUE_ENTRY_SIZE_SMALL = 1 + self::SMALL_OFFSET_SIZE;
+
     public const VALUE_ENTRY_SIZE_LARGE = 1 + self::LARGE_OFFSET_SIZE;
 
     public const OBJECT = 1;
+
     public const ARRAY = 2;
+
     public const SCALAR = 3;
 
-    private $binaryDataReader;
-    private $jsonBinaryDecoderFormatter;
-    private $dataLength;
+    private int $dataLength;
 
     public function __construct(
-        BinaryDataReader $binaryDataReader,
-        JsonBinaryDecoderFormatter $jsonBinaryDecoderFormatter
+        private BinaryDataReader $binaryDataReader,
+        private JsonBinaryDecoderFormatter $jsonBinaryDecoderFormatter
     ) {
-        $this->binaryDataReader = $binaryDataReader;
-        $this->jsonBinaryDecoderFormatter = $jsonBinaryDecoderFormatter;
         $this->dataLength = $this->binaryDataReader->getBinaryDataLength();
     }
 
     public static function makeJsonBinaryDecoder(string $data): self
     {
-        return new self(
-            new BinaryDataReader($data),
-            new JsonBinaryDecoderFormatter()
-        );
+        return new self(new BinaryDataReader($data), new JsonBinaryDecoderFormatter());
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     * @throws JsonBinaryDecoderException
-     */
     public function parseToString(): string
     {
         // Sometimes, we can insert a NULL JSON even we set the JSON field as NOT NULL.
         // If we meet this case, we can return a 'null' value.
-        if($this->binaryDataReader->getBinaryDataLength() === 0) {
+        if ($this->binaryDataReader->getBinaryDataLength() === 0) {
             return 'null';
         }
         $this->parseJson($this->binaryDataReader->readUInt8());
@@ -84,80 +92,66 @@ class JsonBinaryDecoderService
         return $this->jsonBinaryDecoderFormatter->getJsonString();
     }
 
-    /**
-     * @throws JsonBinaryDecoderException
-     * @throws BinaryDataReaderException
-     */
     private function parseJson(int $type): void
     {
         $results = [];
-        if (self::SMALL_OBJECT === $type) {
+        if ($type === self::SMALL_OBJECT) {
             $results[self::OBJECT] = $this->parseArrayOrObject(self::OBJECT, self::SMALL_OFFSET_SIZE);
-        } else if (self::LARGE_OBJECT === $type) {
+        } elseif ($type === self::LARGE_OBJECT) {
             $results[self::OBJECT] = $this->parseArrayOrObject(self::OBJECT, self::LARGE_OFFSET_SIZE);
-        } else if (self::SMALL_ARRAY === $type) {
+        } elseif ($type === self::SMALL_ARRAY) {
             $results[self::ARRAY] = $this->parseArrayOrObject(self::ARRAY, self::SMALL_OFFSET_SIZE);
-        } else if (self::LARGE_ARRAY === $type) {
+        } elseif ($type === self::LARGE_ARRAY) {
             $results[self::ARRAY] = $this->parseArrayOrObject(self::ARRAY, self::LARGE_OFFSET_SIZE);
         } else {
             $results[self::SCALAR][] = [
                 'name' => null,
-                'value' => $this->parseScalar($type)
+                'value' => $this->parseScalar($type),
             ];
         }
 
         $this->parseToJson($results);
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     * @throws JsonBinaryDecoderException
-     */
     private function parseToJson(array $results): void
     {
         foreach ($results as $dataType => $entities) {
-            if (self::OBJECT === $dataType) {
+            if ($dataType === self::OBJECT) {
                 $this->jsonBinaryDecoderFormatter->formatBeginObject();
-            } else if (self::ARRAY === $dataType) {
+            } elseif ($dataType === self::ARRAY) {
                 $this->jsonBinaryDecoderFormatter->formatBeginArray();
             }
 
             foreach ($entities as $i => $entity) {
                 if ($dataType === self::SCALAR) {
-
-                    if (null === $entity['value']->getValue()) {
+                    if ($entity['value']->value === null) {
                         $this->jsonBinaryDecoderFormatter->formatValue('null');
-                    } else if (is_bool($entity['value']->getValue())) {
-                        $this->jsonBinaryDecoderFormatter->formatValueBool($entity['value']->getValue());
+                    } elseif (is_bool($entity['value']->value)) {
+                        $this->jsonBinaryDecoderFormatter->formatValueBool($entity['value']->value);
                     } else {
-                        $this->jsonBinaryDecoderFormatter->formatValue($entity['value']->getValue());
+                        $this->jsonBinaryDecoderFormatter->formatValue($entity['value']->value);
                     }
                     continue;
                 }
-
 
                 if ($i !== 0) {
                     $this->jsonBinaryDecoderFormatter->formatNextEntry();
                 }
 
-                if (null !== $entity['name']) {
+                if ($entity['name'] !== null) {
                     $this->jsonBinaryDecoderFormatter->formatName($entity['name']);
                 }
                 $this->assignValues($entity['value']);
             }
 
-            if (self::OBJECT === $dataType) {
+            if ($dataType === self::OBJECT) {
                 $this->jsonBinaryDecoderFormatter->formatEndObject();
-            } else if (self::ARRAY === $dataType) {
+            } elseif ($dataType === self::ARRAY) {
                 $this->jsonBinaryDecoderFormatter->formatEndArray();
             }
         }
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     * @throws JsonBinaryDecoderException
-     */
     private function parseArrayOrObject(int $type, int $intSize): array
     {
         $large = $intSize === self::LARGE_OFFSET_SIZE;
@@ -217,7 +211,7 @@ class JsonBinaryDecoderService
         for ($i = 0; $i !== $elementCount; ++$i) {
             $results[] = [
                 'name' => $keys[$i] ?? null,
-                'value' => $entries[$i]
+                'value' => $entries[$i],
             ];
         }
 
@@ -239,10 +233,6 @@ class JsonBinaryDecoderService
         return $large ? self::VALUE_ENTRY_SIZE_LARGE : self::VALUE_ENTRY_SIZE_SMALL;
     }
 
-    /**
-     * @throws BinaryDataReaderException
-     * @throws JsonBinaryDecoderException
-     */
     private function getOffsetOrInLinedValue(int $bytes, int $intSize, int $valueEntrySize): JsonBinaryDecoderValue
     {
         $type = $this->binaryDataReader->readUInt8();
@@ -252,7 +242,7 @@ class JsonBinaryDecoderService
 
             // In binlog format, JSON arrays are fixed width elements, even though type value can be smaller.
             // In order to properly process this case, we need to move cursor to the next element, which is on position 1 + $valueEntrySize (1 is length of type)
-            if($type === self::UINT16 || $type === self::INT16) {
+            if ($type === self::UINT16 || $type === self::INT16) {
                 $readNextBytes = $valueEntrySize - 2 - 1;
                 $this->binaryDataReader->read($readNextBytes);
             }
@@ -272,39 +262,30 @@ class JsonBinaryDecoderService
 
     private static function isInLinedType(int $type, int $intSize): bool
     {
-        switch ($type) {
-            case self::LITERAL:
-            case self::INT16:
-            case self::UINT16:
-                return true;
-            case self::INT32:
-            case self::UINT32:
-                return self::LARGE_OFFSET_SIZE === $intSize;
-            default:
-                return false;
-        }
+        return match ($type) {
+            self::LITERAL, self::INT16, self::UINT16 => true,
+            self::INT32, self::UINT32 => $intSize === self::LARGE_OFFSET_SIZE,
+            default => false,
+        };
     }
 
-    /**
-     * @throws JsonBinaryDecoderException
-     */
     private function parseScalar(int $type): JsonBinaryDecoderValue
     {
-        if (self::LITERAL === $type) {
+        if ($type === self::LITERAL) {
             $data = $this->readLiteral();
-        } else if (self::INT16 === $type) {
+        } elseif ($type === self::INT16) {
             $data = $this->binaryDataReader->readInt16();
-        } else if (self::INT32 === $type) {
+        } elseif ($type === self::INT32) {
             $data = ($this->binaryDataReader->readInt32());
-        } else if (self::INT64 === $type) {
+        } elseif ($type === self::INT64) {
             $data = $this->binaryDataReader->readInt64();
-        } else if (self::UINT16 === $type) {
+        } elseif ($type === self::UINT16) {
             $data = ($this->binaryDataReader->readUInt16());
-        } else if (self::UINT64 === $type) {
+        } elseif ($type === self::UINT64) {
             $data = ($this->binaryDataReader->readUInt64());
-        } else if (self::DOUBLE === $type) {
+        } elseif ($type === self::DOUBLE) {
             $data = ($this->binaryDataReader->readDouble());
-        } else if (self::STRING === $type) {
+        } elseif ($type === self::STRING) {
             $data = ($this->binaryDataReader->read($this->readVariableInt()));
         } /**
          * else if (self::OPAQUE === $type)
@@ -325,13 +306,13 @@ class JsonBinaryDecoderService
     private function readLiteral(): ?bool
     {
         $literal = ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
-        if (self::LITERAL_NULL === $literal) {
+        if ($literal === self::LITERAL_NULL) {
             return null;
         }
-        if (self::LITERAL_TRUE === $literal) {
+        if ($literal === self::LITERAL_TRUE) {
             return true;
         }
-        if (self::LITERAL_FALSE === $literal) {
+        if ($literal === self::LITERAL_FALSE) {
             return false;
         }
 
@@ -355,27 +336,23 @@ class JsonBinaryDecoderService
         return $len;
     }
 
-    /**
-     * @throws JsonBinaryDecoderException
-     * @throws BinaryDataReaderException
-     */
     private function assignValues(JsonBinaryDecoderValue $jsonBinaryDecoderValue): void
     {
-        if (false === $jsonBinaryDecoderValue->isIsResolved()) {
-            $this->ensureOffset($jsonBinaryDecoderValue->getOffset());
-            $this->parseJson($jsonBinaryDecoderValue->getType());
-        } else if (null === $jsonBinaryDecoderValue->getValue()) {
+        if ($jsonBinaryDecoderValue->isResolved === false) {
+            $this->ensureOffset($jsonBinaryDecoderValue->offset);
+            $this->parseJson($jsonBinaryDecoderValue->type);
+        } elseif ($jsonBinaryDecoderValue->value === null) {
             $this->jsonBinaryDecoderFormatter->formatValueNull();
-        } else if (is_bool($jsonBinaryDecoderValue->getValue())) {
-            $this->jsonBinaryDecoderFormatter->formatValueBool($jsonBinaryDecoderValue->getValue());
-        } else if (is_numeric($jsonBinaryDecoderValue->getValue())) {
-            $this->jsonBinaryDecoderFormatter->formatValueNumeric($jsonBinaryDecoderValue->getValue());
+        } elseif (is_bool($jsonBinaryDecoderValue->value)) {
+            $this->jsonBinaryDecoderFormatter->formatValueBool($jsonBinaryDecoderValue->value);
+        } elseif (is_numeric($jsonBinaryDecoderValue->value)) {
+            $this->jsonBinaryDecoderFormatter->formatValueNumeric($jsonBinaryDecoderValue->value);
         }
     }
 
     private function ensureOffset(?int $ensureOffset): void
     {
-        if (null === $ensureOffset) {
+        if ($ensureOffset === null) {
             return;
         }
         $pos = $this->binaryDataReader->getReadBytes();

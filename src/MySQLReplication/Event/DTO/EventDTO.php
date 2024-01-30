@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
@@ -12,13 +13,13 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  */
 abstract class EventDTO extends GenericEvent implements JsonSerializable
 {
-    protected $eventInfo;
-
     public function __construct(
-        EventInfo $eventInfo
+        protected EventInfo $eventInfo
     ) {
-        $this->eventInfo = $eventInfo;
+        parent::__construct();
     }
+
+    abstract public function __toString(): string;
 
     public function getEventInfo(): EventInfo
     {
@@ -26,6 +27,4 @@ abstract class EventDTO extends GenericEvent implements JsonSerializable
     }
 
     abstract public function getType(): string;
-
-    abstract public function __toString(): string;
 }

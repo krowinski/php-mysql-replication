@@ -1,5 +1,9 @@
 <?php
+
+/** @noinspection PhpComposerExtensionStubsInspection */
+
 declare(strict_types=1);
+
 error_reporting(E_ALL);
 date_default_timezone_set('UTC');
 include __DIR__ . '/../vendor/autoload.php';
@@ -23,19 +27,19 @@ class benchmark
     private const DB_HOST = '127.0.0.1';
     private const DB_PORT = 3306;
 
-    private $binLogStream;
+    private MySQLReplicationFactory $binLogStream;
 
     public function __construct()
     {
         $conn = $this->getConnection();
-        $conn->exec('DROP DATABASE IF EXISTS ' . self::DB_NAME);
-        $conn->exec('CREATE DATABASE ' . self::DB_NAME);
-        $conn->exec('USE ' . self::DB_NAME);
-        $conn->exec('CREATE TABLE test (i INT) ENGINE = MEMORY');
-        $conn->exec('INSERT INTO test VALUES(1)');
-        $conn->exec('CREATE TABLE test2 (i INT) ENGINE = MEMORY');
-        $conn->exec('INSERT INTO test2 VALUES(1)');
-        $conn->exec('RESET MASTER');
+        $conn->executeStatement('DROP DATABASE IF EXISTS ' . self::DB_NAME);
+        $conn->executeStatement('CREATE DATABASE ' . self::DB_NAME);
+        $conn->executeStatement('USE ' . self::DB_NAME);
+        $conn->executeStatement('CREATE TABLE test (i INT) ENGINE = MEMORY');
+        $conn->executeStatement('INSERT INTO test VALUES(1)');
+        $conn->executeStatement('CREATE TABLE test2 (i INT) ENGINE = MEMORY');
+        $conn->executeStatement('INSERT INTO test2 VALUES(1)');
+        $conn->executeStatement('RESET MASTER');
 
         $this->binLogStream = new MySQLReplicationFactory(
             (new ConfigBuilder())
@@ -43,17 +47,23 @@ class benchmark
                 ->withPassword(self::DB_PASS)
                 ->withHost(self::DB_HOST)
                 ->withPort(self::DB_PORT)
-                ->withEventsOnly([ConstEventType::UPDATE_ROWS_EVENT_V2])
+                ->withEventsOnly(
+                    [
+                        ConstEventType::UPDATE_ROWS_EVENT_V2->value,
+                        // for mariadb v1
+                        ConstEventType::UPDATE_ROWS_EVENT_V1->value,
+                    ]
+                )
                 ->withSlaveId(9999)
                 ->withDatabasesOnly([self::DB_NAME])
                 ->build()
         );
 
         $this->binLogStream->registerSubscriber(
-            new  class extends EventSubscribers
-            {
-                private $start;
-                private $counter = 0;
+            new class() extends EventSubscribers {
+                private float $start;
+
+                private int $counter = 0;
 
                 public function __construct()
                 {
@@ -64,24 +74,12 @@ class benchmark
                 {
                     ++$this->counter;
                     if (0 === ($this->counter % 1000)) {
-                        echo ((int)($this->counter / (microtime(true) - $this->start)) . ' event by seconds (' . $this->counter . ' total)') . PHP_EOL;
+                        echo ((int)($this->counter / (microtime(
+                            true
+                        ) - $this->start)) . ' event by seconds (' . $this->counter . ' total)') . PHP_EOL;
                     }
                 }
             }
-        );
-    }
-
-    private function getConnection(): Connection
-    {
-        return DriverManager::getConnection(
-            [
-                'user' => self::DB_USER,
-                'password' => self::DB_PASS,
-                'host' => self::DB_HOST,
-                'port' => self::DB_PORT,
-                'driver' => 'pdo_mysql',
-                'dbname' => self::DB_NAME
-            ]
         );
     }
 
@@ -100,6 +98,20 @@ class benchmark
         }
     }
 
+    private function getConnection(): Connection
+    {
+        return DriverManager::getConnection(
+            [
+                'user' => self::DB_USER,
+                'password' => self::DB_PASS,
+                'host' => self::DB_HOST,
+                'port' => self::DB_PORT,
+                'driver' => 'pdo_mysql',
+                'dbname' => self::DB_NAME,
+            ]
+        );
+    }
+
     private function consume(): void
     {
         $this->binLogStream->run();
@@ -110,9 +122,11 @@ class benchmark
         $conn = $this->getConnection();
 
         echo 'Start insert data' . PHP_EOL;
+
+        /** @phpstan-ignore-next-line */
         while (1) {
-            $conn->exec('UPDATE  test SET i = i + 1;');
-            $conn->exec('UPDATE test2 SET i = i + 1;');
+            $conn->executeStatement('UPDATE  test SET i = i + 1;');
+            $conn->executeStatement('UPDATE test2 SET i = i + 1;');
         }
     }
 }

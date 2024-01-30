@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
@@ -20,14 +21,10 @@ class QueryEvent extends EventCommon
         $this->binaryDataReader->advance($statusVarsLength);
         $schema = $this->binaryDataReader->read($schemaLength);
         $this->binaryDataReader->advance(1);
-        $query = $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader() - 13 - $statusVarsLength - $schemaLength - 1);
-
-        return new QueryDTO(
-            $this->eventInfo,
-            $schema,
-            $executionTime,
-            $query,
-            $threadId
+        $query = $this->binaryDataReader->read(
+            $this->eventInfo->getSizeNoHeader() - 13 - $statusVarsLength - $schemaLength - 1
         );
+
+        return new QueryDTO($this->eventInfo, $schema, $executionTime, $query, $threadId);
     }
 }

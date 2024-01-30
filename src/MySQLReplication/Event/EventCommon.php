@@ -1,20 +1,18 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
+use MySQLReplication\BinLog\BinLogServerInfo;
 
 abstract class EventCommon
 {
-    protected $eventInfo;
-    protected $binaryDataReader;
-
     public function __construct(
-        EventInfo $eventInfo,
-        BinaryDataReader $binaryDataReader
+        protected EventInfo $eventInfo,
+        protected BinaryDataReader $binaryDataReader,
+        protected BinLogServerInfo $binLogServerInfo
     ) {
-        $this->eventInfo = $eventInfo;
-        $this->binaryDataReader = $binaryDataReader;
     }
 }

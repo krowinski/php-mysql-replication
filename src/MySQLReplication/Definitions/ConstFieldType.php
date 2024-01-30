@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Definitions;
@@ -36,9 +37,7 @@ class ConstFieldType
     public const VAR_STRING = 253;
     public const STRING = 254;
     public const GEOMETRY = 255;
-
-    public const CHAR = self::TINY;
-    public const INTERVAL = self::ENUM;
-
+    public const CHAR = 1;
+    public const INTERVAL = 247;
     public const IGNORE = 666;
 }

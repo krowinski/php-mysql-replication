@@ -1,4 +1,5 @@
 <?php
+
 /** @noinspection PhpUnhandledExceptionInspection */
 
 declare(strict_types=1);
@@ -7,62 +8,48 @@ namespace MySQLReplication\Tests\Unit\Cache;
 
 use MySQLReplication\Cache\ArrayCache;
 use MySQLReplication\Config\ConfigBuilder;
-use MySQLReplication\Tests\Unit\BaseTest;
+use PHPUnit\Framework\TestCase;
 
-class ArrayCacheTest extends BaseTest
+class ArrayCacheTest extends TestCase
 {
     private $arrayCache;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->arrayCache = new ArrayCache();
     }
 
-    /**
-     * @test
-     */
-    public function shouldGet(): void
+    public function testShouldGet(): void
     {
         $this->arrayCache->set('foo', 'bar');
         self::assertSame('bar', $this->arrayCache->get('foo'));
     }
 
-    /**
-     * @test
-     */
-    public function shouldSet(): void
+    public function testShouldSet(): void
     {
         $this->arrayCache->set('foo', 'bar');
         self::assertSame('bar', $this->arrayCache->get('foo'));
     }
 
-    /**
-     * @test
-     */
-    public function shouldClearCacheOnSet(): void
+    public function testShouldClearCacheOnSet(): void
     {
-        (new ConfigBuilder())->withTableCacheSize(1)->build();
+        (new ConfigBuilder())->withTableCacheSize(1)
+            ->build();
 
         $this->arrayCache->set('foo', 'bar');
         $this->arrayCache->set('foo', 'bar');
         self::assertSame('bar', $this->arrayCache->get('foo'));
     }
 
-    /**
-     * @test
-     */
-    public function shouldDelete(): void
+    public function testShouldDelete(): void
     {
         $this->arrayCache->set('foo', 'bar');
         $this->arrayCache->delete('foo');
         self::assertNull($this->arrayCache->get('foo'));
     }
 
-    /**
-     * @test
-     */
-    public function shouldClear(): void
+    public function testShouldClear(): void
     {
         $this->arrayCache->set('foo', 'bar');
         $this->arrayCache->set('foo1', 'bar1');
@@ -70,41 +57,43 @@ class ArrayCacheTest extends BaseTest
         self::assertNull($this->arrayCache->get('foo'));
     }
 
-    /**
-     * @test
-     */
-    public function shouldGetMultiple(): void
+    public function testShouldGetMultiple(): void
     {
-        $expect = ['foo' => 'bar', 'foo1' => 'bar1'];
+        $expect = [
+            'foo' => 'bar',
+            'foo1' => 'bar1',
+        ];
         $this->arrayCache->setMultiple($expect);
-        self::assertSame(['foo' => 'bar'], $this->arrayCache->getMultiple(['foo']));
+        self::assertSame([
+            'foo' => 'bar',
+        ], $this->arrayCache->getMultiple(['foo']));
     }
 
-    /**
-     * @test
-     */
-    public function shouldSetMultiple(): void
+    public function testShouldSetMultiple(): void
     {
-        $expect = ['foo' => 'bar', 'foo1' => 'bar1'];
+        $expect = [
+            'foo' => 'bar',
+            'foo1' => 'bar1',
+        ];
         $this->arrayCache->setMultiple($expect);
         self::assertSame($expect, $this->arrayCache->getMultiple(['foo', 'foo1']));
     }
 
-    /**
-     * @test
-     */
-    public function shouldDeleteMultiple(): void
+    public function testShouldDeleteMultiple(): void
     {
-        $expect = ['foo' => 'bar', 'foo1' => 'bar1', 'foo2' => 'bar2'];
+        $expect = [
+            'foo' => 'bar',
+            'foo1' => 'bar1',
+            'foo2' => 'bar2',
+        ];
         $this->arrayCache->setMultiple($expect);
         $this->arrayCache->deleteMultiple(['foo', 'foo1']);
-        self::assertSame(['foo2' => 'bar2'], $this->arrayCache->getMultiple(['foo2']));
+        self::assertSame([
+            'foo2' => 'bar2',
+        ], $this->arrayCache->getMultiple(['foo2']));
     }
 
-    /**
-     * @test
-     */
-    public function shouldHas(): void
+    public function testShouldHas(): void
     {
         self::assertFalse($this->arrayCache->has('foo'));
         $this->arrayCache->set('foo', 'bar');

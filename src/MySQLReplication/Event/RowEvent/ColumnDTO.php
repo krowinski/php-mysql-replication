@@ -4,52 +4,29 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
+use JsonSerializable;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Definitions\ConstFieldType;
 use MySQLReplication\Repository\FieldDTO;
 
-class ColumnDTO
+readonly class ColumnDTO implements JsonSerializable
 {
-    private $fieldDTO;
-    private $maxLength;
-    private $size;
-    private $fsp;
-    private $lengthSize;
-    private $precision;
-    private $decimals;
-    private $bits;
-    private $bytes;
-    private $type;
-
     public function __construct(
-        FieldDTO $fieldDTO,
-        int $type,
-        int $maxLength,
-        int $size,
-        int $fsp,
-        int $lengthSize,
-        int $precision,
-        int $decimals,
-        int $bits,
-        int $bytes
+        public FieldDTO $fieldDTO,
+        public int $type,
+        public int $maxLength,
+        public int $size,
+        public int $fsp,
+        public int $lengthSize,
+        public int $precision,
+        public int $decimals,
+        public int $bits,
+        public int $bytes
     ) {
-        $this->fieldDTO = $fieldDTO;
-        $this->type = $type;
-        $this->maxLength = $maxLength;
-        $this->size = $size;
-        $this->fsp = $fsp;
-        $this->lengthSize = $lengthSize;
-        $this->precision = $precision;
-        $this->decimals = $decimals;
-        $this->bits = $bits;
-        $this->bytes = $bytes;
     }
 
-    public static function make(
-        int $columnType,
-        FieldDTO $fieldDTO,
-        BinaryDataReader $binaryDataReader
-    ): self {
+    public static function make(int $columnType, FieldDTO $fieldDTO, BinaryDataReader $binaryDataReader): self
+    {
         $maxLength = 0;
         $size = 0;
         $fsp = 0;
@@ -111,65 +88,15 @@ class ColumnDTO
         );
     }
 
-    public function getFieldDTO(): FieldDTO
-    {
-        return $this->fieldDTO;
-    }
-
-    public function getMaxLength(): int
-    {
-        return $this->maxLength;
-    }
-
-    public function getSize(): int
-    {
-        return $this->size;
-    }
-
-    public function getFsp(): int
-    {
-        return $this->fsp;
-    }
-
-    public function getLengthSize(): int
-    {
-        return $this->lengthSize;
-    }
-
-    public function getPrecision(): int
-    {
-        return $this->precision;
-    }
-
-    public function getDecimals(): int
-    {
-        return $this->decimals;
-    }
-
-    public function getBits(): int
-    {
-        return $this->bits;
-    }
-
-    public function getBytes(): int
-    {
-        return $this->bytes;
-    }
-
-    public function getType(): int
-    {
-        return $this->type;
-    }
-
     public function getName(): string
     {
-        return $this->fieldDTO->getColumnName();
+        return $this->fieldDTO->columnName;
     }
 
     public function getEnumValues(): array
     {
         if ($this->type === ConstFieldType::ENUM) {
-            return explode(',', str_replace(['enum(', ')', '\''], '', $this->fieldDTO->getColumnType()));
+            return explode(',', str_replace(['enum(', ')', '\''], '', $this->fieldDTO->columnType));
         }
 
         return [];
@@ -178,7 +105,7 @@ class ColumnDTO
     public function getSetValues(): array
     {
         if ($this->type === ConstFieldType::SET) {
-            return explode(',', str_replace(['set(', ')', '\''], '', $this->fieldDTO->getColumnType()));
+            return explode(',', str_replace(['set(', ')', '\''], '', $this->fieldDTO->columnType));
         }
 
         return [];
@@ -186,11 +113,16 @@ class ColumnDTO
 
     public function isUnsigned(): bool
     {
-        return !(stripos($this->fieldDTO->getColumnType(), 'unsigned') === false);
+        return !(stripos($this->fieldDTO->columnType, 'unsigned') === false);
     }
 
     public function isPrimary(): bool
     {
-        return $this->fieldDTO->getColumnKey() === 'PRI';
+        return $this->fieldDTO->columnKey === 'PRI';
+    }
+
+    public function jsonSerialize(): array
+    {
+        return get_object_vars($this);
     }
 }

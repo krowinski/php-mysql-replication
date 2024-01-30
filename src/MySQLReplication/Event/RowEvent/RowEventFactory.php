@@ -1,27 +1,22 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Event\EventInfo;
-use MySQLReplication\Repository\RepositoryInterface;
-use Psr\SimpleCache\CacheInterface;
 
-class RowEventFactory
+readonly class RowEventFactory
 {
-    private $rowEventBuilder;
-
     public function __construct(
-        RepositoryInterface $repository,
-        CacheInterface $cache
+        private RowEventBuilder $rowEventBuilder
     ) {
-        $this->rowEventBuilder = new RowEventBuilder($repository, $cache);
     }
 
-    public function makeRowEvent(BinaryDataReader $package, EventInfo $eventInfo): RowEvent
+    public function makeRowEvent(BinaryDataReader $binaryDataReader, EventInfo $eventInfo): RowEvent
     {
-        $this->rowEventBuilder->withPackage($package);
+        $this->rowEventBuilder->withBinaryDataReader($binaryDataReader);
         $this->rowEventBuilder->withEventInfo($eventInfo);
 
         return $this->rowEventBuilder->build();

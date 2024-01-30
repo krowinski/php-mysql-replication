@@ -1,55 +1,47 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
 
 use JsonSerializable;
 use MySQLReplication\BinLog\BinLogCurrent;
+use MySQLReplication\Definitions\ConstEventType;
 
 class EventInfo implements JsonSerializable
 {
-    private $timestamp;
-    private $type;
-    private $id;
-    private $size;
-    private $pos;
-    private $flag;
-    private $checkSum;
-    private $sizeNoHeader;
-    private $dateTime;
-    private $binLogCurrent;
+    private ?int $sizeNoHeader;
+    private ?string $dateTime;
+    private ?string $typeName;
 
     public function __construct(
-        int $timestamp,
-        int $type,
-        int $id,
-        int $size,
-        int $pos,
-        int $flag,
-        bool $checkSum,
-        BinLogCurrent $binLogCurrent
+        public readonly int $timestamp,
+        public readonly int $type,
+        public readonly int $serverId,
+        public readonly int $size,
+        public readonly string $pos,
+        public readonly int $flag,
+        public readonly bool $checkSum,
+        public readonly BinLogCurrent $binLogCurrent
     ) {
-        $this->timestamp = $timestamp;
-        $this->type = $type;
-        $this->id = $id;
-        $this->size = $size;
-        $this->pos = $pos;
-        $this->flag = $flag;
-        $this->checkSum = $checkSum;
-        $this->binLogCurrent = $binLogCurrent;
-
         if ($pos > 0) {
             $this->binLogCurrent->setBinLogPosition($pos);
         }
+        $this->sizeNoHeader = $this->dateTime = null;
+        $this->typeName = ConstEventType::from($this->type)->name;
     }
 
-    public function getBinLogCurrent(): BinLogCurrent
+    public function getTypeName(): ?string
     {
-        return $this->binLogCurrent;
+        return $this->typeName;
     }
 
-    public function getDateTime(): string
+    public function getDateTime(): ?string
     {
+        if ($this->timestamp === 0) {
+            return null;
+        }
+
         if (empty($this->dateTime)) {
             $this->dateTime = date('c', $this->timestamp);
         }
@@ -60,44 +52,13 @@ class EventInfo implements JsonSerializable
     public function getSizeNoHeader(): int
     {
         if (empty($this->sizeNoHeader)) {
-            $this->sizeNoHeader = (true === $this->checkSum ? $this->size - 23 : $this->size - 19);
+            $this->sizeNoHeader = ($this->checkSum === true ? $this->size - 23 : $this->size - 19);
         }
 
         return $this->sizeNoHeader;
     }
 
-    public function getTimestamp(): int
-    {
-        return $this->timestamp;
-    }
-
-    public function getType(): int
-    {
-        return $this->type;
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-
-    public function getSize(): int
-    {
-        return $this->size;
-    }
-
-    public function getPos(): int
-    {
-        return $this->pos;
-    }
-
-    public function getFlag(): int
-    {
-        return $this->flag;
-    }
-
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return get_object_vars($this);
     }

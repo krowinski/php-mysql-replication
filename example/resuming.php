@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace example;
@@ -25,10 +26,6 @@ $binLogStream = new MySQLReplicationFactory(
         ->build()
 );
 
-/**
- * Class BenchmarkEventSubscribers
- * @package example
- */
 class MyEventSubscribers extends EventSubscribers
 {
     /**
@@ -45,38 +42,16 @@ class MyEventSubscribers extends EventSubscribers
         echo 'Memory usage ' . round(memory_get_usage() / 1048576, 2) . ' MB' . PHP_EOL;
 
         // save event for resuming it later
-        BinLogBootstrap::save($event->getEventInfo()->getBinLogCurrent());
+        BinLogBootstrap::save($event->getEventInfo()->binLogCurrent);
     }
 }
 
-/**
- * Class SaveBinLogPos
- * @package example
- */
 class BinLogBootstrap
 {
-    /**
-     * @var string
-     */
-    private static $fileAndPath;
+    private static ?string $fileAndPath = null;
 
-    /**
-     * @return string
-     */
-    private static function getFileAndPath(): string
-    {
-        if (null === self::$fileAndPath) {
-            self::$fileAndPath = sys_get_temp_dir() . '/bin-log-replicator-last-position';
-        }
-        return self::$fileAndPath;
-    }
-
-    /**
-     * @param BinLogCurrent $binLogCurrent
-     */
     public static function save(BinLogCurrent $binLogCurrent): void
     {
-
         echo 'saving file:' . $binLogCurrent->getBinFileName() . ', position:' . $binLogCurrent->getBinLogPosition() . ' bin log position' . PHP_EOL;
 
         // can be redis/nosql/file - something fast!
@@ -85,10 +60,6 @@ class BinLogBootstrap
         file_put_contents(self::getFileAndPath(), serialize($binLogCurrent));
     }
 
-    /**
-     * @param ConfigBuilder $builder
-     * @return ConfigBuilder
-     */
     public static function startFromPosition(ConfigBuilder $builder): ConfigBuilder
     {
         if (!is_file(self::getFileAndPath())) {
@@ -104,6 +75,14 @@ class BinLogBootstrap
             ->withBinLogFileName($binLogCurrent->getBinFileName())
             ->withBinLogPosition($binLogCurrent->getBinLogPosition());
     }
+
+    private static function getFileAndPath(): string
+    {
+        if (self::$fileAndPath === null) {
+            self::$fileAndPath = sys_get_temp_dir() . '/bin-log-replicator-last-position';
+        }
+        return self::$fileAndPath;
+    }
 }
 
 // register your events handler here
@@ -111,4 +90,3 @@ $binLogStream->registerSubscriber(new MyEventSubscribers());
 
 // start consuming events
 $binLogStream->run();
-
