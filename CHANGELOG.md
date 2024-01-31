@@ -1,5 +1,9 @@
 # Release Notes
 
+## v8.0.1 (2024-01-31)
+
+- Added: auto authorisation packet switching
+
 ## v8.0.0 (2024-01-29)
 
 - Change: drop support for < 8.2
