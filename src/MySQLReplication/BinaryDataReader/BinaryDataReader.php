@@ -325,4 +325,18 @@ class BinaryDataReader
         }
         return [];
     }
+
+    public static function decodeNullLength(string $data, int &$offset = 0): string
+    {
+        $length = strpos($data, chr(0), $offset);
+        if ($length === false) {
+            return '';
+        }
+
+        $length -= $offset;
+        $result = substr($data, $offset, $length);
+        $offset += $length + 1;
+
+        return $result;
+    }
 }

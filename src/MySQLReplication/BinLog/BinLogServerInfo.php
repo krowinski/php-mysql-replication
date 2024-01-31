@@ -17,7 +17,7 @@ readonly class BinLogServerInfo
         public string $serverVersion,
         public int $connectionId,
         public string $salt,
-        public ?BinLogAuthPluginMode $authPlugin,
+        public BinLogAuthPluginMode $authPlugin,
         public string $versionName,
         public float $versionRevision
     ) {
@@ -94,7 +94,7 @@ readonly class BinLogServerInfo
             $serverVersion,
             $connectionId,
             $salt,
-            BinLogAuthPluginMode::tryFrom($authPlugin),
+            BinLogAuthPluginMode::make($authPlugin),
             self::parseVersion($serverVersion),
             self::parseRevision($version)
         );

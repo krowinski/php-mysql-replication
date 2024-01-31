@@ -6,7 +6,6 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
-use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidCollection;
 use MySQLReplication\Repository\RepositoryInterface;
 use MySQLReplication\Socket\SocketInterface;
@@ -17,6 +16,7 @@ class BinLogSocketConnect
     private const COM_BINLOG_DUMP = 0x12;
     private const COM_REGISTER_SLAVE = 0x15;
     private const COM_BINLOG_DUMP_GTID = 0x1e;
+    private const AUTH_SWITCH_PACKET = 254;
     /**
      * https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase.html 00 FE
      */
@@ -47,7 +47,8 @@ class BinLogSocketConnect
             'Server version name: ' . $this->binLogServerInfo->versionName . ', revision: ' . $this->binLogServerInfo->versionRevision
         );
 
-        $this->authenticate();
+
+        $this->authenticate($this->binLogServerInfo->authPlugin);
         $this->getBinlogStream();
     }
 
@@ -110,17 +111,10 @@ class BinLogSocketConnect
         }
     }
 
-    private function authenticate(): void
+    private function authenticate(BinLogAuthPluginMode $authPlugin): void
     {
-        if ($this->binLogServerInfo->authPlugin === null) {
-            throw new MySQLReplicationException(
-                MySQLReplicationException::BINLOG_AUTH_NOT_SUPPORTED,
-                MySQLReplicationException::BINLOG_AUTH_NOT_SUPPORTED_CODE
-            );
-        }
-
         $this->logger->info(
-            'Trying to authenticate user: ' . $this->config->user . ' using ' . $this->binLogServerInfo->authPlugin->value . ' plugin'
+            'Trying to authenticate user: ' . $this->config->user . ' using ' . $authPlugin->value . ' default plugin'
         );
 
         $data = pack('L', self::getCapabilities());
@@ -128,38 +122,49 @@ class BinLogSocketConnect
         $data .= chr(33);
         $data .= str_repeat(chr(0), 23);
         $data .= $this->config->user . chr(0);
-
-        $auth = '';
-        if ($this->binLogServerInfo->authPlugin === BinLogAuthPluginMode::MysqlNativePassword) {
-            $auth = $this->authenticateMysqlNativePasswordPlugin();
-        } elseif ($this->binLogServerInfo->authPlugin === BinLogAuthPluginMode::CachingSha2Password) {
-            $auth = $this->authenticateCachingSha2PasswordPlugin();
-        }
-
+        $auth = $this->getAuthData($authPlugin, $this->binLogServerInfo->salt);
         $data .= chr(strlen($auth)) . $auth;
-        $data .= $this->binLogServerInfo->authPlugin->value . chr(0);
+        $data .= $authPlugin->value . chr(0);
         $str = pack('L', strlen($data));
         $s = $str[0] . $str[1] . $str[2];
         $data = $s . chr(1) . $data;
 
         $this->socket->writeToSocket($data);
-        $this->getResponse();
+        $response = $this->getResponse();
+
+        // Check for AUTH_SWITCH_PACKET
+        if (isset($response[0]) && ord($response[0]) === self::AUTH_SWITCH_PACKET) {
+            $this->switchAuth($response);
+        }
 
         $this->logger->info('User authenticated');
     }
 
-    private function authenticateCachingSha2PasswordPlugin(): string
+    private function getAuthData(?BinLogAuthPluginMode $authPlugin, string $salt): string
+    {
+        if ($authPlugin === BinLogAuthPluginMode::MysqlNativePassword) {
+            return $this->authenticateMysqlNativePasswordPlugin($salt);
+        }
+
+        if ($authPlugin === BinLogAuthPluginMode::CachingSha2Password) {
+            return $this->authenticateCachingSha2PasswordPlugin($salt);
+        }
+
+        return '';
+    }
+
+    private function authenticateCachingSha2PasswordPlugin(string $salt): string
     {
         $hash1 = hash('sha256', $this->config->password, true);
         $hash2 = hash('sha256', $hash1, true);
-        $hash3 = hash('sha256', $hash2 . $this->binLogServerInfo->salt, true);
+        $hash3 = hash('sha256', $hash2 . $salt, true);
         return $hash1 ^ $hash3;
     }
 
-    private function authenticateMysqlNativePasswordPlugin(): string
+    private function authenticateMysqlNativePasswordPlugin(string $salt): string
     {
         $hash1 = sha1($this->config->password, true);
-        $hash2 = sha1($this->binLogServerInfo->salt . sha1(sha1($this->config->password, true), true), true);
+        $hash2 = sha1($salt . sha1(sha1($this->config->password, true), true), true);
         return $hash1 ^ $hash2;
     }
 
@@ -315,5 +320,18 @@ class BinLogSocketConnect
         $this->binLogCurrent->setBinFileName($binFileName);
 
         $this->logger->info('Set binlog to start from: ' . $binFileName . ':' . $binFilePos);
+    }
+
+    private function switchAuth(string $response): void
+    {
+        // skip AUTH_SWITCH_PACKET byte
+        $offset = 1;
+        $authPluginSwitched = BinLogAuthPluginMode::make(BinaryDataReader::decodeNullLength($response, $offset));
+        $salt = BinaryDataReader::decodeNullLength($response, $offset);
+        $auth = $this->getAuthData($authPluginSwitched, $salt);
+
+        $this->logger->info('Auth switch packet received, switching to ' . $authPluginSwitched->value);
+
+        $this->socket->writeToSocket(pack('L', (strlen($auth)) | (3 << 24)) . $auth);
     }
 }
