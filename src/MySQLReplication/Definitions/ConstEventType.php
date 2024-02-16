@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MySQLReplication\Definitions;
 
 /**
- * @see https://dev.mysql.com/doc/internals/en/event-classes-and-types.html
+ * @see https://github.com/mysql/mysql-server/blob/824e2b4064053f7daf17d7f3f84b7a3ed92e5fb4/libs/mysql/binlog/event/binlog_event.h#L285 (MySQL binlog_event.h)
  */
 enum ConstEventType: int
 {
