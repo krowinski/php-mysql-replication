@@ -20,7 +20,7 @@
     "doctrine/dbal": "^3.8",
     "psr/log": "^3.0",
     "psr/simple-cache": "^3.0",
-    "symfony/event-dispatcher": "^7.0"
+    "symfony/event-dispatcher": "^6.0|^7.0"
   },
   "require-dev": {
     "kubawerlos/php-cs-fixer-custom-fixers": "^3.19",
