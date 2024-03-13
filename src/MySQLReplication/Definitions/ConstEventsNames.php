@@ -17,4 +17,5 @@ enum ConstEventsNames: string
     case TABLE_MAP = 'tableMap';
     case WRITE = 'write';
     case FORMAT_DESCRIPTION = 'format description';
+    case ROWS_QUERY = 'rows_query';
 }
