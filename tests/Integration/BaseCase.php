@@ -41,7 +41,7 @@ abstract class BaseCase extends TestCase
             ->withHost('0.0.0.0')
             ->withPassword('root')
             ->withPort(3306)
-            ->withEventsIgnore([ConstEventType::GTID_LOG_EVENT->value]);
+            ->withEventsIgnore($this->getIgnoredEvents());
 
         $this->connect();
 
@@ -81,6 +81,14 @@ abstract class BaseCase extends TestCase
         $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
         $this->connection->executeStatement('USE ' . $this->database);
         $this->connection->executeStatement('SET SESSION sql_mode = \'\';');
+    }
+
+    protected function getIgnoredEvents(): array
+    {
+        return [
+            ConstEventType::GTID_LOG_EVENT->value, // Generally in here
+            ConstEventType::ROWS_QUERY_LOG_EVENT->value, // Just debugging, there is a special test for it
+        ];
     }
 
     protected function getEvent(): EventDTO

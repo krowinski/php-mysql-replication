@@ -12,7 +12,8 @@ services:
       '--log_bin=binlog',
       '--max_binlog_size=8M',
       '--binlog_format=row',
-      '--server-id=1'
+      '--server-id=1',
+      '--binlog_rows_query_log_events=ON'
     ]
     environment:
       - MYSQL_ROOT_PASSWORD=root

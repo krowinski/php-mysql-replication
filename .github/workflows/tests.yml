@@ -24,7 +24,7 @@ jobs:
 
       - name: Start mysql service
         run: |
-          echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log" | sudo tee -a /etc/mysql/my.cnf
+          echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log\nbinlog_rows_query_log_events=ON" | sudo tee -a /etc/mysql/my.cnf
           sudo /etc/init.d/mysql start
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -proot
 

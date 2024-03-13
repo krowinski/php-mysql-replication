@@ -120,6 +120,11 @@ readonly class Event
             );
         }
 
+        // The Rows Query Log Event will be triggered with enabled MySQL Config `binlog_rows_query_log_events`
+        if ($eventInfo->type === ConstEventType::ROWS_QUERY_LOG_EVENT->value) {
+            return (new RowsQueryEvent($eventInfo, $binaryDataReader, $this->binLogServerInfo))->makeRowsQueryDTO();
+        }
+
         if ($eventInfo->type === ConstEventType::FORMAT_DESCRIPTION_EVENT->value) {
             return new FormatDescriptionEventDTO($eventInfo);
         }
