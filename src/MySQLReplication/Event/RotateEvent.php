@@ -7,7 +7,7 @@ namespace MySQLReplication\Event;
 use MySQLReplication\Event\DTO\RotateDTO;
 
 /**
- * @see https://dev.mysql.com/doc/internals/en/rotate-event.html
+ * @see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_replication_binlog_event.html#sect_protocol_replication_event_rotate
  */
 class RotateEvent extends EventCommon
 {

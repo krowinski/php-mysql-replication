@@ -37,7 +37,7 @@ readonly class Event
     {
         $binaryDataReader = new BinaryDataReader($this->binLogSocketConnect->getResponse());
 
-        // check EOF_Packet -> https://dev.mysql.com/doc/internals/en/packet-EOF_Packet.html
+        // check EOF_Packet -> https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_eof_packet.html
         if ($binaryDataReader->readUInt8() === self::EOF_HEADER_VALUE) {
             return;
         }
@@ -127,6 +127,9 @@ readonly class Event
         return null;
     }
 
+    /**
+     * @see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_replication_binlog_event.html#sect_protocol_replication_binlog_event_header
+     */
     private function createEventInfo(BinaryDataReader $binaryDataReader): EventInfo
     {
         return new EventInfo(
