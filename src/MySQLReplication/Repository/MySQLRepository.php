@@ -65,7 +65,6 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
 
     public function getMasterStatus(): MasterStatusDTO
     {
-		var_dump($this->getVersion());
 		if(version_compare($this->getVersion(),"8.4.0")>=0){
 			$data = $this->getConnection()
 				->fetchAssociative('SHOW BINARY LOG STATUS');
