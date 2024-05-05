@@ -192,9 +192,14 @@ class BinLogSocketConnect
             $this->executeSQL('SET @master_binlog_checksum = @@global.binlog_checksum');
         }
 
+
         if ($this->config->heartbeatPeriod > 0.00) {
             // master_heartbeat_period is in nanoseconds
-            $this->executeSQL('SET @master_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
+			if(version_compare($this->repository->getVersion(),"8.4.0")>=0){
+				$this->executeSQL('SET @source_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
+			}else{
+				$this->executeSQL('SET @master_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
+			}
 
             $this->logger->info('Heartbeat period set to ' . $this->config->heartbeatPeriod . ' seconds');
         }
