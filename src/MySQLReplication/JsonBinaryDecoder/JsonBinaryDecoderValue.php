@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
-readonly class JsonBinaryDecoderValue
+class JsonBinaryDecoderValue
 {
     public function __construct(
         public bool $isResolved,

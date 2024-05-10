@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Repository;
 
-readonly class MasterStatusDTO
+class MasterStatusDTO
 {
     public function __construct(
         public string $position,

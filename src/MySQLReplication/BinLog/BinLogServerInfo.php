@@ -6,7 +6,7 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 
-readonly class BinLogServerInfo
+class BinLogServerInfo
 {
     private const MYSQL_VERSION_MARIADB = 'MariaDB';
     private const MYSQL_VERSION_PERCONA = 'Percona';

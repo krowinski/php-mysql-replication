@@ -17,7 +17,7 @@ use MySQLReplication\Event\RowEvent\RowEventFactory;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-readonly class Event
+class Event
 {
     private const MARIADB_DUMMY_QUERY = '# Dum';
 

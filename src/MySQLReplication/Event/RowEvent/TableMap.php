@@ -6,7 +6,7 @@ namespace MySQLReplication\Event\RowEvent;
 
 use JsonSerializable;
 
-readonly class TableMap implements JsonSerializable
+class TableMap implements JsonSerializable
 {
     public function __construct(
         public string $database,

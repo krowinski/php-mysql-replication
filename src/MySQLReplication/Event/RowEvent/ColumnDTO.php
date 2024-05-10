@@ -9,7 +9,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Definitions\ConstFieldType;
 use MySQLReplication\Repository\FieldDTO;
 
-readonly class ColumnDTO implements JsonSerializable
+class ColumnDTO implements JsonSerializable
 {
     public function __construct(
         public FieldDTO $fieldDTO,

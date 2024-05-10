@@ -7,7 +7,7 @@ namespace MySQLReplication\Event\RowEvent;
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Event\EventInfo;
 
-readonly class RowEventFactory
+class RowEventFactory
 {
     public function __construct(
         private RowEventBuilder $rowEventBuilder
