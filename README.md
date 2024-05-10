@@ -29,6 +29,7 @@ Compatibility (based on integration tests)
 =========
 PHP
 
+- php 8.1
 - php 8.2
 - php 8.3
 
