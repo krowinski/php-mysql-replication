@@ -6,7 +6,7 @@ namespace MySQLReplication\Event\RowEvent;
 
 use Psr\SimpleCache\CacheInterface;
 
-readonly class TableMapCache
+class TableMapCache
 {
     public function __construct(
         private CacheInterface $cache

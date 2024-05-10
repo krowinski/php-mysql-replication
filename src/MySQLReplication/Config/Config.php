@@ -6,7 +6,7 @@ namespace MySQLReplication\Config;
 
 use JsonSerializable;
 
-readonly class Config implements JsonSerializable
+class Config implements JsonSerializable
 {
     public function __construct(
         public string $user,

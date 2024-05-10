@@ -13,7 +13,7 @@ use MySQLReplication\BinaryDataReader\BinaryDataReader;
  * @see https://github.com/mysql/mysql-server/blob/8.0/sql/json_binary.cc
  * @see https://github.com/shyiko/mysql-binlog-connector-java/blob/master/src/main/java/com/github/shyiko/mysql/binlog/event/deserialization/json/JsonBinary.java
  */
-readonly class JsonBinaryDecoderService
+class JsonBinaryDecoderService
 {
     public const SMALL_OBJECT = 0;
 

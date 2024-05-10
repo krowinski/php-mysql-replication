@@ -9,7 +9,7 @@ use Doctrine\DBAL\Exception;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Exception\MySQLReplicationException;
 
-readonly class MySQLRepository implements RepositoryInterface, PingableConnection
+class MySQLRepository implements RepositoryInterface, PingableConnection
 {
     public function __construct(
         private Connection $connection
