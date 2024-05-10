@@ -8,7 +8,7 @@
     "ext-bcmath": "*",
     "ext-json": "*",
     "ext-sockets": "*",
-    "doctrine/collections": "^2.1",
+    "doctrine/collections": "^1.8",
     "doctrine/dbal": "^3.8",
     "psr/log": "^3.0",
     "psr/simple-cache": "^3.0",
