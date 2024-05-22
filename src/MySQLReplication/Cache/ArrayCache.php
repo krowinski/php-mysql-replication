@@ -16,7 +16,7 @@ class ArrayCache implements CacheInterface
     ) {
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function get($key, mixed $default = null): mixed
     {
         return $this->has($key) ? self::$tableMapCache[$key] : $default;
     }
@@ -33,7 +33,7 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    public function getMultiple($keys, $default = null): iterable
     {
         $data = [];
         foreach ($keys as $key) {
@@ -45,7 +45,7 @@ class ArrayCache implements CacheInterface
         return $data !== [] ? $data : (array)$default;
     }
 
-    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
+    public function setMultiple($values, $ttl = null): bool
     {
         foreach ($values as $key => $value) {
             $this->set($key, $value);
@@ -54,7 +54,7 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
+    public function set($key, $value, $ttl = null): bool
     {
         // automatically clear table cache to save memory
         if (count(self::$tableMapCache) > $this->tableCacheSize) {
@@ -66,7 +66,7 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function deleteMultiple(iterable $keys): bool
+    public function deleteMultiple($keys): bool
     {
         foreach ($keys as $key) {
             $this->delete($key);
@@ -75,7 +75,7 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function delete(string $key): bool
+    public function delete($key): bool
     {
         unset(self::$tableMapCache[$key]);
 
