@@ -2,7 +2,7 @@
   "name": "supermetrics-public/php-mysql-replication",
   "description": "Pure PHP Implementation of MySQL replication protocol. This allow you to receive event like insert, update, delete with their data and raw SQL queries.",
   "type": "library",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "require": {
     "php": "8.1.*",
     "ext-bcmath": "*",
@@ -11,7 +11,7 @@
     "doctrine/collections": "^1.8",
     "doctrine/dbal": "^3.8",
     "psr/log": "^1 || ^2 || ^3",
-    "psr/simple-cache": "^1 || ^2 || ^3",
+    "psr/simple-cache": "^1.0",
     "symfony/event-dispatcher": "^6.0|^7.0"
   },
   "require-dev": {
