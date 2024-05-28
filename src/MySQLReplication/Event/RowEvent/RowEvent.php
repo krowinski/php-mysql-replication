@@ -725,7 +725,9 @@ class RowEvent extends EventCommon
         }
 
         $formattedDate = $dateTime->format('Y-m-d H:i:s');
-        if (DateTime::getLastErrors() !== false) {
+
+        $lastError = DateTime::getLastErrors();
+        if (isset($lastError['error_count']) && $lastError['error_count'] > 0) {
             return null;
         }
 
