@@ -18,7 +18,6 @@ use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class EventSubscribers implements EventSubscriberInterface
 {
