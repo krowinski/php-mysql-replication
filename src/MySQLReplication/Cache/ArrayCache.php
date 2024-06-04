@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Cache;
 
-use DateInterval;
-use Psr\SimpleCache\CacheInterface;
-
 class ArrayCache implements CacheInterface
 {
     private static array $tableMapCache = [];
