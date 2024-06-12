@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         php: [ '8.2', '8.3' ]
-        mysql-version: [ 'mysql:5.5', 'mysql:5.6', 'mysql:5.7', 'mysql:8.0', 'mysql:8.4', 'mariadb:5.5', 'mariadb:10.0', 'mariadb:10.1', 'percona:5.7', 'percona:8.0' ]
+        mysql-version: [ 'mysql:5.5', 'mysql:5.6', 'mysql:5.7', 'mysql:8.0', 'mysql:8.4', 'mariadb:5.5', 'mariadb:5.6', 'mariadb:5.7', 'mariadb:10.0', 'mariadb:10.1', 'percona:5.7', 'percona:8.0' ]
 
     services:
       mysql:
