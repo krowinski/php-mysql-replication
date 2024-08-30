@@ -416,7 +416,7 @@ class RowEvent extends EventCommon
 
     protected function findTableMap(): ?TableMap
     {
-        $tableId = $this->binaryDataReader->readTableId();
+        $tableId = (string)$this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
 
         if (in_array(

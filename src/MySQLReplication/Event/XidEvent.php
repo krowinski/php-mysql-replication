@@ -13,6 +13,6 @@ class XidEvent extends EventCommon
 {
     public function makeXidDTO(): XidDTO
     {
-        return new XidDTO($this->eventInfo, $this->binaryDataReader->readUInt64());
+        return new XidDTO($this->eventInfo, (string)$this->binaryDataReader->readUInt64());
     }
 }
