@@ -266,7 +266,7 @@ class BinLogSocketConnect
 
         $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
         $data .= pack('I', $binFilePos);
-        $data .= pack('v', 0);
+        $data .= pack('v', 2);
         $data .= pack('I', Config::getSlaveId());
         $data .= $binFileName;
 
