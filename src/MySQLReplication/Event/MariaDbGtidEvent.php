@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
@@ -14,9 +13,13 @@ class MariaDbGtidEvent extends EventCommon
         $domainId = $this->binaryDataReader->readUInt32();
         $flag = $this->binaryDataReader->readUInt8();
 
-        $this->eventInfo->binLogCurrent
-            ->setMariaDbGtid($mariaDbGtid);
+        $this->eventInfo->getBinLogCurrent()->setMariaDbGtid($mariaDbGtid);
 
-        return new MariaDbGtidLogDTO($this->eventInfo, $flag, $domainId, $mariaDbGtid);
+        return new MariaDbGtidLogDTO(
+            $this->eventInfo,
+            $flag,
+            $domainId,
+            $mariaDbGtid
+        );
     }
 }

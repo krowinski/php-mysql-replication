@@ -6,13 +6,17 @@ namespace MySQLReplication\Tests\Unit\Gtid;
 
 use MySQLReplication\Gtid\Gtid;
 use MySQLReplication\Gtid\GtidCollection;
-use PHPUnit\Framework\TestCase;
+use MySQLReplication\Gtid\GtidException;
+use MySQLReplication\Tests\Unit\BaseTest;
 
-class GtidCollectionTest extends TestCase
+class GtidCollectionTest extends BaseTest
 {
-    private GtidCollection $gtidCollection;
+    /**
+     * @var GtidCollection
+     */
+    private $gtidCollection;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -22,12 +26,18 @@ class GtidCollectionTest extends TestCase
         $this->gtidCollection->add(new Gtid('BBBBBBBB-CCCC-FFFF-DDDD-AAAAAAAAAAAA:1'));
     }
 
-    public function testShouldGetEncodedLength(): void
+    /**
+     * @test
+     */
+    public function shouldGetEncodedLength(): void
     {
         self::assertSame(88, $this->gtidCollection->getEncodedLength());
     }
 
-    public function testShouldGetEncoded(): void
+    /**
+     * @test
+     */
+    public function shouldGetEncoded(): void
     {
         self::assertSame(
             '02000000000000009b1c8d182a7611e5a26b000c2976f3f301000000000000000100000000000000b8b5020000000000bbbbbbbbccccffffddddaaaaaaaaaaaa010000000000000001000000000000000200000000000000',
@@ -35,7 +45,11 @@ class GtidCollectionTest extends TestCase
         );
     }
 
-    public function testShouldCreateCollection(): void
+    /**
+     * @test
+     * @throws GtidException
+     */
+    public function shouldCreateCollection(): void
     {
         self::assertCount(1, GtidCollection::makeCollectionFromString('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592'));
     }

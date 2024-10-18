@@ -1,6 +1,0 @@
-parameters:
-  level: 9
-  checkMissingIterableValueType: false
-  tmpDir: .cache/phpstan/
-  paths:
-    - src

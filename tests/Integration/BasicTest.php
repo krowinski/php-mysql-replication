@@ -1,5 +1,4 @@
 <?php
-
 /** @noinspection PhpPossiblePolymorphicInvocationInspection */
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -8,6 +7,7 @@ declare(strict_types=1);
 
 namespace MySQLReplication\Tests\Integration;
 
+use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\Definitions\ConstEventType;
 use MySQLReplication\Event\DTO\DeleteRowsDTO;
 use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
@@ -18,13 +18,15 @@ use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
 use MySQLReplication\Event\DTO\XidDTO;
 use MySQLReplication\MySQLReplicationFactory;
-use RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class BasicTest extends BaseCase
+class BasicTest extends BaseTest
 {
-    public function testShouldGetDeleteEvent(): void
+    /**
+     * @test
+     */
+    public function shouldGetDeleteEvent(): void
     {
         $this->createAndInsertValue(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))',
@@ -40,11 +42,14 @@ class BasicTest extends BaseCase
         /** @var DeleteRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(DeleteRowsDTO::class, $event);
-        self::assertEquals(1, $event->values[0]['id']);
-        self::assertEquals('Hello World', $event->values[0]['data']);
+        self::assertEquals(1, $event->getValues()[0]['id']);
+        self::assertEquals('Hello World', $event->getValues()[0]['data']);
     }
 
-    public function testShouldGetUpdateEvent(): void
+    /**
+     * @test
+     */
+    public function shouldGetUpdateEvent(): void
     {
         $this->createAndInsertValue(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))',
@@ -60,13 +65,16 @@ class BasicTest extends BaseCase
         /** @var UpdateRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
-        self::assertEquals(1, $event->values[0]['before']['id']);
-        self::assertEquals('Hello', $event->values[0]['before']['data']);
-        self::assertEquals(2, $event->values[0]['after']['id']);
-        self::assertEquals('World', $event->values[0]['after']['data']);
+        self::assertEquals(1, $event->getValues()[0]['before']['id']);
+        self::assertEquals('Hello', $event->getValues()[0]['before']['data']);
+        self::assertEquals(2, $event->getValues()[0]['after']['id']);
+        self::assertEquals('World', $event->getValues()[0]['after']['data']);
     }
 
-    public function testShouldGetWriteEventDropTable(): void
+    /**
+     * @test
+     */
+    public function shouldGetWriteEventDropTable(): void
     {
         $this->connection->executeStatement($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
         $this->connection->executeStatement('INSERT INTO `test` VALUES (1)');
@@ -75,12 +83,12 @@ class BasicTest extends BaseCase
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertEquals($createExpected, $event->query);
+        self::assertEquals($createExpected, $event->getQuery());
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertEquals('BEGIN', $event->query);
+        self::assertEquals('BEGIN', $event->getQuery());
 
         /** @var TableMapDTO $event */
         self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
@@ -88,18 +96,21 @@ class BasicTest extends BaseCase
         /** @var WriteRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
-        self::assertEquals([], $event->values);
-        self::assertEquals(0, $event->changedRows);
+        self::assertEquals([], $event->getValues());
+        self::assertEquals(0, $event->getChangedRows());
 
         self::assertInstanceOf(XidDTO::class, $this->getEvent());
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertStringContainsString($dropExpected, $event->query);
+        self::assertStringContainsString($dropExpected, $event->getQuery());
     }
 
-    public function testShouldGetQueryEventCreateTable(): void
+    /**
+     * @test
+     */
+    public function shouldGetQueryEventCreateTable(): void
     {
         $this->connection->executeStatement(
             $createExpected = 'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
@@ -108,15 +119,18 @@ class BasicTest extends BaseCase
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertEquals($createExpected, $event->query);
+        self::assertEquals($createExpected, $event->getQuery());
     }
 
-    public function testShouldDropColumn(): void
+    /**
+     * @test
+     */
+    public function shouldDropColumn(): void
     {
         $this->disconnect();
 
         $this->configBuilder->withEventsOnly(
-            [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value]
+            [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]
         );
 
         $this->connect();
@@ -129,40 +143,39 @@ class BasicTest extends BaseCase
         /** @var WriteRowsDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
-        self::assertEquals([
-            'id' => 1,
-            'DROPPED_COLUMN_1' => null,
-        ], $event->values[0]);
+        self::assertEquals(['id' => 1, 'DROPPED_COLUMN_1' => null], $event->getValues()[0]);
 
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
-        self::assertEquals([
-            'id' => 2,
-        ], $event->values[0]);
+        self::assertEquals(['id' => 2], $event->getValues()[0]);
     }
 
-    public function testShouldFilterEvents(): void
+    /**
+     * @test
+     */
+    public function shouldFilterEvents(): void
     {
         $this->disconnect();
 
-        $this->configBuilder->withEventsOnly([ConstEventType::QUERY_EVENT->value]);
+        $this->configBuilder->withEventsOnly([ConstEventType::QUERY_EVENT]);
 
         $this->connect();
 
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
 
-        $this->connection->executeStatement(
-            $createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))'
-        );
+        $this->connection->executeStatement($createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))');
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertEquals($createTableExpected, $event->query);
+        self::assertEquals($createTableExpected, $event->getQuery());
     }
 
-    public function testShouldFilterTables(): void
+    /**
+     * @test
+     */
+    public function shouldFilterTables(): void
     {
         $expectedTable = 'test_2';
         $expectedValue = 'foobar';
@@ -171,7 +184,7 @@ class BasicTest extends BaseCase
 
         $this->configBuilder
             ->withEventsOnly(
-                [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value]
+                [ConstEventType::WRITE_ROWS_EVENT_V1, ConstEventType::WRITE_ROWS_EVENT_V2]
             )->withTablesOnly([$expectedTable]);
 
         $this->connect();
@@ -192,15 +205,20 @@ class BasicTest extends BaseCase
 
         $event = $this->getEvent();
         self::assertInstanceOf(WriteRowsDTO::class, $event);
-        self::assertEquals($expectedTable, $event->tableMap->table);
-        self::assertEquals($expectedValue, $event->values[0]['data']);
+        self::assertEquals($expectedTable, $event->getTableMap()->getTable());
+        self::assertEquals($expectedValue, $event->getValues()[0]['data']);
     }
 
-    public function testShouldTruncateTable(): void
+    /**
+     * @test
+     */
+    public function shouldTruncateTable(): void
     {
         $this->disconnect();
 
-        $this->configBuilder->withEventsOnly([ConstEventType::QUERY_EVENT->value]);
+        $this->configBuilder->withEventsOnly(
+            [ConstEventType::QUERY_EVENT]
+        );
 
         $this->connect();
 
@@ -212,16 +230,19 @@ class BasicTest extends BaseCase
         $this->connection->executeStatement('TRUNCATE TABLE test_truncate_column');
 
         $event = $this->getEvent();
-        self::assertSame('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))', $event->query);
+        self::assertSame('CREATE TABLE test_truncate_column (id INTEGER(11), data VARCHAR(50))', $event->getQuery());
         $event = $this->getEvent();
-        self::assertSame('BEGIN', $event->query);
+        self::assertSame('BEGIN', $event->getQuery());
         $event = $this->getEvent();
-        self::assertSame('TRUNCATE TABLE test_truncate_column', $event->query);
+        self::assertSame('TRUNCATE TABLE test_truncate_column', $event->getQuery());
     }
 
-    public function testShouldJsonSetPartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonSetPartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -242,16 +263,22 @@ class BasicTest extends BaseCase
         $event = $this->getEvent();
 
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
-        self::assertEquals($expected, $event->values[0]['before']['j']);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
         self::assertEquals(
             '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8"}},"name":"Alice"}',
-            $event->values[0]['after']['j']
+            $event->getValues()[0]['after']['j']
         );
     }
 
-    public function testShouldJsonRemovePartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonRemovePartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -272,16 +299,22 @@ class BasicTest extends BaseCase
         $event = $this->getEvent();
 
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
-        self::assertEquals($expected, $event->values[0]['before']['j']);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
         self::assertEquals(
             '{"age":22,"addr":{"code":100,"detail":{}},"name":"Alice"}',
-            $event->values[0]['after']['j']
+            $event->getValues()[0]['after']['j']
         );
     }
 
-    public function testShouldJsonReplacePartialUpdateWithHoles(): void
+    /**
+     * @test
+     */
+    public function shouldJsonReplacePartialUpdateWithHoles(): void
     {
-        if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
+        if ($this->checkForVersion(5.7) || BinLogServerInfo::isMariaDb()) {
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
@@ -302,14 +335,20 @@ class BasicTest extends BaseCase
         $event = $this->getEvent();
 
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
-        self::assertEquals($expected, $event->values[0]['before']['j']);
+        self::assertEquals(
+            $expected,
+            $event->getValues()[0]['before']['j']
+        );
         self::assertEquals(
             '{"age":22,"addr":{"code":100,"detail":{"ab":"9707"}},"name":"Alice"}',
-            $event->values[0]['after']['j']
+            $event->getValues()[0]['after']['j']
         );
     }
 
-    public function testShouldRotateLog(): void
+    /**
+     * @test
+     */
+    public function shouldRoteLog(): void
     {
         $this->connection->executeStatement('FLUSH LOGS');
 
@@ -317,14 +356,14 @@ class BasicTest extends BaseCase
 
         self::assertMatchesRegularExpression(
             '/^[a-z-]+\.[\d]+$/',
-            $this->getEvent()
-                ->getEventInfo()
-                ->binLogCurrent
-                ->getBinFileName()
+            $this->getEvent()->getEventInfo()->getBinLogCurrent()->getBinFileName()
         );
     }
 
-    public function testShouldUseProvidedEventDispatcher(): void
+    /**
+     * @test
+     */
+    public function shouldUseProvidedEventDispatcher(): void
     {
         $this->disconnect();
 
@@ -342,7 +381,7 @@ class BasicTest extends BaseCase
         /** @var QueryDTO $event */
         $event = $this->getEvent();
         self::assertInstanceOf(QueryDTO::class, $event);
-        self::assertEquals($createExpected, $event->query);
+        self::assertEquals($createExpected, $event->getQuery());
     }
 
     private function connectWithProvidedEventDispatcher(EventDispatcherInterface $eventDispatcher): void
@@ -354,21 +393,13 @@ class BasicTest extends BaseCase
             $eventDispatcher
         );
 
-        $connection = $this->mySQLReplicationFactory->getDbConnection();
-        if ($connection === null) {
-            throw new RuntimeException('Connection not initialized');
-        }
+        $this->connection = $this->mySQLReplicationFactory->getDbConnection();
 
-        $this->connection = $connection;
         $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
         $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
         $this->connection->executeStatement('CREATE DATABASE ' . $this->database);
         $this->connection->executeStatement('USE ' . $this->database);
         $this->connection->executeStatement('SET SESSION sql_mode = \'\';');
-
-        if ($this->mySQLReplicationFactory->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory->getServerInfo()->isGeneric()) {
-            self::assertInstanceOf(RotateDTO::class, $this->getEvent());
-        }
 
         self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());

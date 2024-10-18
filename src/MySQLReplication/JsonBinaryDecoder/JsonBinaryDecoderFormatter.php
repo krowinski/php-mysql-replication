@@ -1,26 +1,39 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\JsonBinaryDecoder;
 
 class JsonBinaryDecoderFormatter
 {
-    public string $jsonString = '';
+    public $jsonString = '';
 
     public function formatValueBool(bool $bool): void
     {
         $this->jsonString .= var_export($bool, true);
     }
 
-    public function formatValueNumeric(int|string|null|float|bool $val): void
+    public function formatValueNumeric(int $val): void
     {
         $this->jsonString .= $val;
     }
 
-    public function formatValue(int|string|null|float|bool $val): void
+    public function formatValue($val): void
     {
         $this->jsonString .= '"' . self::escapeJsonString($val) . '"';
+    }
+
+    /**
+     * Some characters needs to be escaped
+     * @see http://www.json.org/
+     * @see https://stackoverflow.com/questions/1048487/phps-json-encode-does-not-escape-all-json-control-characters
+     */
+    private static function escapeJsonString($value): string
+    {
+        return str_replace(
+            ["\\", '/', '"', "\n", "\r", "\t", "\x08", "\x0c"],
+            ["\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b"],
+            (string)$value
+        );
     }
 
     public function formatEndObject(): void
@@ -61,19 +74,5 @@ class JsonBinaryDecoderFormatter
     public function getJsonString(): string
     {
         return $this->jsonString;
-    }
-
-    /**
-     * Some characters need to be escaped
-     * @see http://www.json.org/
-     * @see https://stackoverflow.com/questions/1048487/phps-json-encode-does-not-escape-all-json-control-characters
-     */
-    private static function escapeJsonString(int|string|null|float|bool $value): string
-    {
-        return str_replace(
-            ['\\', '/', '"', "\n", "\r", "\t", "\x08", "\x0c"],
-            ['\\\\', '\\/', '\\"', '\\n', '\\r', '\\t', '\\f', '\\b'],
-            (string)$value
-        );
     }
 }

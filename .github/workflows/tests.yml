@@ -2,29 +2,29 @@ name: PHP Tests
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ubuntu-latest
 
-    strategy:
-        matrix:
-            php: [ '8.2' ]
-            mysql-version: [ '5.7', '8.0', '8.4' ]
+    runs-on: ubuntu-latest
 
     services:
       mysql:
-        image: "mysql:${{ matrix.mysql-version }}"
+        image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: mysqlreplication_test
         ports:
           - 3306/tcp
 
+    strategy:
+      matrix:
+        php: [ '7.3', '7.4', '8.0' ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
+        
       - name: Start mysql service
         run: |
-          echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log\nbinlog_rows_query_log_events=ON" | sudo tee -a /etc/mysql/my.cnf
+          echo -e "\n[mysqld]\nserver-id=1\nbinlog_format=row\nlog_bin=/var/log/mysql/mysql-bin.log" | sudo tee -a /etc/mysql/my.cnf
           sudo /etc/init.d/mysql start
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -proot
 

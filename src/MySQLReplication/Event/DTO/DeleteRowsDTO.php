@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
@@ -8,10 +7,10 @@ use MySQLReplication\Definitions\ConstEventsNames;
 
 class DeleteRowsDTO extends RowsDTO
 {
-    protected ConstEventsNames $type = ConstEventsNames::DELETE;
+    protected $type = ConstEventsNames::DELETE;
 
     public function getType(): string
     {
-        return $this->type->value;
+        return $this->type;
     }
 }

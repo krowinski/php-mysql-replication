@@ -1,19 +1,10 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\RowEvent;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use JsonSerializable;
 
-/**
- * @extends ArrayCollection<int, ColumnDTO>
- */
-class ColumnDTOCollection extends ArrayCollection implements JsonSerializable
+class ColumnDTOCollection extends ArrayCollection
 {
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
-    }
 }

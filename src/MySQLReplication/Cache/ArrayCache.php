@@ -1,31 +1,34 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Cache;
 
-use DateInterval;
+use MySQLReplication\Config\Config;
 use Psr\SimpleCache\CacheInterface;
 
 class ArrayCache implements CacheInterface
 {
-    private static array $tableMapCache = [];
+    private static $tableMapCache = [];
 
-    public function __construct(
-        private readonly int $tableCacheSize = 0
-    ) {
-    }
-
-    public function get(string $key, mixed $default = null): mixed
+    /**
+     * @inheritDoc
+     */
+    public function get($key, $default = null)
     {
         return $this->has($key) ? self::$tableMapCache[$key] : $default;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function has($key): bool
     {
         return isset(self::$tableMapCache[$key]);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function clear(): bool
     {
         self::$tableMapCache = [];
@@ -33,7 +36,10 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    /**
+     * @inheritDoc
+     */
+    public function getMultiple($keys, $default = null)
     {
         $data = [];
         foreach ($keys as $key) {
@@ -42,10 +48,13 @@ class ArrayCache implements CacheInterface
             }
         }
 
-        return $data !== [] ? $data : (array)$default;
+        return [] !== $data ? $data : $default;
     }
 
-    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
+    /**
+     * @inheritDoc
+     */
+    public function setMultiple($values, $ttl = null): bool
     {
         foreach ($values as $key => $value) {
             $this->set($key, $value);
@@ -54,11 +63,19 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
+    /**
+     * @inheritDoc
+     */
+    public function set($key, $value, $ttl = null): bool
     {
         // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) > $this->tableCacheSize) {
-            self::$tableMapCache = array_slice(self::$tableMapCache, (int)($this->tableCacheSize / 2), null, true);
+        if (count(self::$tableMapCache) > Config::getTableCacheSize()) {
+            self::$tableMapCache = array_slice(
+                self::$tableMapCache,
+                (int)(Config::getTableCacheSize() / 2),
+                null,
+                true
+            );
         }
 
         self::$tableMapCache[$key] = $value;
@@ -66,7 +83,10 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function deleteMultiple(iterable $keys): bool
+    /**
+     * @inheritDoc
+     */
+    public function deleteMultiple($keys): bool
     {
         foreach ($keys as $key) {
             $this->delete($key);
@@ -75,7 +95,10 @@ class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function delete(string $key): bool
+    /**
+     * @inheritDoc
+     */
+    public function delete($key): bool
     {
         unset(self::$tableMapCache[$key]);
 

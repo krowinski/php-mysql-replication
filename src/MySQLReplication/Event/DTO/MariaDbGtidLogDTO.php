@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Event\DTO;
@@ -9,15 +8,22 @@ use MySQLReplication\Event\EventInfo;
 
 class MariaDbGtidLogDTO extends EventDTO
 {
-    private ConstEventsNames $type = ConstEventsNames::MARIADB_GTID;
+    private $type = ConstEventsNames::MARIADB_GTID;
+    private $flag;
+    private $domainId;
+    private $mariaDbGtid;
 
     public function __construct(
         EventInfo $eventInfo,
-        public readonly int $flag,
-        public readonly int $domainId,
-        public readonly string $mariaDbGtid
+        int $flag,
+        int $domainId,
+        string $mariaDbGtid
     ) {
         parent::__construct($eventInfo);
+
+        $this->flag = $flag;
+        $this->domainId = $domainId;
+        $this->mariaDbGtid = $mariaDbGtid;
     }
 
     public function __toString(): string
@@ -25,20 +31,37 @@ class MariaDbGtidLogDTO extends EventDTO
         return PHP_EOL .
             '=== Event ' . $this->getType() . ' === ' . PHP_EOL .
             'Date: ' . $this->eventInfo->getDateTime() . PHP_EOL .
-            'Log position: ' . $this->eventInfo->pos . PHP_EOL .
-            'Event size: ' . $this->eventInfo->size . PHP_EOL .
+            'Log position: ' . $this->eventInfo->getPos() . PHP_EOL .
+            'Event size: ' . $this->eventInfo->getSize() . PHP_EOL .
             'Flag: ' . var_export($this->flag, true) . PHP_EOL .
             'Domain Id: ' . $this->domainId . PHP_EOL .
             'Sequence Number: ' . $this->mariaDbGtid . PHP_EOL;
     }
 
+
     public function getType(): string
     {
-        return $this->type->value;
+        return $this->type;
     }
 
-    public function jsonSerialize(): array
+
+    public function jsonSerialize()
     {
         return get_object_vars($this);
+    }
+
+    public function getFlag(): int
+    {
+        return $this->flag;
+    }
+
+    public function getMariaDbGtid(): string
+    {
+        return $this->mariaDbGtid;
+    }
+
+    public function getDomainId(): int
+    {
+        return $this->domainId;
     }
 }

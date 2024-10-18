@@ -1,10 +1,12 @@
 php-mysql-replication
 =========
-[![Latest Stable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/stable)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/krowinski/php-mysql-replication/downloads)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/unstable)](https://packagist.org/packages/krowinski/php-mysql-replication)
+[![Build Status](https://travis-ci.org/krowinski/php-mysql-replication.svg?branch=master)](https://travis-ci.org/krowinski/php-mysql-replication)
+[![Latest Stable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/stable)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/krowinski/php-mysql-replication/downloads)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/unstable)](https://packagist.org/packages/krowinski/php-mysql-replication) 
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d/mini.png)](https://insight.sensiolabs.com/projects/4a0e49d4-3802-41d3-bb32-0a8194d0fd4d) [![License](https://poser.pugx.org/krowinski/php-mysql-replication/license)](https://packagist.org/packages/krowinski/php-mysql-replication)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
 
-Pure PHP Implementation of MySQL replication protocol. This allows you to receive event like insert, update, delete with their data and raw SQL queries.
+Pure PHP Implementation of MySQL replication protocol. This allow you to receive event like insert, update, delete with their data and raw SQL queries.
 
 Based on a great work of creators：https://github.com/noplay/python-mysql-replication and https://github.com/fengxiangyun/mysql-replication
 
@@ -27,16 +29,11 @@ composer install -o
 
 Compatibility (based on integration tests) 
 =========
-PHP
 
-- php 8.2
-- php 8.3
-
-MYSQL
  - mysql 5.5
  - mysql 5.6
  - mysql 5.7
- - mysql 8.0 (mysql_native_password and caching_sha2_password supported)
+ - mysql 8.0 (ONLY with mysql_native_password)
  - mariadb 5.5
  - mariadb 10.0
  - mariadb 10.1
@@ -86,7 +83,7 @@ Available options:
 
 'mariaDbGtid' - MariaDB GTID marker(s) to start from (format 1-1-3,0-1-88)
 
-'slaveId' - script slave id for identification (default: 666) (SHOW SLAVE HOSTS)
+'slaveId' - script slave id for identification (SHOW SLAVE HOSTS)
 
 'binLogFileName' - bin log file name to start from
 
@@ -105,8 +102,6 @@ Available options:
 'custom' - if some params must be set in extended/implemented own classes
 
 'heartbeatPeriod' - sets the interval in seconds between replication heartbeats. Whenever the master's binary log is updated with an event, the waiting period for the next heartbeat is reset. interval is a decimal value having the range 0 to 4294967 seconds and a resolution in milliseconds; the smallest nonzero value is 0.001. Heartbeats are sent by the master only if there are no unsent events in the binary log file for a period longer than interval.
-
-'saveUuid' - sets slave uuid for identification (default: 0015d2b6-8a06-4e5e-8c07-206ef3fbd274)
 
 Similar projects
 =========
@@ -399,42 +394,27 @@ FAQ
 =========
 
 1. ### Why and when need php-mysql-replication ?
+ Well first of all mysql don't give you async calls. You usually need to program this in your application (by event dispaching and adding to some queue system and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication protocol you can lisen on write events and process then asynchronously (best combo it's to add item to some queue system like rabbitmq, redis or kafka). Also in invalidate cache,  search engine replication, real time analytics and audits.
 
-Well first of all MYSQL don't give you async calls. You usually need to program this in your application (by event dispatching and adding to some queue system
-and if your db have many point of entry like web, backend other microservices its not always cheap to add processing to all of them. But using mysql replication
-protocol you can listen on write events and process then asynchronously (the best combo it's to add item to some queue system like rabbitmq, redis or kafka).
-Also in invalidate cache, search engine replication, real time analytics and audits.
-
-2. ### It's awesome ! but what is the catch ?
-
-Well first of all you need to know that a lot of events may come through, like if you update 1 000 000 records in table "bar" and you need this one insert from
-your table "foo" Then all must be processed by script, and you need to wait for your data. This is normal and this how it's work. You can speed up
-using [config options](https://github.com/krowinski/php-mysql-replication#configuration).
-Also, if script crashes you need to save from time to time position form binlog (or gtid) to start from this position when you run this script again to avoid
-duplicates.
+2. ### It's awsome ! but what is the catch ?
+ Well first of all you need to know that a lot of events may come through, like if you update 1 000 000  records in table   "bar" and you need this one insert from your table "foo" Then all must be processed by script and you need to wait for your data. This is normal and this how it's work. You can speed up using [config options](https://github.com/krowinski/php-mysql-replication#configuration).
+Also if script crashes you need to save from time to time position form binlog (or gtid) to start from this position when  you run this script again to avoid duplicates.
 
 3. ### I need to process 1 000 000 records and its taking forever!!
  Like I mention in 1 point use queue system like rabbitmq, redis or kafka, they will give you ability to process data in multiple scripts.
 
 4. ### I have a problem ? you script is missing something ! I have found a bug !
- Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to work on it in my free time :)
+ Create an [issue](https://github.com/krowinski/php-mysql-replication/issues) I will try to workon it in my free time :)
 
-5. ### How much its give overhead to MYSQL server ?
-
-It work like any other MYSQL in slave mode and its giving same overhead.
+5. ### How much its give overhead to mysql server ?
+ It work like any other mysql in slave mode and its giving same overhead.
  
 6. ### Socket timeouts error
-
-To fix this best is to increase db configurations ```net_read_timeout``` and ```net_write_timeout``` to 3600.  (tx Bijimon)
+ To fix this best is to increase db configurations "net_read_timeout" and "net_write_timeout" to 3600.  (tx Bijimon)
  
 7. ### Partial updates fix
-
-Set in my.conf ```binlog_row_image=full``` to fix receiving only partial updates.
-
+ Set in my.conf ```binlog_row_image=full``` to fix reciving only partial updates.  
+ 
 8. ### No replication events when connected to replica server   
-Set in my.conf ```log_slave_updates=on``` to fix this (#71)(#66)
+ Set in my.conf ```log_slave_updates=on``` to fix this (#71)(#66)
 
-9. ### "Big" updates / inserts
-Default MYSQL setting generates one big blob of stream this require more RAM/CPU you can change this for smaller stream using
-variable ```binlog_row_event_max_size``` [https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_binlog_row_event_max_size]  to
-split into smaller chunks 

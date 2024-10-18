@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Event;
@@ -13,7 +12,6 @@ use MySQLReplication\Event\DTO\HeartbeatDTO;
 use MySQLReplication\Event\DTO\MariaDbGtidLogDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\RotateDTO;
-use MySQLReplication\Event\DTO\RowsQueryDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\Event\DTO\UpdateRowsDTO;
 use MySQLReplication\Event\DTO\WriteRowsDTO;
@@ -25,24 +23,27 @@ class EventSubscribers implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            ConstEventsNames::TABLE_MAP->value => 'onTableMap',
-            ConstEventsNames::UPDATE->value => 'onUpdate',
-            ConstEventsNames::DELETE->value => 'onDelete',
-            ConstEventsNames::GTID->value => 'onGTID',
-            ConstEventsNames::QUERY->value => 'onQuery',
-            ConstEventsNames::ROTATE->value => 'onRotate',
-            ConstEventsNames::XID->value => 'onXID',
-            ConstEventsNames::WRITE->value => 'onWrite',
-            ConstEventsNames::MARIADB_GTID->value => 'onMariaDbGtid',
-            ConstEventsNames::FORMAT_DESCRIPTION->value => 'onFormatDescription',
-            ConstEventsNames::HEARTBEAT->value => 'onHeartbeat',
-            ConstEventsNames::ROWS_QUERY->value => 'onRowsQuery',
+            ConstEventsNames::TABLE_MAP => 'onTableMap',
+            ConstEventsNames::UPDATE => 'onUpdate',
+            ConstEventsNames::DELETE => 'onDelete',
+            ConstEventsNames::GTID => 'onGTID',
+            ConstEventsNames::QUERY => 'onQuery',
+            ConstEventsNames::ROTATE => 'onRotate',
+            ConstEventsNames::XID => 'onXID',
+            ConstEventsNames::WRITE => 'onWrite',
+            ConstEventsNames::MARIADB_GTID => 'onMariaDbGtid',
+            ConstEventsNames::FORMAT_DESCRIPTION => 'onFormatDescription',
+            ConstEventsNames::HEARTBEAT => 'onHeartbeat',
         ];
     }
 
     public function onUpdate(UpdateRowsDTO $event): void
     {
         $this->allEvents($event);
+    }
+
+    protected function allEvents(EventDTO $event): void
+    {
     }
 
     public function onTableMap(TableMapDTO $event): void
@@ -93,14 +94,5 @@ class EventSubscribers implements EventSubscriberInterface
     public function onHeartbeat(HeartbeatDTO $event): void
     {
         $this->allEvents($event);
-    }
-
-    public function onRowsQuery(RowsQueryDTO $event): void
-    {
-        $this->allEvents($event);
-    }
-
-    protected function allEvents(EventDTO $event): void
-    {
     }
 }

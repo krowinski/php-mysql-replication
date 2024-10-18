@@ -1,21 +1,19 @@
 <?php
-
 declare(strict_types=1);
 
 namespace MySQLReplication\Definitions;
 
-enum ConstEventsNames: string
+class ConstEventsNames
 {
-    case XID = 'xid';
-    case DELETE = 'delete';
-    case QUERY = 'query';
-    case ROTATE = 'rotate';
-    case GTID = 'gtid';
-    case MARIADB_GTID = 'mariadb gtid';
-    case UPDATE = 'update';
-    case HEARTBEAT = 'heartbeat';
-    case TABLE_MAP = 'tableMap';
-    case WRITE = 'write';
-    case FORMAT_DESCRIPTION = 'format description';
-    case ROWS_QUERY = 'rows_query';
+    public const TABLE_MAP = 'tableMap';
+    public const GTID = 'gtid';
+    public const XID = 'xid';
+    public const QUERY = 'query';
+    public const ROTATE = 'rotate';
+    public const DELETE = 'delete';
+    public const UPDATE = 'update';
+    public const WRITE = 'write';
+    public const MARIADB_GTID = 'mariadb gtid';
+    public const FORMAT_DESCRIPTION = 'format description';
+    public const HEARTBEAT = 'heartbeat';
 }
