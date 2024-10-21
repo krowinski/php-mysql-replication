@@ -14,6 +14,8 @@ use MySQLReplication\Event\DTO\EventDTO;
 use MySQLReplication\Event\DTO\FormatDescriptionEventDTO;
 use MySQLReplication\Event\DTO\HeartbeatDTO;
 use MySQLReplication\Event\DTO\QueryDTO;
+use MySQLReplication\Event\DTO\RotateDTO;
+use MySQLReplication\Event\DTO\StaticEventDTO;
 use MySQLReplication\Event\RowEvent\RowEventFactory;
 use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\JsonBinaryDecoder\JsonBinaryDecoderException;
@@ -79,6 +81,8 @@ class Event
             $eventDTO = new HeartbeatDTO($eventInfo);
         } else if (ConstEventType::MARIA_GTID_EVENT === $eventInfo->getType()) {
             $eventDTO = (new MariaDbGtidEvent($eventInfo, $binaryDataReader))->makeMariaDbGTIDLogDTO();
+        } else if ($eventInfo->getType() === 160) {
+            ArrayCache::setRawQuery($binaryDataReader->getData());
         }
 
         // check for ignore and permitted events

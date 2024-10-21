@@ -10,6 +10,8 @@ class ArrayCache implements CacheInterface
 {
     private static $tableMapCache = [];
 
+    public static string $rawQuery = '';
+
     /**
      * @inheritDoc
      */
@@ -103,5 +105,15 @@ class ArrayCache implements CacheInterface
         unset(self::$tableMapCache[$key]);
 
         return true;
+    }
+
+    public static function getRawQuery(): string
+    {
+        return self::$rawQuery;
+    }
+
+    public static function setRawQuery(string $rawQuery): void
+    {
+        self::$rawQuery = $rawQuery;
     }
 }
