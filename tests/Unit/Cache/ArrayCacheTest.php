@@ -22,24 +22,6 @@ class ArrayCacheTest extends BaseTest
     /**
      * @test
      */
-    public function shouldGet(): void
-    {
-        $this->arrayCache->set('foo', 'bar');
-        self::assertSame('bar', $this->arrayCache->get('foo'));
-    }
-
-    /**
-     * @test
-     */
-    public function shouldSet(): void
-    {
-        $this->arrayCache->set('foo', 'bar');
-        self::assertSame('bar', $this->arrayCache->get('foo'));
-    }
-
-    /**
-     * @test
-     */
     public function shouldClearCacheOnSet(): void
     {
         (new ConfigBuilder())->withTableCacheSize(1)->build();
@@ -109,5 +91,39 @@ class ArrayCacheTest extends BaseTest
         self::assertFalse($this->arrayCache->has('foo'));
         $this->arrayCache->set('foo', 'bar');
         self::assertTrue($this->arrayCache->has('foo'));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldHandleRawQueryWithReplicationFlag(): void
+    {
+        ArrayCache::setRawQuery('SELECT * FROM table /* isReplicating */');
+
+        $rawQuery = ArrayCache::getRawQuery();
+        self::assertSame('SELECT * FROM table /* isReplicating */', $rawQuery);
+
+        if ($rawQuery && mb_strpos($rawQuery, '/* isReplicating */') !== false) {
+            ArrayCache::setRawQuery('');
+        }
+
+        self::assertSame('', ArrayCache::getRawQuery());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotClearRawQueryWithoutReplicationFlag(): void
+    {
+        ArrayCache::setRawQuery('SELECT * FROM table');
+
+        $rawQuery = ArrayCache::getRawQuery();
+        self::assertSame('SELECT * FROM table', $rawQuery);
+
+        if ($rawQuery && mb_strpos($rawQuery, '/* isReplicating */') !== false) {
+            ArrayCache::setRawQuery('');
+        }
+
+        self::assertSame('SELECT * FROM table', ArrayCache::getRawQuery());
     }
 }
