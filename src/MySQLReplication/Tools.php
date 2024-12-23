@@ -8,7 +8,7 @@ class Tools
 {
     public static function getFromEnv(string $name, null|int|string $default = null): null|int|string
     {
-        $value = $_ENV[$name] ?: null;
+        $value = getenv($name) ?: null;
         return $value ?? $default;
     }
 }
