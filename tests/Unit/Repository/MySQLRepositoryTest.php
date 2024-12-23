@@ -70,22 +70,14 @@ class MySQLRepositoryTest extends TestCase
 
     public function testShouldGetVersion(): void
     {
-        $expected = [
-            [
-                'Value' => 'foo',
-            ],
-            [
-                'Value' => 'bar',
-            ],
-            [
-                'Value' => '123',
-            ],
-        ];
+	$expected = [
+	    'Value' => 'version',
+	];
 
-        $this->connection->method('fetchAllAssociative')
-            ->willReturn($expected);
+	$this->connection->method('fetchAssociative')
+		  ->willReturn($expected);
 
-        self::assertEquals('foobar123', $this->mySQLRepositoryTest->getVersion());
+	self::assertEquals('version', $this->mySQLRepositoryTest->getVersion());
     }
 
     public function testShouldGetMasterStatus(): void

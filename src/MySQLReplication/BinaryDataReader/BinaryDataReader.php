@@ -114,16 +114,21 @@ class BinaryDataReader
         return $data[1] + ($data[2] << 8) + ($data[3] << 16);
     }
 
-    public function readUInt64(): string
+    public function readUInt64(): string|int
     {
         return $this->unpackUInt64($this->read(self::UNSIGNED_INT64_LENGTH));
     }
 
-    public function unpackUInt64(string $binary): string
+    public function unpackUInt64(string $binary): string|int
     {
         $data = self::unpack('V*', $binary);
 
-        return bcadd((string)$data[1], bcmul((string)$data[2], bcpow('2', '32')));
+        $num = bcadd((string)$data[1], bcmul((string)$data[2], bcpow('2', '32')));
+		if($num>PHP_INT_MAX || $num<PHP_INT_MIN){
+			return $num;
+		}else{
+			return intval($num);
+		}
     }
 
     public function readInt24(): int
@@ -138,11 +143,16 @@ class BinaryDataReader
         return $res;
     }
 
-    public function readInt64(): string
+    public function readInt64(): string|int
     {
         $data = self::unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
 
-        return bcadd((string)$data[1], (string)($data[2] << 32));
+        $num = bcadd((string)$data[1], (string)($data[2] << 32));
+		if($num>PHP_INT_MAX || $num<PHP_INT_MIN){
+			return $num;
+		}else{
+			return intval($num);
+		}
     }
 
     public function readLengthString(int $size): string
@@ -286,7 +296,7 @@ class BinaryDataReader
 
     public function readTableId(): string
     {
-        return $this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
+        return (string)$this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
     }
 
     public function isComplete(int $size): bool
