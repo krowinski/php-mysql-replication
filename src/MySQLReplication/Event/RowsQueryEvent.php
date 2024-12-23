@@ -16,10 +16,10 @@ class RowsQueryEvent extends EventCommon
 {
     public function makeRowsQueryDTO(): RowsQueryDTO
     {
-        // $this->binaryDataReader->advance(1);
+        $this->binaryDataReader->advance(1);
         return new RowsQueryDTO(
             $this->eventInfo,
-            $this->binaryDataReader->read($this->binaryDataReader->readInt8()),
+            $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader() - 1),
         );
     }
 }
