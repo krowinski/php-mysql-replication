@@ -16,7 +16,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: mysqlreplication_test
         ports:
-          - 3306/tcp
+          - 3310:3306
 
     steps:
       - name: Checkout
@@ -51,4 +51,4 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-text
+        run: MYSQL_PORT=3310 vendor/bin/phpunit --coverage-text

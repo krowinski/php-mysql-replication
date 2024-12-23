@@ -15,6 +15,7 @@ use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\MySQLReplicationFactory;
+use MySQLReplication\Tools;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -40,7 +41,7 @@ abstract class BaseCase extends TestCase
             ->withUser('root')
             ->withHost('0.0.0.0')
             ->withPassword('root')
-            ->withPort(3306)
+            ->withPort((int)Tools::getFromEnv('MYSQL_PORT', 3306))
             ->withEventsIgnore($this->getIgnoredEvents());
 
         $this->connect();
