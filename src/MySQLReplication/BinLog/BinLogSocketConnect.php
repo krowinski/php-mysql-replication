@@ -36,14 +36,14 @@ class BinLogSocketConnect
 
         $this->socket->connectToStream($config->host, $config->port);
 
-        $this->logger->info('Connected to ' . $config->host . ':' . $config->port);
+        $this->logger->debug('Connected to ' . $config->host . ':' . $config->port);
 
         $this->binLogServerInfo = BinLogServerInfo::make(
             $this->getResponse(false),
             $this->repository->getVersion()
         );
 
-        $this->logger->info(
+        $this->logger->debug(
             'Server version name: ' . $this->binLogServerInfo->versionName . ', revision: ' . $this->binLogServerInfo->versionRevision
         );
 
@@ -113,7 +113,7 @@ class BinLogSocketConnect
 
     private function authenticate(BinLogAuthPluginMode $authPlugin): void
     {
-        $this->logger->info(
+        $this->logger->debug(
             'Trying to authenticate user: ' . $this->config->user . ' using ' . $authPlugin->value . ' default plugin'
         );
 
@@ -137,7 +137,7 @@ class BinLogSocketConnect
             $this->switchAuth($response);
         }
 
-        $this->logger->info('User authenticated');
+        $this->logger->debug('User authenticated');
     }
 
     private function getAuthData(?BinLogAuthPluginMode $authPlugin, string $salt): string
@@ -196,7 +196,7 @@ class BinLogSocketConnect
             // master_heartbeat_period is in nanoseconds
             $this->executeSQL('SET @master_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
 
-            $this->logger->info('Heartbeat period set to ' . $this->config->heartbeatPeriod . ' seconds');
+            $this->logger->debug('Heartbeat period set to ' . $this->config->heartbeatPeriod . ' seconds');
         }
 
         if ($this->config->slaveUuid !== '') {
@@ -204,7 +204,7 @@ class BinLogSocketConnect
                 'SET @slave_uuid = \'' . $this->config->slaveUuid . '\', @replica_uuid = \'' . $this->config->slaveUuid . '\''
             );
 
-            $this->logger->info('Salve uuid set to ' . $this->config->slaveUuid);
+            $this->logger->debug('Salve uuid set to ' . $this->config->slaveUuid);
         }
 
         $this->registerSlave();
@@ -251,7 +251,7 @@ class BinLogSocketConnect
         $this->socket->writeToSocket($data);
         $this->getResponse();
 
-        $this->logger->info('Slave registered with id ' . $this->config->slaveId);
+        $this->logger->debug('Slave registered with id ' . $this->config->slaveId);
     }
 
     private function setBinLogDumpMariaGtid(): void
@@ -263,7 +263,7 @@ class BinLogSocketConnect
 
         $this->binLogCurrent->setMariaDbGtid($this->config->mariaDbGtid);
 
-        $this->logger->info('Set Maria GTID to start from: ' . $this->config->mariaDbGtid);
+        $this->logger->debug('Set Maria GTID to start from: ' . $this->config->mariaDbGtid);
     }
 
     private function setBinLogDumpGtid(): void
@@ -286,7 +286,7 @@ class BinLogSocketConnect
 
         $this->binLogCurrent->setGtid($this->config->gtid);
 
-        $this->logger->info('Set GTID to start from: ' . $this->config->gtid);
+        $this->logger->debug('Set GTID to start from: ' . $this->config->gtid);
     }
 
     /**
@@ -319,7 +319,7 @@ class BinLogSocketConnect
         $this->binLogCurrent->setBinLogPosition($binFilePos);
         $this->binLogCurrent->setBinFileName($binFileName);
 
-        $this->logger->info('Set binlog to start from: ' . $binFileName . ':' . $binFilePos);
+        $this->logger->debug('Set binlog to start from: ' . $binFileName . ':' . $binFilePos);
     }
 
     private function switchAuth(string $response): void
@@ -330,7 +330,7 @@ class BinLogSocketConnect
         $salt = BinaryDataReader::decodeNullLength($response, $offset);
         $auth = $this->getAuthData($authPluginSwitched, $salt);
 
-        $this->logger->info('Auth switch packet received, switching to ' . $authPluginSwitched->value);
+        $this->logger->debug('Auth switch packet received, switching to ' . $authPluginSwitched->value);
 
         $this->socket->writeToSocket(pack('L', (strlen($auth)) | (3 << 24)) . $auth);
     }
