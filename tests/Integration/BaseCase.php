@@ -46,7 +46,7 @@ abstract class BaseCase extends TestCase
 
         $this->connect();
 
-        var_dump($this->mySQLReplicationFactory?->getServerInfo());
+        var_dump($this->mySQLReplicationFactory?->getServerInfo(), $this->configBuilder->build());
 
         if ($this->mySQLReplicationFactory?->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory?->getServerInfo()->isGeneric()) {
             self::assertInstanceOf(RotateDTO::class, $this->getEvent());
