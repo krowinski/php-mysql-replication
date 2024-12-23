@@ -28,6 +28,9 @@ jobs:
           sudo /etc/init.d/mysql start
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -proot
 
+      - name: Debug matrix values
+        run: echo "Using PHP ${{ matrix.php }} and MySQL ${{ matrix.mysql-version }}"
+
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
         with:
