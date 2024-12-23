@@ -15,6 +15,7 @@ use MySQLReplication\Event\DTO\QueryDTO;
 use MySQLReplication\Event\DTO\RotateDTO;
 use MySQLReplication\Event\DTO\TableMapDTO;
 use MySQLReplication\MySQLReplicationFactory;
+use MySQLReplication\Tools;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -40,10 +41,12 @@ abstract class BaseCase extends TestCase
             ->withUser('root')
             ->withHost('0.0.0.0')
             ->withPassword('root')
-            ->withPort(3306)
+            ->withPort((int)Tools::getFromEnv('MYSQL_PORT', 3306))
             ->withEventsIgnore($this->getIgnoredEvents());
 
         $this->connect();
+
+        var_dump($this->mySQLReplicationFactory?->getServerInfo(), $this->configBuilder->build());
 
         if ($this->mySQLReplicationFactory?->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory?->getServerInfo()->isGeneric()) {
             self::assertInstanceOf(RotateDTO::class, $this->getEvent());
