@@ -32,6 +32,10 @@ class ConfigBuilder
 
     private array $databasesOnly = [];
 
+    private array $tablesRegex = [];
+
+    private array $databasesRegex = [];
+
     private string $mariaDbGtid = '';
 
     private int $tableCacheSize = 128;
@@ -143,6 +147,18 @@ class ConfigBuilder
         return $this;
     }
 
+    public function withDatabasesRegex(array $databasesRegex): self
+    {
+        $this->databasesRegex = $databasesRegex;
+        return $this;
+    }
+
+    public function withTablesRegex(array $tablesRegex): self
+    {
+        $this->tablesRegex = $tablesRegex;
+        return $this;
+    }
+
     public function withMariaDbGtid(string $mariaDbGtid): self
     {
         $this->mariaDbGtid = $mariaDbGtid;
@@ -194,7 +210,9 @@ class ConfigBuilder
             $this->tableCacheSize,
             $this->custom,
             $this->heartbeatPeriod,
-            $this->slaveUuid
+            $this->slaveUuid,
+            $this->tablesRegex,
+            $this->databasesRegex,
         );
     }
 }

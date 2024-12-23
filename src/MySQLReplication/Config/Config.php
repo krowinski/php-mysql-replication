@@ -27,6 +27,8 @@ readonly class Config implements JsonSerializable
         public array $custom,
         public float $heartbeatPeriod,
         public string $slaveUuid,
+        private array $tablesRegex = [],
+        private array $databasesRegex = [],
     ) {
     }
 
@@ -103,13 +105,26 @@ readonly class Config implements JsonSerializable
 
     public function checkDataBasesOnly(string $database): bool
     {
-        return $this->databasesOnly !== [] && !in_array($database, $this->databasesOnly, true);
+        return ($this->databasesOnly !== [] && !in_array($database, $this->databasesOnly, true))
+            || ($this->databasesRegex !== []  && !self::matchNames($database, $this->databasesRegex));
     }
 
 
     public function checkTablesOnly(string $table): bool
     {
-        return $this->tablesOnly !== [] && !in_array($table, $this->tablesOnly, true);
+        return ($this->tablesOnly !== [] && !in_array($table, $this->tablesOnly, true))
+            || ($this->tablesRegex !== [] && !self::matchNames($table, $this->tablesRegex));
+    }
+
+    private static function matchNames(string $name, array $patterns): bool
+    {
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function checkEvent(int $type): bool

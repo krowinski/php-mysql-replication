@@ -97,6 +97,9 @@ class ConfigTest extends TestCase
 
         $config = (new ConfigBuilder())->withDatabasesOnly(['foo'])->build();
         self::assertTrue($config->checkDataBasesOnly('bar'));
+
+        $config = (new ConfigBuilder())->withDatabasesRegex(['/^foo_.*/'])->build();
+        self::assertFalse($config->checkDataBasesOnly('foo_123'));
     }
 
     public function testShouldCheckTablesOnly(): void
@@ -112,6 +115,9 @@ class ConfigTest extends TestCase
 
         $config = (new ConfigBuilder())->withTablesOnly(['foo'])->build();
         self::assertTrue($config->checkTablesOnly('bar'));
+
+        $config = (new ConfigBuilder())->withTablesRegex(['/^foo_.*/'])->build();
+        self::assertFalse($config->checkTablesOnly('foo_123'));
     }
 
     public function testShouldCheckEvent(): void
