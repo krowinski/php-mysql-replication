@@ -437,7 +437,7 @@ class RowEvent extends EventCommon
             return $this->tableMapCache->get($tableId);
         }
 
-        $this->logger->info('No table map found for table ID: ' . $tableId);
+        $this->logger->debug('No table map found for table ID: ' . $tableId);
 
         return null;
     }
