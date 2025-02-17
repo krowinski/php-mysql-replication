@@ -33,11 +33,11 @@ class MySQLReplicationFactory
 
     public function __construct(
         Config $config,
-        RepositoryInterface $repository = null,
-        CacheInterface $cache = null,
-        EventDispatcherInterface $eventDispatcher = null,
-        SocketInterface $socket = null,
-        LoggerInterface $logger = null
+        RepositoryInterface|null $repository = null,
+        CacheInterface|null $cache = null,
+        EventDispatcherInterface|null $eventDispatcher = null,
+        SocketInterface|null $socket = null,
+        LoggerInterface|null $logger = null
     ) {
         $config->validate();
 
