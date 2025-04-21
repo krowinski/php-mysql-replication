@@ -17,7 +17,7 @@
     "ext-json": "*",
     "ext-sockets": "*",
     "doctrine/collections": "^2.1",
-    "doctrine/dbal": "^3.8",
+    "doctrine/dbal": "^4.0",
     "psr/log": "^3.0",
     "psr/simple-cache": "^3.0",
     "symfony/event-dispatcher": "^6.0|^7.0"
@@ -26,7 +26,7 @@
     "kubawerlos/php-cs-fixer-custom-fixers": "^3.19",
     "monolog/monolog": "^3.5",
     "phpstan/phpstan": "^1.10",
-    "phpunit/phpunit": "^10.5",
+    "phpunit/phpunit": "^11.0",
     "symplify/easy-coding-standard": "^12.1"
   },
   "license": "MIT",
