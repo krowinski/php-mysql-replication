@@ -37,8 +37,8 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
                     `TABLE_SCHEMA` = ?
                 AND
                     `TABLE_NAME` = ?
-            ORDER BY 
-                ORDINAL_POSITION        
+            ORDER BY
+                ORDINAL_POSITION
        ';
 
         return FieldDTOCollection::makeFromArray(
@@ -95,11 +95,8 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
 
     private function getConnection(): Connection
     {
-        if ($this->ping($this->connection) === false) {
-            $this->connection->close();
-            $this->connection->connect();
-        }
-
+        // In DBAL 4.x, connections handle reconnection automatically
+        // No need for manual ping/reconnect logic
         return $this->connection;
     }
 }
