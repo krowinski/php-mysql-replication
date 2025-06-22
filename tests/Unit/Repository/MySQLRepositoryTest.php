@@ -8,6 +8,7 @@ namespace MySQLReplication\Tests\Unit\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use MySQLReplication\Repository\FieldDTOCollection;
 use MySQLReplication\Repository\MasterStatusDTO;
@@ -96,13 +97,17 @@ class MySQLRepositoryTest extends TestCase
         self::assertEquals(MasterStatusDTO::makeFromArray($expected), $this->mySQLRepositoryTest->getMasterStatus());
     }
 
-    public function testShouldReconnect(): void
+            public function testShouldReconnect(): void
     {
         // just to cover private getConnection
+        $exception = $this->createMock(ConnectionException::class);
+
         $this->connection->method('executeQuery')
-            ->willReturnCallback(static function () {
-                throw new Exception('');
-            });
+            ->willThrowException($exception);
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['Value' => 'NONE']);
+
         $this->mySQLRepositoryTest->isCheckSum();
         self::assertTrue(true);
     }
