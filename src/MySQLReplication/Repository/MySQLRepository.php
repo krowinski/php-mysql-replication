@@ -60,7 +60,7 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
         $res = $this->getConnection()
             ->fetchAssociative('SHOW VARIABLES LIKE "version"');
 
-        return $res['Value']??"";
+        return $res['Value'] ?? '';
     }
 
     public function getMasterStatus(): MasterStatusDTO
