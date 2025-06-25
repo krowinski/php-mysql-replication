@@ -286,7 +286,7 @@ class BinaryDataReader
 
     public function readTableId(): string
     {
-        return $this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
+        return (string)$this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
     }
 
     public function isComplete(int $size): bool
