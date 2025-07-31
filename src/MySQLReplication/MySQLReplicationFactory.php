@@ -104,6 +104,22 @@ class MySQLReplicationFactory
         }
     }
 
+    /**
+     * Run replication, checking $shouldStop callback on each iteration, to be able to gracefully stop the process.
+     *
+     * @param callable $shouldStop Returns true if the process should stop
+     */
+    public function runWithStopCheck(callable $shouldStop): void
+    {
+        while (true) {
+            if ($shouldStop()) {
+                break;
+            }
+
+            $this->consume();
+        }
+    }
+
     public function consume(): void
     {
         $this->event->consume();
