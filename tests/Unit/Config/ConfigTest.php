@@ -102,6 +102,20 @@ class ConfigTest extends TestCase
         self::assertFalse($config->checkDataBasesOnly('foo_123'));
     }
 
+    public function testShouldCheckDataBasesOnlyListAndRegex(): void
+    {
+        $config = (new ConfigBuilder())
+            ->withDatabasesOnly(['foo'])
+            ->withDatabasesRegex(['/^instance\d+$/'])
+            ->build();
+        self::assertFalse($config->checkDataBasesOnly('foo'));
+        self::assertFalse($config->checkDataBasesOnly('instance1'));
+        self::assertFalse($config->checkDataBasesOnly('instance123'));
+        self::assertTrue($config->checkDataBasesOnly('bar'));
+        self::assertTrue($config->checkDataBasesOnly('instance'));
+        self::assertTrue($config->checkDataBasesOnly('instanceX'));
+    }
+
     public function testShouldCheckTablesOnly(): void
     {
         $config = (new ConfigBuilder())->build();
@@ -118,6 +132,20 @@ class ConfigTest extends TestCase
 
         $config = (new ConfigBuilder())->withTablesRegex(['/^foo_.*/'])->build();
         self::assertFalse($config->checkTablesOnly('foo_123'));
+    }
+
+    public function testShouldCheckTablesOnlyListAndRegex(): void
+    {
+        $config = (new ConfigBuilder())
+            ->withTablesOnly(['foo'])
+            ->withTablesRegex(['/^instance\d+$/'])
+            ->build();
+        self::assertFalse($config->checkTablesOnly('foo'));
+        self::assertFalse($config->checkTablesOnly('instance1'));
+        self::assertFalse($config->checkTablesOnly('instance123'));
+        self::assertTrue($config->checkTablesOnly('bar'));
+        self::assertTrue($config->checkTablesOnly('instance'));
+        self::assertTrue($config->checkTablesOnly('instanceX'));
     }
 
     public function testShouldCheckEvent(): void
