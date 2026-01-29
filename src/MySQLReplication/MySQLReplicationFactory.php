@@ -129,4 +129,9 @@ class MySQLReplicationFactory
     {
         return $this->binLogSocketConnect->getBinLogServerInfo();
     }
+
+    public function getBinLogCurrent(): BinLogCurrent
+    {
+        return $this->binLogSocketConnect->getBinLogCurrent();
+    }
 }
