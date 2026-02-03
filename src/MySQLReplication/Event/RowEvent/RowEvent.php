@@ -707,7 +707,11 @@ class RowEvent extends EventCommon
             $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second
         );
         if ($formattedDate) {
-            return $formattedDate . $fsp;
+            if ($fsp > 0) {
+                return vsprintf('%s.%06u', [$formattedDate, $fsp]);
+            } else {
+                return $formattedDate;
+            }
         }
 
         return null;

@@ -381,6 +381,46 @@ class TypesTest extends BaseCase
         self::assertNull($event->values[0]['test']);
     }
 
+    public function testShouldBeDateTime2(): void
+    {
+        $create_query = 'CREATE TABLE test (test DATETIME(6));';
+        $insert_query = 'INSERT INTO test VALUES("1984-12-03 12:33:07.023450")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals('1984-12-03 12:33:07.023450', $event->values[0]['test']);
+    }
+
+    public function testShouldBeZeroDateTime2(): void
+    {
+        $create_query = 'CREATE TABLE test (id INTEGER, test DATETIME(6) NOT NULL DEFAULT 0);';
+        $insert_query = 'INSERT INTO test (id) VALUES(1)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->values[0]['test']);
+    }
+
+    public function testShouldBeBrokenDateTime2(): void
+    {
+        $create_query = 'CREATE TABLE test (test DATETIME(6) NOT NULL);';
+        $insert_query = 'INSERT INTO test VALUES("2013-00-00 00:00:00")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->values[0]['test']);
+    }
+
+    public function testShouldReturnNullOnZeroDateDateTime2(): void
+    {
+        $create_query = 'CREATE TABLE test (test DATETIME(6) NOT NULL);';
+        $insert_query = 'INSERT INTO test VALUES("0000-00-00 00:00:00")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertNull($event->values[0]['test']);
+    }
+
     public function testShouldBeYear(): void
     {
         $create_query = 'CREATE TABLE test (test YEAR(4), test2 YEAR, test3 YEAR)';
