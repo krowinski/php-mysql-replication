@@ -67,7 +67,7 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
     {
         $query = 'SHOW MASTER STATUS';
 
-        if (str_starts_with($this->getVersion(), '8.4')) {
+        if (version_compare($this->getVersion(), '8.4.0') >= 0) {
             $query = 'SHOW BINARY LOG STATUS';
         }
 
