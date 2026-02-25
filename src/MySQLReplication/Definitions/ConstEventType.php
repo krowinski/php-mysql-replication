@@ -57,6 +57,15 @@ enum ConstEventType: int
     case MARIA_UPDATE_ROWS_COMPRESSED_EVENT = 170;
     case MARIA_GTID_EVENT = 162;
 
+    // MySQL 8.0+ event types
+    case TRANSACTION_CONTEXT_EVENT = 36;
+    case VIEW_CHANGE_EVENT = 37;
+    case XA_PREPARE_LOG_EVENT = 38;
+    case PARTIAL_UPDATE_ROWS_EVENT = 39;
+    case TRANSACTION_PAYLOAD_EVENT = 40;
+    case HEARTBEAT_LOG_EVENT_V2 = 41;
+    case GTID_TAGGED_LOG_EVENT = 42;
+
     //Transaction ID for 2PC, written whenever a COMMIT is expected.
 
     // Row-Based Binary Logging
