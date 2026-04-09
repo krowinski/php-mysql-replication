@@ -281,6 +281,8 @@ readonly class JsonBinaryDecoderService
             $data = $this->binaryDataReader->readInt64();
         } elseif ($type === self::UINT16) {
             $data = ($this->binaryDataReader->readUInt16());
+        } elseif ($type === self::UINT32) {
+            $data = ($this->binaryDataReader->readUInt32());
         } elseif ($type === self::UINT64) {
             $data = ($this->binaryDataReader->readUInt64());
         } elseif ($type === self::DOUBLE) {
