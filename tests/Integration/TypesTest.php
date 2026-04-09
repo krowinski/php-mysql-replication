@@ -726,7 +726,8 @@ class TypesTest extends BaseCase
             (101, '{\"bool\": true}'),
             (102, '{\"bool\": false}'),
             (103, '{\"null\": null}'),
-            (104, '[\"\\\\\"test\"]')
+            (104, '[\"\\\\\"test\"]'),
+            (105, CAST(CAST(4294967295 AS UNSIGNED) AS JSON))
         ";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
@@ -762,5 +763,6 @@ class TypesTest extends BaseCase
         self::assertEquals('{"bool":false}', $results[26]['j']);
         self::assertEquals('{"null":null}', $results[27]['j']);
         self::assertEquals('["\"test"]', $results[28]['j']);
+        self::assertEquals('"4294967295"', $results[29]['j']);
     }
 }
