@@ -35,7 +35,19 @@ readonly class Event
 
     public function consume(): void
     {
-        $binaryDataReader = new BinaryDataReader($this->binLogSocketConnect->getResponse());
+        $rawResponse = $this->binLogSocketConnect->getResponse();
+
+        // A binlog event is at minimum 1 status byte + 19 bytes of event header.
+        // Any response shorter than 20 bytes cannot be a valid event packet — it
+        // is most likely a leftover OK packet from an incomplete or misaligned
+        // handshake (e.g. an un-drained auth response). Skip it and let the next
+        // iteration read the real first event rather than crashing with a
+        // TypeError on readInt32() when the buffer is too short.
+        if (strlen($rawResponse) < 20) {
+            return;
+        }
+
+        $binaryDataReader = new BinaryDataReader($rawResponse);
 
         // check EOF_Packet -> https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_eof_packet.html
         if ($binaryDataReader->readUInt8() === self::EOF_HEADER_VALUE) {
