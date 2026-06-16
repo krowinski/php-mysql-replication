@@ -338,5 +338,42 @@ class BinLogSocketConnect
         $this->logger->debug('Auth switch packet received, switching to ' . $authPluginSwitched->value);
 
         $this->socket->writeToSocket(pack('L', (strlen($auth)) | (3 << 24)) . $auth);
+
+        // caching_sha2_password sends an AuthMoreData packet (0x01 status byte)
+        // followed by either fast_auth_success (0x03) or perform_full_authentication
+        // (0x04). Both packets must be drained here so that subsequent setup
+        // commands (executeSQL, registerSlave, setBinLogDump) each see their own
+        // response on the wire rather than a leftover auth packet.
+        //
+        // Without this drain, every getResponse() call in getBinlogStream() is
+        // offset by 2 packets, and the final misaligned packet reaches
+        // Event::consume() where its 0x00 status byte is misread as a binlog
+        // event header, causing a TypeError on readInt32() (PHP 8 strict types)
+        // or an unpack() underflow on older PHP.
+        //
+        // See: https://dev.mysql.com/doc/dev/mysql-server/latest/page_caching_sha2_authentication_exchanges.html
+        if ($authPluginSwitched === BinLogAuthPluginMode::CachingSha2Password) {
+            $authMoreData = $this->getResponse(false);
+            if ($authMoreData !== '' && ord($authMoreData[0]) === 0x01) {
+                $marker = isset($authMoreData[1]) ? ord($authMoreData[1]) : 0x00;
+                if ($marker === 0x04) {
+                    // Server is requesting full authentication (password not yet in
+                    // server cache). Full-auth requires sending the password over a
+                    // secure channel (TLS or unix socket) which this client does not
+                    // currently implement. Surface a clear error rather than hanging.
+                    throw new BinLogException(
+                        'caching_sha2_password full authentication required ' .
+                        '(server sent perform_full_authentication 0x04). ' .
+                        'This client supports only fast-auth (the user must already ' .
+                        'be in the server auth cache, or connect via TLS/unix socket).',
+                        0
+                    );
+                }
+                // 0x03 = fast_auth_success: server now sends the final auth OK packet.
+                $this->getResponse();
+            }
+            // If the first byte was not 0x01 the server skipped AuthMoreData and
+            // sent the OK directly — nothing more to drain.
+        }
     }
 }
