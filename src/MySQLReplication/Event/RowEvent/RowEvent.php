@@ -707,11 +707,7 @@ class RowEvent extends EventCommon
             $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second
         );
         if ($formattedDate) {
-            if ($fsp > 0) {
-                return vsprintf('%s.%06u', [$formattedDate, $fsp]);
-            } else {
-                return $formattedDate;
-            }
+            return $formattedDate . $fsp;
         }
 
         return null;
@@ -756,7 +752,7 @@ class RowEvent extends EventCommon
             if ($fsp % 2) {
                 $microsecond = (int)($microsecond / 10);
             }
-            $time = $microsecond * (10 ** (6 - $fsp));
+            $time = ".".$microsecond * (10 ** (6 - $fsp));
         }
 
         return (string)$time;
@@ -799,11 +795,7 @@ class RowEvent extends EventCommon
     {
         $datetime = date('Y-m-d H:i:s', $this->binaryDataReader->readInt32Be());
         $fsp = $this->getFSP($columnDTO);
-        if ($fsp !== '') {
-            $datetime .= '.' . $fsp;
-        }
-
-        return $datetime;
+        return $datetime . $fsp;
     }
 
     protected function getDate(): ?string
