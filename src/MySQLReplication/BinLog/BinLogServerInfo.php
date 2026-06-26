@@ -17,6 +17,7 @@ readonly class BinLogServerInfo
         public string $serverVersion,
         public int $connectionId,
         public string $salt,
+        public int $characterSet,
         public BinLogAuthPluginMode $authPlugin,
         public string $versionName,
         public float $versionRevision
@@ -60,7 +61,7 @@ readonly class BinLogServerInfo
         $i += 2;
 
         //character_set (1) -- default server character-set, only the lower 8-bits Protocol::CharacterSet (optional)
-        $characterSet = $data[$i];
+        $characterSet = ord($data[$i]);
         ++$i;
 
         //status_flags (2) -- Protocol::StatusFlags (optional)
@@ -94,6 +95,7 @@ readonly class BinLogServerInfo
             $serverVersion,
             $connectionId,
             $salt,
+            $characterSet,
             BinLogAuthPluginMode::make($authPlugin),
             self::parseVersion($serverVersion),
             self::parseRevision($version)

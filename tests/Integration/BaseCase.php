@@ -39,10 +39,10 @@ abstract class BaseCase extends TestCase
         parent::setUp();
 
         $this->configBuilder = (new ConfigBuilder())
-            ->withUser('root')
-            ->withHost('0.0.0.0')
-            ->withPassword('root')
-            ->withPort(3306)
+            ->withUser(getenv('DB_USER') ?: 'root')
+            ->withHost(getenv('DB_HOST') ?: '0.0.0.0')
+            ->withPassword(getenv('DB_PASSWORD') ?: 'root')
+            ->withPort((int) (getenv('DB_PORT') ?: 3306))
             ->withEventsIgnore($this->getIgnoredEvents());
 
         $this->connect();

@@ -677,6 +677,42 @@ class TypesTest extends BaseCase
         self::assertEquals($string, $event->values[0]['test']);
     }
 
+    public function testShouldBeTime2MySQL56(): void
+    {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb() && $this->checkForVersion(10.1)) {
+            self::markTestIncomplete('Only for mariadb 10.1 or higher');
+        } elseif ($this->checkForVersion(5.6)) {
+            self::markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
+        $create_query = 'CREATE TABLE test (
+            test0 TIME(0),
+            test1 TIME(1),
+            test2 TIME(2),
+            test3 TIME(3),
+            test4 TIME(4),
+            test5 TIME(5),
+            test6 TIME(6));';
+        $insert_query = 'INSERT INTO test VALUES(
+            "12:33:07",
+            "12:33:07.1",
+            "12:33:07.12",
+            "12:33:07.123",
+            "12:33:07.1234",
+            "12:33:07.12345",
+            "12:33:07.123456")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals('12:33:07', $event->values[0]['test0']);
+        self::assertEquals('12:33:07.100000', $event->values[0]['test1']);
+        self::assertEquals('12:33:07.120000', $event->values[0]['test2']);
+        self::assertEquals('12:33:07.123000', $event->values[0]['test3']);
+        self::assertEquals('12:33:07.123400', $event->values[0]['test4']);
+        self::assertEquals('12:33:07.123450', $event->values[0]['test5']);
+        self::assertEquals('12:33:07.123456', $event->values[0]['test6']);
+    }
+
     public function testShouldBeJson(): void
     {
         if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {

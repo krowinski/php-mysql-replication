@@ -57,7 +57,7 @@ class ArrayCache implements CacheInterface
     public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
         // automatically clear table cache to save memory
-        if (count(self::$tableMapCache) > $this->tableCacheSize) {
+        if ($this->tableCacheSize > 0 && count(self::$tableMapCache) > $this->tableCacheSize) {
             self::$tableMapCache = array_slice(self::$tableMapCache, (int)($this->tableCacheSize / 2), null, true);
         }
 

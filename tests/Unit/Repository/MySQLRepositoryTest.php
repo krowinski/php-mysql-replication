@@ -7,28 +7,26 @@ declare(strict_types=1);
 namespace MySQLReplication\Tests\Unit\Repository;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use MySQLReplication\Repository\FieldDTOCollection;
 use MySQLReplication\Repository\MasterStatusDTO;
 use MySQLReplication\Repository\MySQLRepository;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class MySQLRepositoryTest extends TestCase
 {
     private MySQLRepository $mySQLRepositoryTest;
 
-    private Connection|MockObject $connection;
+    private Connection&Stub $connection;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->connection = $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock();
-        $this->connection->method('getDatabasePlatform')
-            ->willReturn(new MySQLPlatform());
+        $this->connection = $this->createStub(Connection::class);
+        $this->connection->method('getDatabasePlatform')->willReturn(new MySQLPlatform());
         $this->mySQLRepositoryTest = new MySQLRepository($this->connection);
     }
 
@@ -76,7 +74,7 @@ class MySQLRepositoryTest extends TestCase
         ];
 
         $this->connection->method('fetchAssociative')
-              ->willReturn($expected);
+            ->willReturn($expected);
 
         self::assertEquals('version', $this->mySQLRepositoryTest->getVersion());
     }
@@ -97,16 +95,18 @@ class MySQLRepositoryTest extends TestCase
         self::assertEquals(MasterStatusDTO::makeFromArray($expected), $this->mySQLRepositoryTest->getMasterStatus());
     }
 
-            public function testShouldReconnect(): void
+    public function testShouldReconnect(): void
     {
         // just to cover private getConnection
-        $exception = $this->createMock(ConnectionException::class);
+        $exception = $this->createStub(ConnectionException::class);
 
         $this->connection->method('executeQuery')
             ->willThrowException($exception);
 
         $this->connection->method('fetchAssociative')
-            ->willReturn(['Value' => 'NONE']);
+            ->willReturn([
+                'Value' => 'NONE',
+            ]);
 
         $this->mySQLRepositoryTest->isCheckSum();
         self::assertTrue(true);

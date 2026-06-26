@@ -27,19 +27,19 @@ class EventConsumeShortPacketTest extends TestCase
     #[DataProvider('shortPackets')]
     public function testConsumeSkipsResponsesShorterThanAnEventHeader(string $response): void
     {
-        $socket = $this->createMock(BinLogSocketConnect::class);
+        $socket = $this->createStub(BinLogSocketConnect::class);
         $socket->method('getResponse')->willReturn($response);
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::never())->method('dispatch');
+        $dispatcher->expects($this->never())->method('dispatch');
 
         $event = new Event(
             $socket,
-            $this->createMock(RowEventFactory::class),
+            $this->createStub(RowEventFactory::class),
             $dispatcher,
-            $this->createMock(CacheInterface::class),
-            $this->createMock(Config::class),
-            $this->createMock(BinLogServerInfo::class)
+            $this->createStub(CacheInterface::class),
+            $this->createStub(Config::class),
+            $this->createStub(BinLogServerInfo::class)
         );
 
         $event->consume();

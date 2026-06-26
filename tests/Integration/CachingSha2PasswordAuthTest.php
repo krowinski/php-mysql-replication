@@ -29,10 +29,7 @@ class CachingSha2PasswordAuthTest extends BaseCase
             self::markTestSkipped('caching_sha2_password and switchAuth() apply to MySQL 8+ only');
         }
 
-        self::assertGreaterThanOrEqual(
-            8.0,
-            $this->mySQLReplicationFactory->getServerInfo()->versionRevision
-        );
+        self::assertGreaterThanOrEqual(8.0, $this->mySQLReplicationFactory->getServerInfo() ->versionRevision);
 
         $this->connection->executeStatement('CREATE TABLE caching_sha2_handshake_check (id INT)');
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());

@@ -307,7 +307,7 @@ readonly class JsonBinaryDecoderService
 
     private function readLiteral(): ?bool
     {
-        $literal = ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH));
+        $literal = ord($this->binaryDataReader->read(BinaryDataReader::UNSIGNED_SHORT_LENGTH)[0]);
         if ($literal === self::LITERAL_NULL) {
             return null;
         }

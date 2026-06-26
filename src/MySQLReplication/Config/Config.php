@@ -76,7 +76,7 @@ readonly class Config implements JsonSerializable
                 ConfigException::SLAVE_ID_ERROR_CODE
             );
         }
-        if (bccomp($this->binLogPosition, '0') === -1) {
+        if (bccomp((string)(int)$this->binLogPosition, '0') === -1) {
             throw new ConfigException(
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
@@ -139,7 +139,7 @@ readonly class Config implements JsonSerializable
 
     public function jsonSerialize(): array
     {
-        return get_class_vars(self::class);
+        return get_object_vars($this);
     }
 
     private static function matchNames(string $name, array $patterns): bool

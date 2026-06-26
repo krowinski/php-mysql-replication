@@ -579,11 +579,7 @@ class RowEvent extends EventCommon
         $n = 0;
         $bitmapLength = strlen($bitmap);
         for ($i = 0; $i < $bitmapLength; ++$i) {
-            $bit = $bitmap[$i];
-            if (is_string($bit)) {
-                $bit = ord($bit);
-            }
-            $n += self::$bitCountInByte[$bit];
+            $n += self::$bitCountInByte[ord($bitmap[$i])];
         }
 
         return $n;
@@ -596,12 +592,7 @@ class RowEvent extends EventCommon
 
     protected function getBitFromBitmap(string $bitmap, int $position): int
     {
-        $bit = $bitmap[(int)($position / 8)];
-        if (is_string($bit)) {
-            $bit = ord($bit);
-        }
-
-        return $bit;
+        return ord($bitmap[(int)($position / 8)]);
     }
 
     protected function checkNull(string $nullBitmap, int $position): int
@@ -662,7 +653,11 @@ class RowEvent extends EventCommon
             $res .= sprintf('%0' . $compFractional . 'd', $value);
         }
 
-        return bcmul($res, '1', $columnDTO->decimals);
+        if (is_numeric($res)) {
+            return bcmul($res, '1', $columnDTO->decimals);
+        }
+
+        return '0';
     }
 
     protected function getDatetime(): ?string
@@ -709,9 +704,8 @@ class RowEvent extends EventCommon
         if ($formattedDate) {
             if ($fsp > 0) {
                 return vsprintf('%s.%06u', [$formattedDate, $fsp]);
-            } else {
-                return $formattedDate;
             }
+            return $formattedDate;
         }
 
         return null;
@@ -790,9 +784,13 @@ class RowEvent extends EventCommon
         $minute = $this->binaryDataReader->getBinarySlice($data, 12, 6, 24);
         $second = $this->binaryDataReader->getBinarySlice($data, 18, 6, 24);
 
-        return (new DateTime())
-                ->setTime($hour, $minute, $second)
-                ->format('H:i:s') . $this->getFSP($columnDTO);
+        $time = (new DateTime())->setTime($hour, $minute, $second)->format('H:i:s');
+        $fsp = $this->getFSP($columnDTO);
+        if ($fsp !== '') {
+            $time .= '.' . $fsp;
+        }
+
+        return $time;
     }
 
     protected function getTimestamp2(ColumnDTO $columnDTO): string
