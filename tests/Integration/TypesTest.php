@@ -391,6 +391,37 @@ class TypesTest extends BaseCase
         self::assertEquals('1984-12-03 12:33:07.023450', $event->values[0]['test']);
     }
 
+    public function testShouldBeDateTime2WithDefaultCurrentTimestamp(): void
+    {
+        $create_query = 'CREATE TABLE test (
+            id bigint NOT NULL AUTO_INCREMENT,
+            update_time datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB';
+        $insert_query = 'INSERT INTO test (id, update_time) VALUES (NULL, "2026-06-25 12:36:26.575914")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals('2026-06-25 12:36:26.575914', $event->values[0]['update_time']);
+    }
+
+    public function testShouldBeDateTime2DefaultCurrentTimestampFormatOnInsert(): void
+    {
+        $create_query = 'CREATE TABLE test (
+            id bigint NOT NULL AUTO_INCREMENT,
+            update_time datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB';
+        $insert_query = 'INSERT INTO test (id) VALUES (NULL)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertMatchesRegularExpression(
+            '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/',
+            $event->values[0]['update_time']
+        );
+    }
+
     public function testShouldBeZeroDateTime2(): void
     {
         $create_query = 'CREATE TABLE test (id INTEGER, test DATETIME(6) NOT NULL DEFAULT 0);';

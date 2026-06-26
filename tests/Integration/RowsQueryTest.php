@@ -16,7 +16,9 @@ final class RowsQueryTest extends BaseCase
     public function testThatTheEditingQueryIsReadFromBinLog(string $query): void
     {
         if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
-            self::markTestSkipped('binlog_rows_query_log_events is MySQL-specific; MariaDB uses binlog_annotate_row_events which emits a different event type not yet supported.');
+            self::markTestSkipped(
+                'binlog_rows_query_log_events is MySQL-specific; MariaDB uses binlog_annotate_row_events which emits a different event type not yet supported.'
+            );
         }
 
         $this->connection->executeStatement(
