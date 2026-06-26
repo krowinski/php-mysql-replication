@@ -50,11 +50,5 @@ jobs:
         if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Show PHP and MySQL versions
-        run: |
-          echo "Matrix PHP: ${{ matrix.php }} / Matrix MySQL: ${{ matrix.mysql-version }}"
-          php --version
-          mysql -u root -proot -e "SELECT VERSION();"
-
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-text --testdox --log-events-verbose-text php://stdout
+        run: vendor/bin/phpunit --coverage-text --testdox
