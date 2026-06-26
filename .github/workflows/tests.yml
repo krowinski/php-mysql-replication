@@ -3,8 +3,10 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }} / MySQL ${{ matrix.mysql-version }}
 
     strategy:
+        fail-fast: false
         matrix:
             php: [ '8.2', '8.3', '8.4', '8.5' ]
             mysql-version: [ '5.7', '8.0', '8.4' ]
@@ -48,5 +50,11 @@ jobs:
         if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer install --prefer-dist --no-progress --no-suggest
 
+      - name: Show PHP and MySQL versions
+        run: |
+          echo "Matrix PHP: ${{ matrix.php }} / Matrix MySQL: ${{ matrix.mysql-version }}"
+          php --version
+          mysql -u root -proot -e "SELECT VERSION();"
+
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-text
+        run: vendor/bin/phpunit --coverage-text --testdox --log-events-verbose-text php://stdout
