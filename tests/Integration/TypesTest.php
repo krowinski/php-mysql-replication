@@ -114,6 +114,28 @@ class TypesTest extends BaseCase
         self::assertEquals('-1234567891234567891234', $event->values[0]['test']);
     }
 
+    public function testShouldBeDecimalPrecisionEqualsDecimals(): void
+    {
+        $create_query = 'CREATE TABLE test (test DECIMAL(5,5))';
+        $insert_query = 'INSERT INTO test VALUES(0.12345)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertIsString($event->values[0]['test']);
+        self::assertEquals('0.12345', $event->values[0]['test']);
+    }
+
+    public function testShouldBeDecimalPrecisionEqualsDecimalsNegative(): void
+    {
+        $create_query = 'CREATE TABLE test (test DECIMAL(5,5))';
+        $insert_query = 'INSERT INTO test VALUES(-0.12345)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertIsString($event->values[0]['test']);
+        self::assertStringContainsString('0.12345', $event->values[0]['test']);
+    }
+
     public function testShouldBeTinyInt(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test TINYINT)';
