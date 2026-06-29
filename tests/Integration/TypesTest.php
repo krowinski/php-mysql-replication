@@ -133,7 +133,7 @@ class TypesTest extends BaseCase
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertIsString($event->values[0]['test']);
-        self::assertStringContainsString('0.12345', $event->values[0]['test']);
+        self::assertEquals('-0.12345', $event->values[0]['test']);
     }
 
     public function testShouldBeTinyInt(): void
