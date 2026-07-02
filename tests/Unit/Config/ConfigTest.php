@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 class ConfigTest extends TestCase
 {
-    public function shouldMakeConfig(): void
+    public function testShouldMakeConfig(): void
     {
         $expected = [
             'user' => 'foo',
@@ -37,7 +37,7 @@ class ConfigTest extends TestCase
                     'random' => 'data',
                 ],
             ],
-            'heartbeatPeriod' => 69,
+            'heartbeatPeriod' => 69.0,
             'slaveUuid' => '6c27ed6d-7ee1-11e3-be39-6c626d957cff',
         ];
 

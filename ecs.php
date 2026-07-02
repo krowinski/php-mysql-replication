@@ -13,6 +13,7 @@ use PhpCsFixer\Fixer\Whitespace\TypeDeclarationSpacesFixer;
 use PhpCsFixerCustomFixers\Fixer\NoLeadingSlashInGlobalNamespaceFixer;
 use PhpCsFixerCustomFixers\Fixer\PhpdocNoSuperfluousParamFixer;
 use PhpCsFixerCustomFixers\Fixer\PromotedConstructorPropertyFixer;
+use Symplify\CodingStandard\Fixer\Spacing\MethodChainingNewlineFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
 
@@ -42,6 +43,10 @@ return static function (ECSConfig $ecsConfig): void {
         NoLeadingSlashInGlobalNamespaceFixer::class,
         PhpdocNoSuperfluousParamFixer::class,
         PhpdocAddMissingParamAnnotationFixer::class,
+    ]);
+
+    $ecsConfig->skip([
+        MethodChainingNewlineFixer::class,
     ]);
 
     $ecsConfig->fileExtensions(['php']);

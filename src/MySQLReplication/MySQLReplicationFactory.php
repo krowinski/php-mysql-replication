@@ -6,6 +6,7 @@ namespace MySQLReplication;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use MySQLReplication\BinLog\BinLogCurrent;
 use MySQLReplication\BinLog\BinLogServerInfo;
 use MySQLReplication\BinLog\BinLogSocketConnect;
 use MySQLReplication\Cache\ArrayCache;

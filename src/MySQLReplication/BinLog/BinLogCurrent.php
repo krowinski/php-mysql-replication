@@ -8,13 +8,10 @@ use JsonSerializable;
 
 class BinLogCurrent implements JsonSerializable
 {
-    private string $binLogPosition;
-
-    private string $binFileName;
-
-    private string $gtid;
-
-    private string $mariaDbGtid;
+    private string $binLogPosition = '';
+    private string $binFileName = '';
+    private string $gtid = '';
+    private string $mariaDbGtid = '';
 
     public function getBinLogPosition(): string
     {

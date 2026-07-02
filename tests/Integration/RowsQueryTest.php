@@ -15,6 +15,12 @@ final class RowsQueryTest extends BaseCase
     #[DataProvider('provideQueries')]
     public function testThatTheEditingQueryIsReadFromBinLog(string $query): void
     {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
+            self::markTestSkipped(
+                'binlog_rows_query_log_events is MySQL-specific; MariaDB uses binlog_annotate_row_events which emits a different event type not yet supported.'
+            );
+        }
+
         $this->connection->executeStatement(
             'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
         );

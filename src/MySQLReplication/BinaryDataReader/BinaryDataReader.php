@@ -123,7 +123,7 @@ class BinaryDataReader
     {
         $data = self::unpack('V*', $binary);
 
-        return bcadd((string)$data[1], bcmul((string)$data[2], bcpow('2', '32')));
+        return bcadd((string)(int)$data[1], bcmul((string)(int)$data[2], bcpow('2', '32')));
     }
 
     public function readInt24(): int
@@ -142,7 +142,7 @@ class BinaryDataReader
     {
         $data = self::unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
 
-        return bcadd((string)$data[1], (string)($data[2] << 32));
+        return bcadd((string)(int)$data[1], (string)((int)$data[2] << 32));
     }
 
     public function readLengthString(int $size): string

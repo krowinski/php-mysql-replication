@@ -123,7 +123,7 @@ class BinLogSocketConnect
         $data .= str_repeat(chr(0), 23);
         $data .= $this->config->user . chr(0);
         $auth = $this->getAuthData($authPlugin, $this->binLogServerInfo->salt);
-        $data .= chr(strlen($auth)) . $auth;
+        $data .= chr(strlen($auth) & 0xFF) . $auth;
         $data .= $authPlugin->value . chr(0);
         $str = pack('L', strlen($data));
         $s = $str[0] . $str[1] . $str[2];
