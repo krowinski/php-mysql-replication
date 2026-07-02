@@ -3,11 +3,13 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }} / ${{ matrix.mysql-version }}
 
     strategy:
+        fail-fast: false
         matrix:
-            php: [ '8.2', '8.3', '8.4' ]
-            mysql-version: [ '5.7', '8.0', '8.4', '9.0' ]
+            php: [ '8.2', '8.3', '8.4', '8.5' ]
+            mysql-version: [ '5.7', '8.0', '8.4', '9.0', 'mariadb-10.6', 'mariadb-11.4' ]
 
     steps:
       - name: Checkout
@@ -19,7 +21,8 @@ jobs:
           my-cnf: |
             server-id=1
             binlog_format=row
-            binlog_rows_query_log_events=ON
+            loose-binlog_rows_query_log_events=ON
+            loose-binlog_annotate_row_events=ON
             log_bin=binlog
           root-password: root
 
@@ -49,4 +52,4 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-text
+        run: vendor/bin/phpunit --coverage-text --testdox

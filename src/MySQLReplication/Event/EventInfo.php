@@ -28,7 +28,7 @@ class EventInfo implements JsonSerializable
             $this->binLogCurrent->setBinLogPosition($pos);
         }
         $this->sizeNoHeader = $this->dateTime = null;
-        $this->typeName = ConstEventType::from($this->type)->name;
+        $this->typeName = ConstEventType::tryFrom($this->type)?->name;
     }
 
     public function getTypeName(): ?string

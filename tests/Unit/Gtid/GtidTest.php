@@ -29,7 +29,7 @@ class GtidTest extends TestCase
         self::assertSame(40, $this->getGtid('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592')->getEncodedLength());
     }
 
-    public function testShouldThrowErrorOnIncrrectGtid(): void
+    public function testShouldThrowErrorOnIncorrectGtid(): void
     {
         $this->expectException(GtidException::class);
         $this->expectExceptionMessage(GtidException::INCORRECT_GTID_MESSAGE);

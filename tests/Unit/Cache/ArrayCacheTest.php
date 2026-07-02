@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 class ArrayCacheTest extends TestCase
 {
-    private $arrayCache;
+    private ArrayCache $arrayCache;
 
     protected function setUp(): void
     {

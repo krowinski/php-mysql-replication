@@ -114,6 +114,28 @@ class TypesTest extends BaseCase
         self::assertEquals('-1234567891234567891234', $event->values[0]['test']);
     }
 
+    public function testShouldBeDecimalPrecisionEqualsDecimals(): void
+    {
+        $create_query = 'CREATE TABLE test (test DECIMAL(5,5))';
+        $insert_query = 'INSERT INTO test VALUES(0.12345)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertIsString($event->values[0]['test']);
+        self::assertEquals('0.12345', $event->values[0]['test']);
+    }
+
+    public function testShouldBeDecimalPrecisionEqualsDecimalsNegative(): void
+    {
+        $create_query = 'CREATE TABLE test (test DECIMAL(5,5))';
+        $insert_query = 'INSERT INTO test VALUES(-0.12345)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertIsString($event->values[0]['test']);
+        self::assertEquals('-0.12345', $event->values[0]['test']);
+    }
+
     public function testShouldBeTinyInt(): void
     {
         $create_query = 'CREATE TABLE test (id TINYINT UNSIGNED NOT NULL, test TINYINT)';
@@ -389,6 +411,37 @@ class TypesTest extends BaseCase
         $event = $this->createAndInsertValue($create_query, $insert_query);
 
         self::assertEquals('1984-12-03 12:33:07.023450', $event->values[0]['test']);
+    }
+
+    public function testShouldBeDateTime2WithDefaultCurrentTimestamp(): void
+    {
+        $create_query = 'CREATE TABLE test (
+            id bigint NOT NULL AUTO_INCREMENT,
+            update_time datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB';
+        $insert_query = 'INSERT INTO test (id, update_time) VALUES (NULL, "2026-06-25 12:36:26.575914")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals('2026-06-25 12:36:26.575914', $event->values[0]['update_time']);
+    }
+
+    public function testShouldBeDateTime2DefaultCurrentTimestampFormatOnInsert(): void
+    {
+        $create_query = 'CREATE TABLE test (
+            id bigint NOT NULL AUTO_INCREMENT,
+            update_time datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB';
+        $insert_query = 'INSERT INTO test (id) VALUES (NULL)';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertMatchesRegularExpression(
+            '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/',
+            $event->values[0]['update_time']
+        );
     }
 
     public function testShouldBeZeroDateTime2(): void
@@ -677,6 +730,42 @@ class TypesTest extends BaseCase
         self::assertEquals($string, $event->values[0]['test']);
     }
 
+    public function testShouldBeTime2MySQL56(): void
+    {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb() && $this->checkForVersion(10.1)) {
+            self::markTestIncomplete('Only for mariadb 10.1 or higher');
+        } elseif ($this->checkForVersion(5.6)) {
+            self::markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
+        $create_query = 'CREATE TABLE test (
+            test0 TIME(0),
+            test1 TIME(1),
+            test2 TIME(2),
+            test3 TIME(3),
+            test4 TIME(4),
+            test5 TIME(5),
+            test6 TIME(6));';
+        $insert_query = 'INSERT INTO test VALUES(
+            "12:33:07",
+            "12:33:07.1",
+            "12:33:07.12",
+            "12:33:07.123",
+            "12:33:07.1234",
+            "12:33:07.12345",
+            "12:33:07.123456")';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals('12:33:07', $event->values[0]['test0']);
+        self::assertEquals('12:33:07.100000', $event->values[0]['test1']);
+        self::assertEquals('12:33:07.120000', $event->values[0]['test2']);
+        self::assertEquals('12:33:07.123000', $event->values[0]['test3']);
+        self::assertEquals('12:33:07.123400', $event->values[0]['test4']);
+        self::assertEquals('12:33:07.123450', $event->values[0]['test5']);
+        self::assertEquals('12:33:07.123456', $event->values[0]['test6']);
+    }
+
     public function testShouldBeJson(): void
     {
         if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
@@ -726,7 +815,8 @@ class TypesTest extends BaseCase
             (101, '{\"bool\": true}'),
             (102, '{\"bool\": false}'),
             (103, '{\"null\": null}'),
-            (104, '[\"\\\\\"test\"]')
+            (104, '[\"\\\\\"test\"]'),
+            (105, CAST(CAST(4294967295 AS UNSIGNED) AS JSON))
         ";
 
         $event = $this->createAndInsertValue($create_query, $insert_query);
@@ -762,5 +852,6 @@ class TypesTest extends BaseCase
         self::assertEquals('{"bool":false}', $results[26]['j']);
         self::assertEquals('{"null":null}', $results[27]['j']);
         self::assertEquals('["\"test"]', $results[28]['j']);
+        self::assertEquals('"4294967295"', $results[29]['j']);
     }
 }

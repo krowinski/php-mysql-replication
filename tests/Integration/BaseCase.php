@@ -32,15 +32,17 @@ abstract class BaseCase extends TestCase
 
     private TestEventSubscribers $testEventSubscribers;
 
+    private static bool $serverVersionPrinted = false;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->configBuilder = (new ConfigBuilder())
-            ->withUser('root')
-            ->withHost('0.0.0.0')
-            ->withPassword('root')
-            ->withPort(3306)
+            ->withUser(getenv('DB_USER') ?: 'root')
+            ->withHost(getenv('DB_HOST') ?: '0.0.0.0')
+            ->withPassword(getenv('DB_PASSWORD') ?: 'root')
+            ->withPort((int) (getenv('DB_PORT') ?: 3306))
             ->withEventsIgnore($this->getIgnoredEvents());
 
         $this->connect();
@@ -76,6 +78,16 @@ abstract class BaseCase extends TestCase
             throw new RuntimeException('Connection not initialized');
         }
         $this->connection = $connection;
+
+        if (!self::$serverVersionPrinted) {
+            $serverInfo = $this->mySQLReplicationFactory->getServerInfo();
+            fwrite(STDERR, sprintf(
+                "\n>> Tests running against MySQL server version: %s (%s)\n\n",
+                $serverInfo->serverVersion,
+                $serverInfo->versionName
+            ));
+            self::$serverVersionPrinted = true;
+        }
         $this->connection->executeStatement('SET SESSION time_zone = "UTC"');
         $this->connection->executeStatement('DROP DATABASE IF EXISTS ' . $this->database);
         $this->connection->executeStatement('CREATE DATABASE ' . $this->database);

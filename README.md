@@ -1,8 +1,7 @@
 php-mysql-replication
 =========
 [![Latest Stable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/stable)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Total Downloads](https://poser.pugx.org/krowinski/php-mysql-replication/downloads)](https://packagist.org/packages/krowinski/php-mysql-replication) [![Latest Unstable Version](https://poser.pugx.org/krowinski/php-mysql-replication/v/unstable)](https://packagist.org/packages/krowinski/php-mysql-replication)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/krowinski/php-mysql-replication/?branch=master)
+
 
 Pure PHP Implementation of MySQL replication protocol. This allows you to receive event like insert, update, delete with their data and raw SQL queries.
 
@@ -31,6 +30,8 @@ PHP
 
 - php 8.2
 - php 8.3
+- php 8.4
+- php 8.5
 
 MYSQL
  - mysql 5.5
