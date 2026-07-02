@@ -31,6 +31,8 @@ PHP
 
 - php 8.2
 - php 8.3
+- php 8.4
+- php 8.5
 
 MYSQL
  - mysql 5.5
