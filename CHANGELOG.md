@@ -1,10 +1,42 @@
 # Release Notes
 
-## v8.0.1 (2024-01-31)
+## [v10.0.0](https://github.com/krowinski/php-mysql-replication/releases/tag/v10.0.0) (2026-07-08)
+
+- Fix typo in attribute list by @maxxer (#139)
+- Fix databases and tables check by @janpalacky (#140)
+- Provide access to BinLogCurrent on the connection by @hufman (#142)
+- Fix Datetime2 microseconds formatting by @hufman (#141)
+- Support PHP 8.5 in CI by @DZunke (#145)
+- Add missing MySQL 8.0+ binlog event types (36-42) by @cyppe (#143)
+- Support Symfony 8 by @DZunke (#144)
+- Parse unsigned int32 values from json by @janpalacky (#147)
+- Fix: drain caching_sha2_password AuthMoreData+OK in switchAuth() by @JacobStephens2 (#148)
+- Feat: added more versions to check by @krowinski (#121)
+- Refactor edge case handling, enhance tests, and add MariaDB support by @krowinski (#151)
+
+## [v9.0.0](https://github.com/krowinski/php-mysql-replication/releases/tag/v9.0.0) (2025-09-17)
+
+- Utilize matrix for testing multiple mysql versions by @DZunke (#119)
+- Add regular expression matching support for `checkDatabasesOnly`/`checkTablesOnly` by @Moln (#129)
+- Update logging level to debug by @huangdijia (#126)
+- Fix: Utilize correct cache action version in CI by @DZunke (#135)
+- Chore: deprecation constructor argument must explicit nullable by @DZunke (#134)
+- Run tests with multiple php and mysql versions by @cgrabenstein (#136)
+- Fix ROWS_QUERY event parsing long queries by @DZunke (#117)
+- Fix MySQL 8.4.0 and DBAL 4.x compatibility issues by @cyppe (#137)
+- Add runWithStopCheck to replication factory by @DZunke (#138)
+
+## [v8.1.0](https://github.com/krowinski/php-mysql-replication/releases/tag/v8.1.0) (2024-03-13)
+
+- Update and extend links to mysql documentation by @DZunke (#106)
+- Fix: Symfony Backward Compatibility by @DZunke (#113)
+- Implement rows query event by @DZunke (#112)
+
+## [v8.0.1](https://github.com/krowinski/php-mysql-replication/releases/tag/v8.0.1) (2024-01-31)
 
 - Added: auto authorisation packet switching
 
-## v8.0.0 (2024-01-29)
+## [v8.0.0](https://github.com/krowinski/php-mysql-replication/releases/tag/v8.0.0) (2024-01-29)
 
 - Change: drop support for < 8.2
 - Change: moved to enums, promoted properties
@@ -92,7 +124,7 @@
 ## v5.0.3 (2018-08-07)
 - Added symfony 4.0 compatibility in composer
 
-## v5.0.3
+## v5.0.3 (2018-08-07)
 - Added symfony 4.0 compatibility in composer
 
 ## v5.0.2 (2018-06-22)
@@ -203,10 +235,10 @@
 ## v1.0.2 (2016-05-05)
 - Fixed handling not existing value in enum definitions
 
-## v1.0.1
+## v1.0.1 (2016-03-??)
 - Fixed missing Config attr
 
-## v1.0.0
+## v1.0.0 (2016-05-05)
 - Added php5.4 compatibility 
 - Added new results set 
 - Added benchmark results to readme
