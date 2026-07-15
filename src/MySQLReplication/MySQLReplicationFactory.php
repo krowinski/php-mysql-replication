@@ -32,49 +32,33 @@ class MySQLReplicationFactory
     private Event $event;
     private BinLogSocketConnect $binLogSocketConnect;
 
-    public function __construct(
-        Config $config,
-        ?RepositoryInterface $repository = null,
-        ?CacheInterface $cache = null,
-        ?EventDispatcherInterface $eventDispatcher = null,
-        ?SocketInterface $socket = null,
-        ?LoggerInterface $logger = null
-    ) {
+    public function __construct(Config $config, ?RepositoryInterface $repository = null, ?CacheInterface $cache = null, ?EventDispatcherInterface $eventDispatcher = null, ?SocketInterface $socket = null, ?LoggerInterface $logger = null)
+    {
         $config->validate();
 
         if ($repository === null) {
-            $this->connection = DriverManager::getConnection(
-                [
-                    'user' => $config->user,
-                    'password' => $config->password,
-                    'host' => $config->host,
-                    'port' => $config->port,
-                    'driver' => 'pdo_mysql',
-                    'charset' => $config->charset,
-                ]
-            );
+            $this->connection = DriverManager::getConnection([
+                'user' => $config->user,
+                'password' => $config->password,
+                'host' => $config->host,
+                'port' => $config->port,
+                'driver' => 'pdo_mysql',
+                'charset' => $config->charset,
+            ]);
             $repository = new MySQLRepository($this->connection);
         }
 
-        $cache = $cache ?: new ArrayCache($config->tableCacheSize);
-        $logger = $logger ?: new NullLogger();
-        $socket = $socket ?: new Socket();
+        $cache = $cache ?? new ArrayCache($config->tableCacheSize);
+        $logger = $logger ?? new NullLogger();
+        $socket = $socket ?? new Socket();
 
-        $this->eventDispatcher = $eventDispatcher ?: new EventDispatcher();
+        $this->eventDispatcher = $eventDispatcher ?? new EventDispatcher();
 
         $this->binLogSocketConnect = new BinLogSocketConnect($repository, $socket, $logger, $config);
 
         $this->event = new Event(
             $this->binLogSocketConnect,
-            new RowEventFactory(
-                new RowEventBuilder(
-                    $repository,
-                    $cache,
-                    $config,
-                    $this->binLogSocketConnect->getBinLogServerInfo(),
-                    $logger
-                )
-            ),
+            new RowEventFactory(new RowEventBuilder($repository, $cache, $config, $this->binLogSocketConnect->getBinLogServerInfo(), $logger)),
             $this->eventDispatcher,
             $cache,
             $config,

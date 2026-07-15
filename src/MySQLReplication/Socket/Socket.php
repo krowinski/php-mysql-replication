@@ -20,10 +20,7 @@ class Socket implements SocketInterface
     {
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($socket === false) {
-            throw new SocketException(
-                SocketException::SOCKET_UNABLE_TO_CREATE_MESSAGE . $this->getSocketErrorMessage(),
-                SocketException::SOCKET_UNABLE_TO_CREATE_CODE
-            );
+            throw new SocketException(SocketException::SOCKET_UNABLE_TO_CREATE_MESSAGE . $this->getSocketErrorMessage(), SocketException::SOCKET_UNABLE_TO_CREATE_CODE);
         }
         $this->socket = $socket;
         socket_set_block($this->socket);
@@ -43,10 +40,7 @@ class Socket implements SocketInterface
 
         // http://php.net/manual/en/function.socket-recv.php#47182
         if ($received === 0) {
-            throw new SocketException(
-                SocketException::SOCKET_DISCONNECTED_MESSAGE,
-                SocketException::SOCKET_DISCONNECTED_CODE
-            );
+            throw new SocketException(SocketException::SOCKET_DISCONNECTED_MESSAGE, SocketException::SOCKET_DISCONNECTED_CODE);
         }
 
         throw new SocketException($this->getSocketErrorMessage(), $this->getSocketErrorCode());
@@ -54,11 +48,8 @@ class Socket implements SocketInterface
 
     public function writeToSocket(string $data): void
     {
-        if (!socket_write($this->socket, $data, strlen($data))) {
-            throw new SocketException(
-                SocketException::SOCKET_UNABLE_TO_WRITE_MESSAGE . $this->getSocketErrorMessage(),
-                SocketException::SOCKET_UNABLE_TO_WRITE_CODE
-            );
+        if (socket_write($this->socket, $data, strlen($data)) === false) {
+            throw new SocketException(SocketException::SOCKET_UNABLE_TO_WRITE_MESSAGE . $this->getSocketErrorMessage(), SocketException::SOCKET_UNABLE_TO_WRITE_CODE);
         }
     }
 

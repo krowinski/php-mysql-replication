@@ -22,15 +22,24 @@ use MySQLReplication\MySQLReplicationFactory;
 class benchmark
 {
     private const DB_NAME = 'mysqlreplication_test';
-    private const DB_USER = 'root';
-    private const DB_PASS = 'root';
-    private const DB_HOST = '127.0.0.1';
-    private const DB_PORT = 3306;
+
+    private string $dbUser;
+
+    private string $dbPass;
+
+    private string $dbHost;
+
+    private int $dbPort;
 
     private MySQLReplicationFactory $binLogStream;
 
     public function __construct()
     {
+        $this->dbUser = getenv('DB_USER') ?: 'root';
+        $this->dbPass = getenv('DB_PASSWORD') ?: 'root';
+        $this->dbHost = getenv('DB_HOST') ?: '127.0.0.1';
+        $this->dbPort = (int) (getenv('DB_PORT') ?: 3306);
+
         $conn = $this->getConnection();
         $conn->executeStatement('DROP DATABASE IF EXISTS ' . self::DB_NAME);
         $conn->executeStatement('CREATE DATABASE ' . self::DB_NAME);
@@ -43,10 +52,10 @@ class benchmark
 
         $this->binLogStream = new MySQLReplicationFactory(
             (new ConfigBuilder())
-                ->withUser(self::DB_USER)
-                ->withPassword(self::DB_PASS)
-                ->withHost(self::DB_HOST)
-                ->withPort(self::DB_PORT)
+                ->withUser($this->dbUser)
+                ->withPassword($this->dbPass)
+                ->withHost($this->dbHost)
+                ->withPort($this->dbPort)
                 ->withEventsOnly(
                     [
                         ConstEventType::UPDATE_ROWS_EVENT_V2->value,
@@ -74,9 +83,7 @@ class benchmark
                 {
                     ++$this->counter;
                     if (0 === ($this->counter % 1000)) {
-                        echo ((int)($this->counter / (microtime(
-                            true
-                        ) - $this->start)) . ' event by seconds (' . $this->counter . ' total)') . PHP_EOL;
+                        echo ((int)($this->counter / (microtime(true) - $this->start)) . ' event by seconds (' . $this->counter . ' total)') . PHP_EOL;
                     }
                 }
             }
@@ -100,16 +107,14 @@ class benchmark
 
     private function getConnection(): Connection
     {
-        return DriverManager::getConnection(
-            [
-                'user' => self::DB_USER,
-                'password' => self::DB_PASS,
-                'host' => self::DB_HOST,
-                'port' => self::DB_PORT,
-                'driver' => 'pdo_mysql',
-                'dbname' => self::DB_NAME,
-            ]
-        );
+        return DriverManager::getConnection([
+            'user' => $this->dbUser,
+            'password' => $this->dbPass,
+            'host' => $this->dbHost,
+            'port' => $this->dbPort,
+            'driver' => 'pdo_mysql',
+            'dbname' => self::DB_NAME,
+        ]);
     }
 
     private function consume(): void

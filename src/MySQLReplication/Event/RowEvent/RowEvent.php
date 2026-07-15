@@ -349,19 +349,13 @@ class RowEvent extends EventCommon
                 }
 
                 $fieldDTO = $fieldDTOCollection->offsetGet($offset);
-                if ($fieldDTO) {
+                if ($fieldDTO !== null) {
                     $columnDTOCollection->set($offset, ColumnDTO::make($type, $fieldDTO, $this->binaryDataReader));
                 }
             }
         }
 
-        $tableMap = new TableMap(
-            $data['schema_name'],
-            $data['table_name'],
-            $data['table_id'],
-            $data['columns_amount'],
-            $columnDTOCollection
-        );
+        $tableMap = new TableMap($data['schema_name'], $data['table_name'], $data['table_id'], $data['columns_amount'], $columnDTOCollection);
 
         $this->tableMapCache->set($data['table_id'], $tableMap);
 
@@ -416,18 +410,10 @@ class RowEvent extends EventCommon
 
     protected function findTableMap(): ?TableMap
     {
-        $tableId = (string)$this->binaryDataReader->readTableId();
+        $tableId = $this->binaryDataReader->readTableId();
         $this->binaryDataReader->advance(2);
 
-        if (in_array(
-            $this->eventInfo->type,
-            [
-                ConstEventType::DELETE_ROWS_EVENT_V2->value,
-                ConstEventType::WRITE_ROWS_EVENT_V2->value,
-                ConstEventType::UPDATE_ROWS_EVENT_V2->value,
-            ],
-            true
-        )) {
+        if (in_array($this->eventInfo->type, [ConstEventType::DELETE_ROWS_EVENT_V2->value, ConstEventType::WRITE_ROWS_EVENT_V2->value, ConstEventType::UPDATE_ROWS_EVENT_V2->value], true)) {
             $this->binaryDataReader->read((int)($this->binaryDataReader->readUInt16() / 8));
         }
 
@@ -449,9 +435,7 @@ class RowEvent extends EventCommon
             return [];
         }
 
-        $binaryData = $this->binaryDataReader->read(
-            $this->getColumnsBinarySize($this->currentTableMap->columnsAmount)
-        );
+        $binaryData = $this->binaryDataReader->read($this->getColumnsBinarySize($this->currentTableMap->columnsAmount));
 
         $values = [];
         while (!$this->binaryDataReader->isComplete($this->eventInfo->getSizeNoHeader())) {
@@ -488,7 +472,7 @@ class RowEvent extends EventCommon
                 continue;
             }
 
-            if ($this->checkNull($nullBitmap, $nullBitmapIndex)) {
+            if ($this->isNull($nullBitmap, $nullBitmapIndex)) {
                 $values[$name] = null;
             } elseif ($type === ConstFieldType::IGNORE) {
                 $this->binaryDataReader->advance($columnDTO->lengthSize);
@@ -561,9 +545,7 @@ class RowEvent extends EventCommon
             } elseif ($type === ConstFieldType::GEOMETRY) {
                 $values[$name] = $this->getString($columnDTO->lengthSize);
             } elseif ($type === ConstFieldType::JSON) {
-                $values[$name] = JsonBinaryDecoderService::makeJsonBinaryDecoder(
-                    $this->getString($columnDTO->lengthSize)
-                )->parseToString();
+                $values[$name] = JsonBinaryDecoderService::makeJsonBinaryDecoder($this->getString($columnDTO->lengthSize))->parseToString();
             } else {
                 throw new MySQLReplicationException('Unknown row type: ' . $type);
             }
@@ -595,9 +577,9 @@ class RowEvent extends EventCommon
         return ord($bitmap[(int)($position / 8)]);
     }
 
-    protected function checkNull(string $nullBitmap, int $position): int
+    protected function isNull(string $nullBitmap, int $position): bool
     {
-        return $this->getBitFromBitmap($nullBitmap, $position) & (1 << ($position % 8));
+        return ($this->getBitFromBitmap($nullBitmap, $position) & (1 << ($position % 8))) > 0;
     }
 
     protected function getString(int $size): string
@@ -698,10 +680,8 @@ class RowEvent extends EventCommon
         $second = $this->binaryDataReader->getBinarySlice($data, 34, 6, 40);
         $fsp = $this->getFSP($columnDTO);
 
-        $formattedDate = $this->dateFormatter(
-            $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second
-        );
-        if ($formattedDate) {
+        $formattedDate = $this->dateFormatter($year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second);
+        if ($formattedDate !== null) {
             if ($fsp > 0) {
                 return vsprintf('%s.%06u', [$formattedDate, $fsp]);
             }
@@ -715,15 +695,17 @@ class RowEvent extends EventCommon
     {
         try {
             $dateTime = new DateTime($date);
-        } catch (Exception) {
+        } catch (Exception $exception) {
             $dateTime = DateTime::createFromFormat('YmdHis', $date);
             if ($dateTime === false) {
+                $this->logger->warning('Failed to parse date "' . $date);
                 return null;
             }
         }
 
         $formattedDate = $dateTime->format('Y-m-d H:i:s');
         if (DateTime::getLastErrors() !== false) {
+            $this->logger->warning('Failed to parse date "' . $date);
             return null;
         }
 
@@ -747,7 +729,7 @@ class RowEvent extends EventCommon
         }
         if ($read > 0) {
             $microsecond = $this->binaryDataReader->readIntBeBySize($read);
-            if ($fsp % 2) {
+            if ($fsp % 2 !== 0) {
                 $microsecond = (int)($microsecond / 10);
             }
             $time = $microsecond * (10 ** (6 - $fsp));
@@ -824,7 +806,8 @@ class RowEvent extends EventCommon
 
     protected function getEnum(ColumnDTO $columnDTO): string
     {
-        $value = $this->binaryDataReader->readUIntBySize($columnDTO->size) - 1;
+        // ENUM storage is always 1 or 2 bytes (max 65535 members), never the 8-byte case
+        $value = (int) $this->binaryDataReader->readUIntBySize($columnDTO->size) - 1;
 
         // check if given value exists in enums, if there not existing enum mysql returns empty string.
         if (array_key_exists($value, $columnDTO->getEnumValues())) {
@@ -837,10 +820,13 @@ class RowEvent extends EventCommon
     protected function getSet(ColumnDTO $columnDTO): array
     {
         // we read set columns as a bitmap telling us which options are enabled
-        $bitMask = $this->binaryDataReader->readUIntBySize($columnDTO->size);
+        // note: a SET with all 64 members enabled overflows a native PHP int (see
+        // BinaryDataReader::readUIntBySize()); this cast keeps existing behavior for that
+        // already-unsupported edge case rather than changing it here
+        $bitMask = (int) $this->binaryDataReader->readUIntBySize($columnDTO->size);
         $sets = [];
         foreach ($columnDTO->getSetValues() as $k => $item) {
-            if ($bitMask & (2 ** $k)) {
+            if (($bitMask & (2 ** $k)) !== 0) {
                 $sets[] = $item;
             }
         }
@@ -868,7 +854,7 @@ class RowEvent extends EventCommon
             }
 
             for ($bit = 0; $bit < $end; ++$bit) {
-                if ($data & (1 << $bit)) {
+                if (($data & (1 << $bit)) !== 0) {
                     $currentByte .= '1';
                 } else {
                     $currentByte .= '0';

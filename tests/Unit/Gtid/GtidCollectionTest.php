@@ -30,7 +30,7 @@ class GtidCollectionTest extends TestCase
     public function testShouldGetEncoded(): void
     {
         self::assertSame(
-            '02000000000000009b1c8d182a7611e5a26b000c2976f3f301000000000000000100000000000000b8b5020000000000bbbbbbbbccccffffddddaaaaaaaaaaaa010000000000000001000000000000000200000000000000',
+            '02000000000000009b1c8d182a7611e5a26b000c2976f3f301000000000000000100000000000000b9b5020000000000bbbbbbbbccccffffddddaaaaaaaaaaaa010000000000000001000000000000000200000000000000',
             bin2hex($this->gtidCollection->getEncoded())
         );
     }

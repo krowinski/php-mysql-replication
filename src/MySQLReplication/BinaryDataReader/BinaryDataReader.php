@@ -45,17 +45,7 @@ class BinaryDataReader
 
     public static function pack64bit(int $value): string
     {
-        return pack(
-            'C8',
-            ($value >> 0) & 0xFF,
-            ($value >> 8) & 0xFF,
-            ($value >> 16) & 0xFF,
-            ($value >> 24) & 0xFF,
-            ($value >> 32) & 0xFF,
-            ($value >> 40) & 0xFF,
-            ($value >> 48) & 0xFF,
-            ($value >> 56) & 0xFF
-        );
+        return pack('C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF, ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF);
     }
 
     public function advance(int $length): void
@@ -83,7 +73,7 @@ class BinaryDataReader
         $this->binaryData = $data . $this->binaryData;
     }
 
-    public function readCodedBinary(): ?int
+    public function readCodedBinary(): int|string|null
     {
         $c = ord($this->read(self::UNSIGNED_CHAR_LENGTH));
         if ($c === self::NULL_COLUMN) {
@@ -97,6 +87,9 @@ class BinaryDataReader
         }
         if ($c === self::UNSIGNED_INT24_COLUMN) {
             return $this->readUInt24();
+        }
+        if ($c === self::UNSIGNED_INT64_COLUMN) {
+            return $this->readUInt64AsIntOrString();
         }
 
         throw new BinaryDataReaderException('Column num ' . $c . ' not handled');
@@ -114,11 +107,17 @@ class BinaryDataReader
         return $data[1] + ($data[2] << 8) + ($data[3] << 16);
     }
 
+    /**
+     * @return numeric-string
+     */
     public function readUInt64(): string
     {
         return $this->unpackUInt64($this->read(self::UNSIGNED_INT64_LENGTH));
     }
 
+    /**
+     * @return numeric-string
+     */
     public function unpackUInt64(string $binary): string
     {
         $data = self::unpack('V*', $binary);
@@ -147,10 +146,10 @@ class BinaryDataReader
 
     public function readLengthString(int $size): string
     {
-        return $this->read($this->readUIntBySize($size));
+        return $this->read((int) $this->readUIntBySize($size));
     }
 
-    public function readUIntBySize(int $size): int
+    public function readUIntBySize(int $size): int|string
     {
         if ($size === self::UNSIGNED_CHAR_LENGTH) {
             return $this->readUInt8();
@@ -172,6 +171,9 @@ class BinaryDataReader
         }
         if ($size === self::UNSIGNED_INT56_LENGTH) {
             return $this->readUInt56();
+        }
+        if ($size === self::UNSIGNED_INT64_LENGTH) {
+            return $this->readUInt64AsIntOrString();
         }
 
         throw new BinaryDataReaderException('$size ' . $size . ' not handled');
@@ -286,7 +288,7 @@ class BinaryDataReader
 
     public function readTableId(): string
     {
-        return (string)$this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
+        return $this->unpackUInt64($this->read(self::UNSIGNED_INT48_LENGTH) . chr(0) . chr(0));
     }
 
     public function isComplete(int $size): bool
@@ -320,7 +322,7 @@ class BinaryDataReader
     public static function unpack(string $format, string $string): array
     {
         $unpacked = unpack($format, $string);
-        if ($unpacked) {
+        if ($unpacked !== false) {
             return $unpacked;
         }
         return [];
@@ -338,5 +340,11 @@ class BinaryDataReader
         $offset += $length + 1;
 
         return $result;
+    }
+
+    private function readUInt64AsIntOrString(): int|string
+    {
+        $value = $this->readUInt64();
+        return bccomp($value, (string)PHP_INT_MAX) <= 0 ? (int)$value : $value;
     }
 }

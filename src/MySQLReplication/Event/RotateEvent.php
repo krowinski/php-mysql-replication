@@ -13,10 +13,8 @@ class RotateEvent extends EventCommon
 {
     public function makeRotateEventDTO(): RotateDTO
     {
-        $binFilePos = (string)$this->binaryDataReader->readUInt64();
-        $binFileName = $this->binaryDataReader->read(
-            $this->eventInfo->getSizeNoHeader() - $this->getSizeToRemoveByVersion()
-        );
+        $binFilePos = $this->binaryDataReader->readUInt64();
+        $binFileName = $this->binaryDataReader->read($this->eventInfo->getSizeNoHeader() - $this->getSizeToRemoveByVersion());
 
         $this->eventInfo->binLogCurrent
             ->setBinLogPosition($binFilePos);

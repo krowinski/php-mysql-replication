@@ -13,11 +13,35 @@ services:
       '--max_binlog_size=8M',
       '--binlog_format=row',
       '--server-id=1',
-      '--binlog_rows_query_log_events=ON'
+      '--binlog_rows_query_log_events=ON',
+      '--gtid-mode=ON',
+      '--enforce-gtid-consistency=ON'
     ]
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=mysqlreplication_test
     ports:
-      - "3306:3306/tcp"
+      - "3399:3306/tcp"
+    restart: unless-stopped
+
+  replication-test-mariadb:
+    container_name: replication-test-mariadb
+    hostname: replication-test-mariadb
+    image: mariadb:11.4
+    platform: linux/amd64
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--log-bin=binlog',
+      '--max_binlog_size=8M',
+      '--binlog-format=row',
+      '--server-id=1',
+      '--loose-binlog_rows_query_log_events=ON',
+      '--loose-binlog_annotate_row_events=ON'
+    ]
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=mysqlreplication_test
+    ports:
+      - "3400:3306/tcp"
     restart: unless-stopped

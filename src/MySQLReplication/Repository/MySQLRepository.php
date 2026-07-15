@@ -9,10 +9,12 @@ use Doctrine\DBAL\Exception;
 use MySQLReplication\BinLog\BinLogException;
 use MySQLReplication\Exception\MySQLReplicationException;
 
-readonly class MySQLRepository implements RepositoryInterface, PingableConnection
+class MySQLRepository implements RepositoryInterface, PingableConnection
 {
+    private ?string $version = null;
+
     public function __construct(
-        private Connection $connection
+        private readonly Connection $connection
     ) {
     }
 
@@ -41,10 +43,7 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
                 ORDINAL_POSITION
        ';
 
-        return FieldDTOCollection::makeFromArray(
-            $this->getConnection()
-                ->fetchAllAssociative($sql, [$database, $table])
-        );
+        return FieldDTOCollection::makeFromArray($this->getConnection() ->fetchAllAssociative($sql, [$database, $table]));
     }
 
     public function isCheckSum(): bool
@@ -55,12 +54,61 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
         return isset($res['Value']) && $res['Value'] !== 'NONE';
     }
 
+    public function isRowFormat(): bool
+    {
+        $res = $this->getConnection()
+            ->fetchAssociative('SHOW GLOBAL VARIABLES LIKE "binlog_format"');
+
+        return isset($res['Value']) && $res['Value'] === 'ROW';
+    }
+
+    public function isRowImageFull(): bool
+    {
+        $res = $this->getConnection()
+            ->fetchAssociative('SHOW GLOBAL VARIABLES LIKE "binlog_row_image"');
+
+        // versions without this variable have no partial row image mode
+        return !isset($res['Value']) || $res['Value'] === 'FULL';
+    }
+
     public function getVersion(): string
     {
+        if ($this->version !== null) {
+            return $this->version;
+        }
+
         $res = $this->getConnection()
             ->fetchAssociative('SHOW VARIABLES LIKE "version"');
 
-        return isset($res['Value']) && is_scalar($res['Value']) ? (string)$res['Value'] : '';
+        return $this->version = (isset($res['Value']) && is_scalar($res['Value']) ? (string)$res['Value'] : '');
+    }
+
+    public function getGtidExecuted(): string
+    {
+        // MariaDB tracks its GTID position in gtid_current_pos; MySQL uses GTID_EXECUTED
+        $sql = str_contains($this->getVersion(), 'MariaDB')
+            ? 'SELECT @@GLOBAL.gtid_current_pos AS Gtid_Executed'
+            : 'SELECT @@GLOBAL.GTID_EXECUTED AS Gtid_Executed';
+
+        $res = $this->getConnection()
+            ->fetchAssociative($sql);
+
+        return isset($res['Gtid_Executed']) && is_scalar($res['Gtid_Executed']) ? (string)$res['Gtid_Executed'] : '';
+    }
+
+    public function isSemiSyncEnabled(): bool
+    {
+        // MySQL 8.0.26 renamed rpl_semi_sync_master_enabled to rpl_semi_sync_source_enabled
+        $rows = $this->getConnection()
+            ->fetchAllAssociative("SHOW GLOBAL VARIABLES WHERE Variable_name IN ('rpl_semi_sync_master_enabled', 'rpl_semi_sync_source_enabled')");
+
+        foreach ($rows as $row) {
+            if (isset($row['Value']) && $row['Value'] === 'ON') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getMasterStatus(): MasterStatusDTO
@@ -73,11 +121,8 @@ readonly class MySQLRepository implements RepositoryInterface, PingableConnectio
 
         $data = $this->getConnection()
             ->fetchAssociative($query);
-        if (empty($data)) {
-            throw new BinLogException(
-                MySQLReplicationException::BINLOG_NOT_ENABLED,
-                MySQLReplicationException::BINLOG_NOT_ENABLED_CODE
-            );
+        if ($data === false || $data === []) {
+            throw new BinLogException(MySQLReplicationException::BINLOG_NOT_ENABLED, MySQLReplicationException::BINLOG_NOT_ENABLED_CODE);
         }
 
         return MasterStatusDTO::makeFromArray($data);

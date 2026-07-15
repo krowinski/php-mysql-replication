@@ -19,10 +19,10 @@ use MySQLReplication\MySQLReplicationFactory;
  */
 $binLogStream = new MySQLReplicationFactory(
     BinLogBootstrap::startFromPosition(new ConfigBuilder())
-        ->withUser('root')
-        ->withHost('127.0.0.1')
-        ->withPort(3306)
-        ->withPassword('root')
+        ->withUser(getenv('DB_USER') ?: 'root')
+        ->withHost(getenv('DB_HOST') ?: '127.0.0.1')
+        ->withPort((int) (getenv('DB_PORT') ?: 3306))
+        ->withPassword(getenv('DB_PASSWORD') ?: 'root')
         ->build()
 );
 
