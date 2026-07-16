@@ -13,6 +13,7 @@ use PhpCsFixer\Fixer\Whitespace\TypeDeclarationSpacesFixer;
 use PhpCsFixerCustomFixers\Fixer\NoLeadingSlashInGlobalNamespaceFixer;
 use PhpCsFixerCustomFixers\Fixer\PhpdocNoSuperfluousParamFixer;
 use PhpCsFixerCustomFixers\Fixer\PromotedConstructorPropertyFixer;
+use Symplify\CodingStandard\Fixer\LineLength\LineLengthFixer;
 use Symplify\CodingStandard\Fixer\Spacing\MethodChainingNewlineFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
@@ -47,6 +48,10 @@ return static function (ECSConfig $ecsConfig): void {
 
     $ecsConfig->skip([
         MethodChainingNewlineFixer::class,
+    ]);
+
+    $ecsConfig->ruleWithConfiguration(LineLengthFixer::class, [
+        'line_length' => 256,
     ]);
 
     $ecsConfig->fileExtensions(['php']);

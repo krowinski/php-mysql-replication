@@ -42,7 +42,7 @@ class EventInfo implements JsonSerializable
             return null;
         }
 
-        if (empty($this->dateTime)) {
+        if ($this->dateTime === null) {
             $this->dateTime = date('c', $this->timestamp);
         }
 
@@ -51,7 +51,7 @@ class EventInfo implements JsonSerializable
 
     public function getSizeNoHeader(): int
     {
-        if (empty($this->sizeNoHeader)) {
+        if ($this->sizeNoHeader === null) {
             $this->sizeNoHeader = ($this->checkSum === true ? $this->size - 23 : $this->size - 19);
         }
 

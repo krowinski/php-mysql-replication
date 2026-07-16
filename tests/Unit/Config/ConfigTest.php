@@ -84,6 +84,30 @@ class ConfigTest extends TestCase
         $config->validate();
     }
 
+    public function testShouldSetGtidAutoPosition(): void
+    {
+        $config = (new ConfigBuilder())->build();
+        self::assertFalse($config->gtidAutoPosition);
+
+        $config = (new ConfigBuilder())->withGtidAutoPosition()->build();
+        self::assertTrue($config->gtidAutoPosition);
+
+        $config = (new ConfigBuilder())->withGtidAutoPosition(false)->build();
+        self::assertFalse($config->gtidAutoPosition);
+    }
+
+    public function testShouldSetSemiSync(): void
+    {
+        $config = (new ConfigBuilder())->build();
+        self::assertFalse($config->semiSync);
+
+        $config = (new ConfigBuilder())->withSemiSync()->build();
+        self::assertTrue($config->semiSync);
+
+        $config = (new ConfigBuilder())->withSemiSync(false)->build();
+        self::assertFalse($config->semiSync);
+    }
+
     public function testShouldCheckDataBasesOnly(): void
     {
         $config = (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();

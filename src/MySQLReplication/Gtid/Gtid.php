@@ -13,16 +13,12 @@ class Gtid
 
     public function __construct(string $gtid)
     {
-        if ((bool)preg_match(
-            '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/',
-            $gtid,
-            $matches
-        ) === false) {
+        if ((bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid, $matches) === false) {
             throw new GtidException(GtidException::INCORRECT_GTID_MESSAGE, GtidException::INCORRECT_GTID_CODE);
         }
 
         $this->sid = $matches[1];
-        foreach (array_filter(explode(':', $matches[2])) as $k) {
+        foreach (array_filter(explode(':', $matches[2]), static fn (string $part): bool => $part !== '') as $k) {
             $this->intervals[] = explode('-', $k);
         }
         $this->sid = str_replace('-', '', $this->sid);
@@ -35,11 +31,10 @@ class Gtid
 
         foreach ($this->intervals as $interval) {
             $buffer .= BinaryDataReader::pack64bit((int)$interval[0]);
-            if (count($interval) !== 1) {
-                $buffer .= BinaryDataReader::pack64bit((int)$interval[1]);
-            } else {
-                $buffer .= BinaryDataReader::pack64bit($interval[0] + 1);
-            }
+            // MySQL GTID intervals are [start, stop) - stop is one past the last
+            // included transaction number, not the inclusive endpoint.
+            $stop = count($interval) !== 1 ? (int)$interval[1] : (int)$interval[0];
+            $buffer .= BinaryDataReader::pack64bit($stop + 1);
         }
 
         return $buffer;

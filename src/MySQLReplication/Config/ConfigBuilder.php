@@ -46,6 +46,29 @@ class ConfigBuilder
 
     private string $slaveUuid = '0015d2b6-8a06-4e5e-8c07-206ef3fbd274';
 
+    private bool $gtidAutoPosition = false;
+
+    private bool $semiSync = false;
+
+    public function withGtidAutoPosition(bool $gtidAutoPosition = true): self
+    {
+        $this->gtidAutoPosition = $gtidAutoPosition;
+
+        return $this;
+    }
+
+    /**
+     * Opt in to semi-sync replication. If the master doesn't have
+     * rpl_semi_sync_master_enabled/rpl_semi_sync_source_enabled = ON, this is
+     * silently ignored and the connection falls back to async replication.
+     */
+    public function withSemiSync(bool $semiSync = true): self
+    {
+        $this->semiSync = $semiSync;
+
+        return $this;
+    }
+
     public function withSlaveUuid(string $slaveUuid): self
     {
         $this->slaveUuid = $slaveUuid;
@@ -213,6 +236,8 @@ class ConfigBuilder
             $this->slaveUuid,
             $this->tablesRegex,
             $this->databasesRegex,
+            $this->gtidAutoPosition,
+            $this->semiSync,
         );
     }
 }

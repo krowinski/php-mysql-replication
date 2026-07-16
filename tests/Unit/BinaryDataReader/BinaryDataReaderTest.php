@@ -23,14 +23,8 @@ class BinaryDataReaderTest extends TestCase
     {
         self::assertSame(0, $this->getBinaryRead(pack('C', ''))->readCodedBinary());
         self::assertNull($this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary());
-        self::assertSame(
-            0,
-            $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary()
-        );
-        self::assertSame(
-            0,
-            $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary()
-        );
+        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary());
+        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary());
     }
 
     public function testShouldThrowErrorOnUnknownCodedBinary(): void
@@ -39,6 +33,24 @@ class BinaryDataReaderTest extends TestCase
 
         $this->getBinaryRead(pack('i', 255))
             ->readCodedBinary();
+    }
+
+    public static function dataProviderForCodedBinaryUnsignedInt64(): array
+    {
+        return [
+            'regular value' => [pack('C8', 1, 2, 3, 4, 5, 6, 7, 8), 578437695752307201],
+            // 0xFFFFFFFFFFFFFFFF does not fit a 64-bit signed PHP int, so it comes back as a numeric string
+            'max uint64 value' => [pack('C8', 255, 255, 255, 255, 255, 255, 255, 255), '18446744073709551615'],
+            // -1's two's complement bit pattern is identical to the unsigned max, so it must decode the same way
+            '-1 as unsigned' => [BinaryDataReader::pack64bit(-1), '18446744073709551615'],
+        ];
+    }
+
+    #[DataProvider('dataProviderForCodedBinaryUnsignedInt64')]
+    public function testShouldReadCodedBinaryForUnsignedInt64Column(string $data, int|string $expected): void
+    {
+        // An 8-byte length must follow 0xFE (UNSIGNED_INT64_COLUMN) header byte
+        self::assertSame($expected, $this->getBinaryRead(pack('C', BinaryDataReader::UNSIGNED_INT64_COLUMN) . $data)->readCodedBinary());
     }
 
     public static function dataProviderForUInt(): array
@@ -51,22 +63,24 @@ class BinaryDataReaderTest extends TestCase
             [5, pack('CI', 71, 2570258120), 657986078791],
             [6, pack('v3', 2570258120, 2570258120, 2570258120), 7456176998088],
             [7, pack('CSI', 66, 7890, 2570258120), 43121775657013826],
+            [8, pack('C8', 1, 2, 3, 4, 5, 6, 7, 8), 578437695752307201],
         ];
     }
 
     public function testShouldReadReadUInt64(): void
     {
-        $this->assertSame(
-            '18374686483949813760',
-            $this->getBinaryRead(pack('VV', 4278190080, 4278190080))
-                ->readUInt64()
-        );
+        $this->assertSame('18374686483949813760', $this->getBinaryRead(pack('VV', 4278190080, 4278190080)) ->readUInt64());
     }
 
     #[DataProvider('dataProviderForUInt')]
     public function testShouldReadUIntBySize(mixed $size, mixed $data, mixed $expected): void
     {
         self::assertSame($expected, $this->getBinaryRead($data)->readUIntBySize($size));
+    }
+
+    public function testShouldReadUIntBySizeAtMaxUint64WithoutCrashing(): void
+    {
+        self::assertSame('18446744073709551615', $this->getBinaryRead(pack('C8', 255, 255, 255, 255, 255, 255, 255, 255)) ->readUIntBySize(BinaryDataReader::UNSIGNED_INT64_LENGTH));
     }
 
     public function testShouldThrowErrorOnReadUIntBySizeNotSupported(): void
@@ -79,20 +93,11 @@ class BinaryDataReaderTest extends TestCase
 
     public static function dataProviderForBeInt(): array
     {
-        return [
-            [1, pack('c', 4), 4],
-            [2, pack('n', 9999), 9999],
-            [3, pack('CCC', 160, 190, 15), -6242801],
-            [4, pack('i', 123123543), 1471632903],
-            [5, pack('NC', 71, 2570258120), 18376],
-        ];
+        return [[1, pack('c', 4), 4], [2, pack('n', 9999), 9999], [3, pack('CCC', 160, 190, 15), -6242801], [4, pack('i', 123123543), 1471632903], [5, pack('NC', 71, 2570258120), 18376]];
     }
 
-    #[DataProvider('dataProviderForBeInt')] public function testShouldReadIntBeBySize(
-        int $size,
-        string $data,
-        int $expected
-    ): void {
+    #[DataProvider('dataProviderForBeInt')] public function testShouldReadIntBeBySize(int $size, string $data, int $expected): void
+    {
         self::assertSame($expected, $this->getBinaryRead($data)->readIntBeBySize($size));
     }
 
@@ -141,10 +146,7 @@ class BinaryDataReaderTest extends TestCase
     public function testShouldReadLengthCodedPascalString(): void
     {
         $expected = 255;
-        self::assertSame(
-            $expected,
-            hexdec(bin2hex($this->getBinaryRead(pack('cc', 1, $expected))->readLengthString(1)))
-        );
+        self::assertSame($expected, hexdec(bin2hex($this->getBinaryRead(pack('cc', 1, $expected))->readLengthString(1))));
     }
 
     public function testShouldReadInt32(): void
@@ -168,11 +170,7 @@ class BinaryDataReaderTest extends TestCase
 
     public function testShouldReadTableId(): void
     {
-        self::assertSame(
-            '7456176998088',
-            $this->getBinaryRead(pack('v3', 2570258120, 2570258120, 2570258120))
-                ->readTableId()
-        );
+        self::assertSame('7456176998088', $this->getBinaryRead(pack('v3', 2570258120, 2570258120, 2570258120)) ->readTableId());
     }
 
     public function testShouldCheckIsCompleted(): void

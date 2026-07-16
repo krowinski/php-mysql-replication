@@ -23,6 +23,13 @@ readonly class Event
 
     private const EOF_HEADER_VALUE = 254;
 
+    /**
+     * @see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_replication_semisync.html
+     */
+    private const SEMI_SYNC_INDICATOR = 0xef;
+
+    private const SEMI_SYNC_ACK_REQUESTED = 0x01;
+
     public function __construct(
         private BinLogSocketConnect $binLogSocketConnect,
         private RowEventFactory $rowEventFactory,
@@ -54,7 +61,21 @@ readonly class Event
             return;
         }
 
+        $semiSyncAckRequired = false;
+        if ($this->binLogSocketConnect->getSemiSyncEnabled()) {
+            $marker = $binaryDataReader->read(1);
+            if ($marker !== '' && ord($marker) === self::SEMI_SYNC_INDICATOR) {
+                $semiSyncAckRequired = $binaryDataReader->readUInt8() === self::SEMI_SYNC_ACK_REQUESTED;
+            } else {
+                $binaryDataReader->unread($marker);
+            }
+        }
+
         $this->dispatch($this->makeEvent($binaryDataReader));
+
+        if ($semiSyncAckRequired) {
+            $this->binLogSocketConnect->sendSemiSyncAck();
+        }
     }
 
     private function makeEvent(BinaryDataReader $binaryDataReader): ?EventDTO
@@ -83,11 +104,7 @@ readonly class Event
         }
 
         if ($eventInfo->type === ConstEventType::MARIA_GTID_EVENT->value) {
-            return (new MariaDbGtidEvent(
-                $eventInfo,
-                $binaryDataReader,
-                $this->binLogServerInfo
-            ))->makeMariaDbGTIDLogDTO();
+            return (new MariaDbGtidEvent($eventInfo, $binaryDataReader, $this->binLogServerInfo))->makeMariaDbGTIDLogDTO();
         }
 
         // check for ignore and permitted events
@@ -95,29 +112,17 @@ readonly class Event
             return null;
         }
 
-        if (in_array(
-            $eventInfo->type,
-            [ConstEventType::UPDATE_ROWS_EVENT_V1->value, ConstEventType::UPDATE_ROWS_EVENT_V2->value],
-            true
-        )) {
+        if (in_array($eventInfo->type, [ConstEventType::UPDATE_ROWS_EVENT_V1->value, ConstEventType::UPDATE_ROWS_EVENT_V2->value], true)) {
             return $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)
                 ->makeUpdateRowsDTO();
         }
 
-        if (in_array(
-            $eventInfo->type,
-            [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value],
-            true
-        )) {
+        if (in_array($eventInfo->type, [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value], true)) {
             return $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)
                 ->makeWriteRowsDTO();
         }
 
-        if (in_array(
-            $eventInfo->type,
-            [ConstEventType::DELETE_ROWS_EVENT_V1->value, ConstEventType::DELETE_ROWS_EVENT_V2->value],
-            true
-        )) {
+        if (in_array($eventInfo->type, [ConstEventType::DELETE_ROWS_EVENT_V1->value, ConstEventType::DELETE_ROWS_EVENT_V2->value], true)) {
             return $this->rowEventFactory->makeRowEvent($binaryDataReader, $eventInfo)
                 ->makeDeleteRowsDTO();
         }
@@ -127,9 +132,7 @@ readonly class Event
         }
 
         if ($eventInfo->type === ConstEventType::QUERY_EVENT->value) {
-            return $this->filterDummyMariaDbEvents(
-                (new QueryEvent($eventInfo, $binaryDataReader, $this->binLogServerInfo))->makeQueryDTO()
-            );
+            return $this->filterDummyMariaDbEvents((new QueryEvent($eventInfo, $binaryDataReader, $this->binLogServerInfo))->makeQueryDTO());
         }
 
         // The Rows Query Log Event will be triggered with enabled MySQL Config `binlog_rows_query_log_events`
@@ -172,7 +175,7 @@ readonly class Event
 
     private function dispatch(?EventDTO $eventDTO): void
     {
-        if ($eventDTO) {
+        if ($eventDTO !== null) {
             if ($this->ignoreEvent($eventDTO->getEventInfo()->type)) {
                 return;
             }

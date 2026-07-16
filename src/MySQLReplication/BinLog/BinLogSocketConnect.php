@@ -6,6 +6,7 @@ namespace MySQLReplication\BinLog;
 
 use MySQLReplication\BinaryDataReader\BinaryDataReader;
 use MySQLReplication\Config\Config;
+use MySQLReplication\Exception\MySQLReplicationException;
 use MySQLReplication\Gtid\GtidCollection;
 use MySQLReplication\Repository\RepositoryInterface;
 use MySQLReplication\Socket\SocketInterface;
@@ -18,11 +19,16 @@ class BinLogSocketConnect
     private const COM_BINLOG_DUMP_GTID = 0x1e;
     private const AUTH_SWITCH_PACKET = 254;
     /**
+     * @see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_replication_semisync.html
+     */
+    private const SEMI_SYNC_INDICATOR = 0xef;
+    /**
      * https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase.html 00 FE
      */
     private array $packageOkHeader = [0, 1, 254];
     private int $binaryDataMaxLength = 16777215;
     private bool $checkSum = false;
+    private bool $semiSyncEnabled = false;
     private BinLogCurrent $binLogCurrent;
     private BinLogServerInfo $binLogServerInfo;
 
@@ -38,14 +44,9 @@ class BinLogSocketConnect
 
         $this->logger->debug('Connected to ' . $config->host . ':' . $config->port);
 
-        $this->binLogServerInfo = BinLogServerInfo::make(
-            $this->getResponse(false),
-            $this->repository->getVersion()
-        );
+        $this->binLogServerInfo = BinLogServerInfo::make($this->getResponse(false), $this->repository->getVersion());
 
-        $this->logger->debug(
-            'Server version name: ' . $this->binLogServerInfo->versionName . ', revision: ' . $this->binLogServerInfo->versionRevision
-        );
+        $this->logger->debug('Server version name: ' . $this->binLogServerInfo->versionName . ', revision: ' . $this->binLogServerInfo->versionRevision);
 
 
         $this->authenticate($this->binLogServerInfo->authPlugin);
@@ -96,6 +97,25 @@ class BinLogSocketConnect
         return $this->checkSum;
     }
 
+    public function getSemiSyncEnabled(): bool
+    {
+        return $this->semiSyncEnabled;
+    }
+
+    /**
+     * @see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_replication_semisync.html
+     */
+    public function sendSemiSyncAck(): void
+    {
+        $payload = chr(self::SEMI_SYNC_INDICATOR)
+            . BinaryDataReader::pack64bit((int)$this->binLogCurrent->getBinLogPosition())
+            . $this->binLogCurrent->getBinFileName();
+
+        $this->socket->writeToSocket(pack('l', strlen($payload)) . $payload);
+
+        $this->logger->debug('Semi-sync ACK sent for ' . $this->binLogCurrent->getBinFileName() . ':' . $this->binLogCurrent->getBinLogPosition());
+    }
+
     private function isWriteSuccessful(string $data): void
     {
         $head = ord($data[0]);
@@ -113,9 +133,7 @@ class BinLogSocketConnect
 
     private function authenticate(BinLogAuthPluginMode $authPlugin): void
     {
-        $this->logger->debug(
-            'Trying to authenticate user: ' . $this->config->user . ' using ' . $authPlugin->value . ' default plugin'
-        );
+        $this->logger->debug('Trying to authenticate user: ' . $this->config->user . ' using ' . $authPlugin->value . ' default plugin');
 
         $data = pack('L', self::getCapabilities());
         $data .= pack('L', $this->binaryDataMaxLength);
@@ -187,15 +205,25 @@ class BinLogSocketConnect
 
     private function getBinlogStream(): void
     {
+        if (!$this->repository->isRowFormat()) {
+            throw new BinLogException(MySQLReplicationException::BINLOG_FORMAT_NOT_ROW, MySQLReplicationException::BINLOG_FORMAT_NOT_ROW_CODE);
+        }
+
+        if (!$this->repository->isRowImageFull()) {
+            $this->logger->warning('binlog_row_image is not FULL - row events may contain partial column data.');
+        }
+
         $this->checkSum = $this->repository->isCheckSum();
         if ($this->checkSum) {
             $this->executeSQL('SET @master_binlog_checksum = @@global.binlog_checksum');
         }
 
-
         if ($this->config->heartbeatPeriod > 0.00) {
             // master_heartbeat_period is in nanoseconds
-            if (version_compare($this->repository->getVersion(), '8.4.0') >= 0) {
+            // MariaDB never adopted MySQL 8.0.26+'s master->source renaming, so a
+            // MariaDB version string (e.g. "10.6.15-MariaDB") must not take this branch
+            // even though version_compare() would otherwise treat "10" as >= "8.4.0".
+            if (!$this->binLogServerInfo->isMariaDb() && version_compare($this->repository->getVersion(), '8.4.0') >= 0) {
                 $this->executeSQL('SET @source_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
             } else {
                 $this->executeSQL('SET @master_heartbeat_period = ' . $this->config->heartbeatPeriod * 1000000000);
@@ -205,20 +233,42 @@ class BinLogSocketConnect
         }
 
         if ($this->config->slaveUuid !== '') {
-            $this->executeSQL(
-                'SET @slave_uuid = \'' . $this->config->slaveUuid . '\', @replica_uuid = \'' . $this->config->slaveUuid . '\''
-            );
+            $this->executeSQL('SET @slave_uuid = \'' . $this->config->slaveUuid . '\', @replica_uuid = \'' . $this->config->slaveUuid . '\'');
 
-            $this->logger->debug('Salve uuid set to ' . $this->config->slaveUuid);
+            $this->logger->debug('Slave uuid set to ' . $this->config->slaveUuid);
+        }
+
+        if ($this->config->semiSync) {
+            if ($this->repository->isSemiSyncEnabled()) {
+                $this->executeSQL('SET @rpl_semi_sync_slave = 1');
+                $this->semiSyncEnabled = true;
+
+                $this->logger->debug('Semi-sync replication enabled');
+            } else {
+                $this->logger->warning('Semi-sync replication requested but the master does not have it enabled ' . '(rpl_semi_sync_master_enabled/rpl_semi_sync_source_enabled is not ON) - ' . 'falling back to asynchronous replication.');
+            }
         }
 
         $this->registerSlave();
 
-        if ($this->config->mariaDbGtid !== '') {
-            $this->setBinLogDumpMariaGtid();
+        $mariaDbGtid = $this->config->mariaDbGtid;
+        $gtid = $this->config->gtid;
+
+        // no explicit position given - ask the master for its current GTID set
+        // and start streaming from there instead of falling back to file+position
+        if ($this->config->gtidAutoPosition && $mariaDbGtid === '' && $gtid === '') {
+            if ($this->binLogServerInfo->isMariaDb()) {
+                $mariaDbGtid = $this->repository->getGtidExecuted();
+            } else {
+                $gtid = $this->repository->getGtidExecuted();
+            }
         }
-        if ($this->config->gtid !== '') {
-            $this->setBinLogDumpGtid();
+
+        if ($mariaDbGtid !== '') {
+            $this->setBinLogDumpMariaGtid($mariaDbGtid);
+        }
+        if ($gtid !== '') {
+            $this->setBinLogDumpGtid($gtid);
         } else {
             $this->setBinLogDump();
         }
@@ -259,21 +309,21 @@ class BinLogSocketConnect
         $this->logger->debug('Slave registered with id ' . $this->config->slaveId);
     }
 
-    private function setBinLogDumpMariaGtid(): void
+    private function setBinLogDumpMariaGtid(string $mariaDbGtid): void
     {
         $this->executeSQL('SET @mariadb_slave_capability = 4');
-        $this->executeSQL('SET @slave_connect_state = \'' . $this->config->mariaDbGtid . '\'');
+        $this->executeSQL('SET @slave_connect_state = \'' . $mariaDbGtid . '\'');
         $this->executeSQL('SET @slave_gtid_strict_mode = 0');
         $this->executeSQL('SET @slave_gtid_ignore_duplicates = 0');
 
-        $this->binLogCurrent->setMariaDbGtid($this->config->mariaDbGtid);
+        $this->binLogCurrent->setMariaDbGtid($mariaDbGtid);
 
-        $this->logger->debug('Set Maria GTID to start from: ' . $this->config->mariaDbGtid);
+        $this->logger->debug('Set Maria GTID to start from: ' . $mariaDbGtid);
     }
 
-    private function setBinLogDumpGtid(): void
+    private function setBinLogDumpGtid(string $gtid): void
     {
-        $collection = GtidCollection::makeCollectionFromString($this->config->gtid);
+        $collection = GtidCollection::makeCollectionFromString($gtid);
 
         $data = pack('l', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
         $data .= pack('S', 0);
@@ -289,9 +339,9 @@ class BinLogSocketConnect
         $this->socket->writeToSocket($data);
         $this->getResponse();
 
-        $this->binLogCurrent->setGtid($this->config->gtid);
+        $this->binLogCurrent->setGtid($gtid);
 
-        $this->logger->debug('Set GTID to start from: ' . $this->config->gtid);
+        $this->logger->debug('Set GTID to start from: ' . $gtid);
     }
 
     /**

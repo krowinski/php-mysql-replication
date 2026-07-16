@@ -15,7 +15,7 @@ class GtidCollection extends ArrayCollection
     public static function makeCollectionFromString(string $gtids): self
     {
         $collection = new self();
-        foreach (array_filter(explode(',', $gtids)) as $gtid) {
+        foreach (array_filter(explode(',', $gtids), static fn (string $part): bool => $part !== '') as $gtid) {
             $collection->add(new Gtid($gtid));
         }
 

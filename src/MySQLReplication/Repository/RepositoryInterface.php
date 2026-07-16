@@ -10,7 +10,15 @@ interface RepositoryInterface
 
     public function isCheckSum(): bool;
 
+    public function isRowFormat(): bool;
+
+    public function isRowImageFull(): bool;
+
     public function getVersion(): string;
+
+    public function getGtidExecuted(): string;
+
+    public function isSemiSyncEnabled(): bool;
 
     public function getMasterStatus(): MasterStatusDTO;
 }

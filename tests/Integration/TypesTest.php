@@ -854,4 +854,28 @@ class TypesTest extends BaseCase
         self::assertEquals('["\"test"]', $results[28]['j']);
         self::assertEquals('"4294967295"', $results[29]['j']);
     }
+
+    public function testShouldKeepVirtualGeneratedColumnAligned(): void
+    {
+        $create_query = 'CREATE TABLE test (a INT, gen INT GENERATED ALWAYS AS (a + 1) VIRTUAL, b VARCHAR(20))';
+        $insert_query = 'INSERT INTO test (a, b) VALUES (5, \'hello\')';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals(5, $event->values[0]['a']);
+        self::assertEquals(6, $event->values[0]['gen']);
+        self::assertEquals('hello', $event->values[0]['b']);
+    }
+
+    public function testShouldKeepStoredGeneratedColumnAligned(): void
+    {
+        $create_query = 'CREATE TABLE test (a INT, gen INT GENERATED ALWAYS AS (a + 1) STORED, b VARCHAR(20))';
+        $insert_query = 'INSERT INTO test (a, b) VALUES (5, \'hello\')';
+
+        $event = $this->createAndInsertValue($create_query, $insert_query);
+
+        self::assertEquals(5, $event->values[0]['a']);
+        self::assertEquals(6, $event->values[0]['gen']);
+        self::assertEquals('hello', $event->values[0]['b']);
+    }
 }

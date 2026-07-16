@@ -43,12 +43,15 @@ class MySQLRepositoryTest extends TestCase
             ],
         ];
 
-        $this->connection->method('fetchAllAssociative')
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAllAssociative')
+            ->with(self::anything(), ['foo', 'bar'])
             ->willReturn($expected);
 
         self::assertEquals(
             FieldDTOCollection::makeFromArray($expected),
-            $this->mySQLRepositoryTest->getFields('foo', 'bar')
+            (new MySQLRepository($connection))->getFields('foo', 'bar')
         );
     }
 
@@ -67,16 +70,148 @@ class MySQLRepositoryTest extends TestCase
         self::assertFalse($this->mySQLRepositoryTest->isCheckSum());
     }
 
+    public function testShouldIsRowFormat(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturnOnConsecutiveCalls([
+                'Value' => 'ROW',
+            ], [
+                'Value' => 'STATEMENT',
+            ]);
+
+        self::assertTrue($this->mySQLRepositoryTest->isRowFormat());
+        self::assertFalse($this->mySQLRepositoryTest->isRowFormat());
+    }
+
+    public function testShouldIsRowImageFull(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturnOnConsecutiveCalls([
+                'Value' => 'FULL',
+            ], [
+                'Value' => 'MINIMAL',
+            ], false);
+
+        self::assertTrue($this->mySQLRepositoryTest->isRowImageFull());
+        self::assertFalse($this->mySQLRepositoryTest->isRowImageFull());
+        // versions without the variable have no partial row image mode
+        self::assertTrue($this->mySQLRepositoryTest->isRowImageFull());
+    }
+
     public function testShouldGetVersion(): void
     {
         $expected = [
             'Value' => 'version',
         ];
 
-        $this->connection->method('fetchAssociative')
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAssociative')
             ->willReturn($expected);
 
-        self::assertEquals('version', $this->mySQLRepositoryTest->getVersion());
+        $repository = new MySQLRepository($connection);
+
+        self::assertEquals('version', $repository->getVersion());
+        // second call must hit the cache, not the connection again
+        self::assertEquals('version', $repository->getVersion());
+    }
+
+    public function testShouldGetGtidExecutedForMysql(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::exactly(2))
+            ->method('fetchAssociative')
+            ->willReturnOnConsecutiveCalls(
+                [
+                    'Value' => '8.0.46',
+                ],
+                [
+                    'Gtid_Executed' => '041de05f-a36a-11e6-bc73-000c2976f3f3:1-8023',
+                ]
+            );
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertEquals('041de05f-a36a-11e6-bc73-000c2976f3f3:1-8023', $repository->getGtidExecuted());
+    }
+
+    public function testShouldGetGtidExecutedForMariaDb(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::exactly(2))
+            ->method('fetchAssociative')
+            ->willReturnOnConsecutiveCalls([
+                'Value' => '10.11.6-MariaDB',
+            ], [
+                'Gtid_Executed' => '0-1-100',
+            ]);
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertEquals('0-1-100', $repository->getGtidExecuted());
+    }
+
+    public function testShouldIsSemiSyncEnabledForMysql(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAllAssociative')
+            ->willReturn([
+                [
+                    'Variable_name' => 'rpl_semi_sync_source_enabled',
+                    'Value' => 'ON',
+                ],
+            ]);
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertTrue($repository->isSemiSyncEnabled());
+    }
+
+    public function testShouldIsSemiSyncEnabledForOldMysql(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAllAssociative')
+            ->willReturn([
+                [
+                    'Variable_name' => 'rpl_semi_sync_master_enabled',
+                    'Value' => 'ON',
+                ],
+            ]);
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertTrue($repository->isSemiSyncEnabled());
+    }
+
+    public function testShouldIsSemiSyncEnabledFalseWhenNotConfigured(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAllAssociative')
+            ->willReturn([]);
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertFalse($repository->isSemiSyncEnabled());
+    }
+
+    public function testShouldIsSemiSyncEnabledFalseWhenOff(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())
+            ->method('fetchAllAssociative')
+            ->willReturn([
+                [
+                    'Variable_name' => 'rpl_semi_sync_source_enabled',
+                    'Value' => 'OFF',
+                ],
+            ]);
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertFalse($repository->isSemiSyncEnabled());
     }
 
     public function testShouldGetMasterStatus(): void

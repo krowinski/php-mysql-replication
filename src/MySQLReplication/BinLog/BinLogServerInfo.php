@@ -33,8 +33,7 @@ readonly class BinLogServerInfo
 
         //version
         $serverVersion = '';
-        $start = $i;
-        for ($i = $start; $i < $length; ++$i) {
+        for (; $i < $length; ++$i) {
             if ($data[$i] === chr(0)) {
                 ++$i;
                 break;
@@ -90,16 +89,7 @@ readonly class BinLogServerInfo
             $authPlugin .= $data[$j];
         }
 
-        return new self(
-            $protocolVersion,
-            $serverVersion,
-            $connectionId,
-            $salt,
-            $characterSet,
-            BinLogAuthPluginMode::make($authPlugin),
-            self::parseVersion($serverVersion),
-            self::parseRevision($version)
-        );
+        return new self($protocolVersion, $serverVersion, $connectionId, $salt, $characterSet, BinLogAuthPluginMode::make($authPlugin), self::parseVersion($serverVersion), self::parseRevision($version));
     }
 
     public function isMariaDb(): bool

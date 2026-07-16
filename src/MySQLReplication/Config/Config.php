@@ -29,76 +29,52 @@ readonly class Config implements JsonSerializable
         public string $slaveUuid,
         private array $tablesRegex = [],
         private array $databasesRegex = [],
+        public bool $gtidAutoPosition = false,
+        public bool $semiSync = false,
     ) {
     }
 
     public function validate(): void
     {
-        if (!empty($this->host)) {
+        if ($this->host !== '') {
             $ip = gethostbyname($this->host);
             if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
                 throw new ConfigException(ConfigException::IP_ERROR_MESSAGE, ConfigException::IP_ERROR_CODE);
             }
         }
-        if (!empty($this->port) && filter_var(
-            $this->port,
-            FILTER_VALIDATE_INT,
-            [
-                'options' => [
-                    'min_range' => 0,
-                ],
-            ]
-        ) === false) {
+        if (filter_var($this->port, FILTER_VALIDATE_INT, [
+            'options' => [
+                'min_range' => 0,
+            ],
+        ]) === false) {
             throw new ConfigException(ConfigException::PORT_ERROR_MESSAGE, ConfigException::PORT_ERROR_CODE);
         }
-        if (!empty($this->gtid)) {
+        if ($this->gtid !== '') {
             foreach (explode(',', $this->gtid) as $gtid) {
-                if (!(bool)preg_match(
-                    '/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/',
-                    $gtid,
-                    $matches
-                )) {
+                if (!(bool)preg_match('/^([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})((?::[0-9-]+)+)$/', $gtid)) {
                     throw new ConfigException(ConfigException::GTID_ERROR_MESSAGE, ConfigException::GTID_ERROR_CODE);
                 }
             }
         }
-        if (!empty($this->slaveId) && filter_var(
-            $this->slaveId,
-            FILTER_VALIDATE_INT,
-            [
-                'options' => [
-                    'min_range' => 0,
-                ],
-            ]
-        ) === false) {
-            throw new ConfigException(
-                ConfigException::SLAVE_ID_ERROR_MESSAGE,
-                ConfigException::SLAVE_ID_ERROR_CODE
-            );
+        if (filter_var($this->slaveId, FILTER_VALIDATE_INT, [
+            'options' => [
+                'min_range' => 0,
+            ],
+        ]) === false) {
+            throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
         if (bccomp((string)(int)$this->binLogPosition, '0') === -1) {
-            throw new ConfigException(
-                ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
-                ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
-            );
+            throw new ConfigException(ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE);
         }
         if (filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, [
             'options' => [
                 'min_range' => 0,
             ],
         ]) === false) {
-            throw new ConfigException(
-                ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE,
-                ConfigException::TABLE_CACHE_SIZE_ERROR_CODE
-            );
+            throw new ConfigException(ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE);
         }
-        if ($this->heartbeatPeriod !== 0.0 && false === (
-            $this->heartbeatPeriod >= 0.001 && $this->heartbeatPeriod <= 4294967.0
-        )) {
-            throw new ConfigException(
-                ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE,
-                ConfigException::HEARTBEAT_PERIOD_ERROR_CODE
-            );
+        if ($this->heartbeatPeriod !== 0.0 && false === ($this->heartbeatPeriod >= 0.001 && $this->heartbeatPeriod <= 4294967.0)) {
+            throw new ConfigException(ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE);
         }
     }
 
@@ -145,7 +121,7 @@ readonly class Config implements JsonSerializable
     private static function matchNames(string $name, array $patterns): bool
     {
         foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $name)) {
+            if ((bool)preg_match($pattern, $name)) {
                 return true;
             }
         }

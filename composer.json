@@ -26,6 +26,7 @@
     "kubawerlos/php-cs-fixer-custom-fixers": "^3.19",
     "monolog/monolog": "^3.5",
     "phpstan/phpstan": "^2.2",
+    "phpstan/phpstan-strict-rules": "^2.0",
     "phpunit/phpunit": "^12.0",
     "symplify/easy-coding-standard": "^12.1"
   },

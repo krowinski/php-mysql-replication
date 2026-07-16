@@ -15,7 +15,7 @@ class GtidTest extends TestCase
     public function testShouldGetEncoded(): void
     {
         self::assertSame(
-            '9b1c8d182a7611e5a26b000c2976f3f301000000000000000100000000000000b8b5020000000000',
+            '9b1c8d182a7611e5a26b000c2976f3f301000000000000000100000000000000b9b5020000000000',
             bin2hex($this->getGtid('9b1c8d18-2a76-11e5-a26b-000c2976f3f3:1-177592')->getEncoded())
         );
         self::assertSame(

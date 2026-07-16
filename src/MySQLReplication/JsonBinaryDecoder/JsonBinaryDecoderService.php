@@ -160,13 +160,12 @@ readonly class JsonBinaryDecoderService
             throw new InvalidArgumentException('Document is not long enough to contain the two length fields');
         }
 
-        $elementCount = $this->binaryDataReader->readUIntBySize($intSize);
-        $bytes = $this->binaryDataReader->readUIntBySize($intSize);
+        // $intSize is always 2 or 4 (small/large offset), never the 8-byte case
+        $elementCount = (int) $this->binaryDataReader->readUIntBySize($intSize);
+        $bytes = (int) $this->binaryDataReader->readUIntBySize($intSize);
 
         if ($bytes > $this->dataLength) {
-            throw new InvalidArgumentException(
-                'The value can\'t have more bytes than what\'s available in the data buffer.'
-            );
+            throw new InvalidArgumentException('The value can\'t have more bytes than what\'s available in the data buffer.');
         }
 
         $keyEntrySize = self::keyEntrySize($large);
@@ -187,7 +186,7 @@ readonly class JsonBinaryDecoderService
         if ($type === self::OBJECT) {
             // Read each key-entry, consisting of the offset and length of each key ...
             for ($i = 0; $i !== $elementCount; ++$i) {
-                $keyOffset = $this->binaryDataReader->readUIntBySize($intSize);
+                $keyOffset = (int) $this->binaryDataReader->readUIntBySize($intSize);
                 $keyLengths[$i] = $this->binaryDataReader->readUInt16();
                 if ($keyOffset < $headerSize) {
                     throw new InvalidArgumentException('Invalid key offset');
@@ -250,11 +249,9 @@ readonly class JsonBinaryDecoderService
             return $scalar;
         }
 
-        $offset = $this->binaryDataReader->readUIntBySize($intSize);
+        $offset = (int) $this->binaryDataReader->readUIntBySize($intSize);
         if ($offset > $bytes) {
-            throw new LengthException(
-                'The offset for the value in the JSON binary document is ' . $offset . ', which is larger than the binary form of the JSON document (' . $bytes . ' bytes)'
-            );
+            throw new LengthException('The offset for the value in the JSON binary document is ' . $offset . ', which is larger than the binary form of the JSON document (' . $bytes . ' bytes)');
         }
 
         return new JsonBinaryDecoderValue(false, null, $type, $offset);
@@ -296,10 +293,7 @@ readonly class JsonBinaryDecoderService
          * }
          */
         else {
-            throw new JsonBinaryDecoderException(
-                JsonBinaryDecoderException::UNKNOWN_JSON_TYPE_MESSAGE . $type,
-                JsonBinaryDecoderException::UNKNOWN_JSON_TYPE_CODE
-            );
+            throw new JsonBinaryDecoderException(JsonBinaryDecoderException::UNKNOWN_JSON_TYPE_MESSAGE . $type, JsonBinaryDecoderException::UNKNOWN_JSON_TYPE_CODE);
         }
 
         return new JsonBinaryDecoderValue(true, $data, $type);
