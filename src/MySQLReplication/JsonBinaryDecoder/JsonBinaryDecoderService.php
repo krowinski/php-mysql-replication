@@ -154,6 +154,7 @@ readonly class JsonBinaryDecoderService
 
     private function parseArrayOrObject(int $type, int $intSize): array
     {
+        $containerStart = $this->binaryDataReader->getReadBytes();
         $large = $intSize === self::LARGE_OFFSET_SIZE;
         $offsetSize = self::offsetSize($large);
         if ($this->dataLength < 2 * $offsetSize) {
@@ -196,7 +197,7 @@ readonly class JsonBinaryDecoderService
 
         $entries = [];
         for ($i = 0; $i !== $elementCount; ++$i) {
-            $entries[$i] = $this->getOffsetOrInLinedValue($bytes, $intSize, $valueEntrySize);
+            $entries[$i] = $this->getOffsetOrInLinedValue($bytes, $intSize, $valueEntrySize, $containerStart);
         }
 
         $keys = [];
@@ -232,7 +233,7 @@ readonly class JsonBinaryDecoderService
         return $large ? self::VALUE_ENTRY_SIZE_LARGE : self::VALUE_ENTRY_SIZE_SMALL;
     }
 
-    private function getOffsetOrInLinedValue(int $bytes, int $intSize, int $valueEntrySize): JsonBinaryDecoderValue
+    private function getOffsetOrInLinedValue(int $bytes, int $intSize, int $valueEntrySize, int $containerStart): JsonBinaryDecoderValue
     {
         $type = $this->binaryDataReader->readUInt8();
 
@@ -254,7 +255,7 @@ readonly class JsonBinaryDecoderService
             throw new LengthException('The offset for the value in the JSON binary document is ' . $offset . ', which is larger than the binary form of the JSON document (' . $bytes . ' bytes)');
         }
 
-        return new JsonBinaryDecoderValue(false, null, $type, $offset);
+        return new JsonBinaryDecoderValue(false, null, $type, $offset, $containerStart);
     }
 
     private static function isInLinedType(int $type, int $intSize): bool
@@ -335,7 +336,7 @@ readonly class JsonBinaryDecoderService
     private function assignValues(JsonBinaryDecoderValue $jsonBinaryDecoderValue): void
     {
         if ($jsonBinaryDecoderValue->isResolved === false) {
-            $this->ensureOffset($jsonBinaryDecoderValue->offset);
+            $this->ensureOffset($jsonBinaryDecoderValue->containerStart, $jsonBinaryDecoderValue->offset);
             $this->parseJson($jsonBinaryDecoderValue->type);
         } elseif ($jsonBinaryDecoderValue->value === null) {
             $this->jsonBinaryDecoderFormatter->formatValueNull();
@@ -346,17 +347,15 @@ readonly class JsonBinaryDecoderService
         }
     }
 
-    private function ensureOffset(?int $ensureOffset): void
+    private function ensureOffset(int $containerStart, ?int $offset): void
     {
-        if ($ensureOffset === null) {
+        if ($offset === null) {
             return;
         }
+        $targetAbsolute = $containerStart + $offset;
         $pos = $this->binaryDataReader->getReadBytes();
-        if ($pos !== $ensureOffset) {
-            if ($ensureOffset < $pos) {
-                return;
-            }
-            $this->binaryDataReader->advance($ensureOffset + 1 - $pos);
+        if ($pos < $targetAbsolute) {
+            $this->binaryDataReader->advance($targetAbsolute - $pos);
         }
     }
 }

@@ -10,7 +10,8 @@ readonly class JsonBinaryDecoderValue
         public bool $isResolved,
         public mixed $value,
         public int $type,
-        public ?int $offset = null
+        public ?int $offset = null,
+        public int $containerStart = 0,
     ) {
     }
 }
