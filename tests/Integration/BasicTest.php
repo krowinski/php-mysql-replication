@@ -225,7 +225,7 @@ class BasicTest extends BaseCase
             self::markTestIncomplete('Only for mysql 5.7 or higher');
         }
 
-        $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8 - C299"}},"name":"Alice"}';
+        $expected = '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8 - C299","ac":[]}},"name":"Alice"}';
 
         $create_query = 'CREATE TABLE t1 (j JSON)';
         $insert_query = "INSERT INTO t1 VALUES ('" . $expected . "')";
@@ -244,7 +244,7 @@ class BasicTest extends BaseCase
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
         self::assertEquals($expected, $event->values[0]['before']['j']);
         self::assertEquals(
-            '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8"}},"name":"Alice"}',
+            '{"age":22,"addr":{"code":100,"detail":{"ab":"970785C8","ac":[]}},"name":"Alice"}',
             $event->values[0]['after']['j']
         );
     }
