@@ -51,7 +51,7 @@ return static function (ECSConfig $ecsConfig): void {
     ]);
 
     $ecsConfig->ruleWithConfiguration(LineLengthFixer::class, [
-        'line_length' => 256,
+        'line_length' => 140,
     ]);
 
     $ecsConfig->fileExtensions(['php']);

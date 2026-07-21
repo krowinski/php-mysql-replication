@@ -31,6 +31,9 @@ readonly class Config implements JsonSerializable
         private array $databasesRegex = [],
         public bool $gtidAutoPosition = false,
         public bool $semiSync = false,
+        public bool $useTableMapMetadata = true,
+        public array $tablesIgnore = [],
+        public array $databasesIgnore = [],
     ) {
     }
 
@@ -64,7 +67,10 @@ readonly class Config implements JsonSerializable
             throw new ConfigException(ConfigException::SLAVE_ID_ERROR_MESSAGE, ConfigException::SLAVE_ID_ERROR_CODE);
         }
         if (bccomp((string)(int)$this->binLogPosition, '0') === -1) {
-            throw new ConfigException(ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE, ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE);
+            throw new ConfigException(
+                ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
+                ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE
+            );
         }
         if (filter_var($this->tableCacheSize, FILTER_VALIDATE_INT, [
             'options' => [
@@ -100,6 +106,16 @@ readonly class Config implements JsonSerializable
             && !self::matchNames($table, $this->tablesRegex);
     }
 
+    public function checkDataBasesIgnore(string $database): bool
+    {
+        return in_array($database, $this->databasesIgnore, true);
+    }
+
+    public function checkTablesIgnore(string $table): bool
+    {
+        return in_array($table, $this->tablesIgnore, true);
+    }
+
     public function checkEvent(int $type): bool
     {
         if ($this->eventsOnly !== [] && !in_array($type, $this->eventsOnly, true)) {
@@ -116,6 +132,18 @@ readonly class Config implements JsonSerializable
     public function jsonSerialize(): array
     {
         return get_object_vars($this);
+    }
+
+    /**
+     * Returns only the settings explicitly set via ConfigBuilder (as opposed to left at their default value).
+     */
+    public function toArray(): array
+    {
+        $settings = $this->jsonSerialize();
+        if (isset($settings['password'])) {
+            $settings['password'] = '*censored*';
+        }
+        return $settings;
     }
 
     private static function matchNames(string $name, array $patterns): bool

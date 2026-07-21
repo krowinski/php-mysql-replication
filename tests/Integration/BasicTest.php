@@ -68,6 +68,19 @@ class BasicTest extends BaseCase
 
     public function testShouldGetWriteEventDropTable(): void
     {
+        // exercises the information_schema fallback's "table no longer exists" guard, so force it
+        // even on a server that would otherwise use the (now default) binlog table-map metadata
+        $this->disconnect();
+        $this->configBuilder->withUseTableMapMetadata(false);
+        $this->connect();
+
+        if ($this->mySQLReplicationFactory?->getServerInfo()->versionRevision >= 8 && $this->mySQLReplicationFactory?->getServerInfo()->isGeneric()) {
+            self::assertInstanceOf(RotateDTO::class, $this->getEvent());
+        }
+        self::assertInstanceOf(FormatDescriptionEventDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+
         $this->connection->executeStatement($createExpected = 'CREATE TABLE `test` (id INTEGER(11))');
         $this->connection->executeStatement('INSERT INTO `test` VALUES (1)');
         $this->connection->executeStatement($dropExpected = 'DROP TABLE `test`');
@@ -113,11 +126,14 @@ class BasicTest extends BaseCase
 
     public function testShouldDropColumn(): void
     {
+        // exercises the information_schema fallback's dropped-column guard, so force it even on a
+        // server that would otherwise use the (now default) binlog table-map metadata, which is
+        // self-describing and doesn't need the guard (see TableMapMetadataTest)
         $this->disconnect();
 
-        $this->configBuilder->withEventsOnly(
-            [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value]
-        );
+        $this->configBuilder
+            ->withEventsOnly([ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value])
+            ->withUseTableMapMetadata(false);
 
         $this->connect();
 
@@ -152,9 +168,7 @@ class BasicTest extends BaseCase
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
         self::assertInstanceOf(QueryDTO::class, $this->getEvent());
 
-        $this->connection->executeStatement(
-            $createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))'
-        );
+        $this->connection->executeStatement($createTableExpected = 'CREATE TABLE test (id INTEGER(11), data VARCHAR(50))');
 
         /** @var QueryDTO $event */
         $event = $this->getEvent();
@@ -170,9 +184,9 @@ class BasicTest extends BaseCase
         $this->disconnect();
 
         $this->configBuilder
-            ->withEventsOnly(
-                [ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value]
-            )->withTablesOnly([$expectedTable]);
+            ->withEventsOnly([ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value])->withTablesOnly(
+                [$expectedTable]
+            );
 
         $this->connect();
 
@@ -194,6 +208,72 @@ class BasicTest extends BaseCase
         self::assertInstanceOf(WriteRowsDTO::class, $event);
         self::assertEquals($expectedTable, $event->tableMap->table);
         self::assertEquals($expectedValue, $event->values[0]['data']);
+    }
+
+    public function testShouldFilterTablesIgnore(): void
+    {
+        $expectedTable = 'test_2';
+        $expectedValue = 'foobar';
+
+        $this->disconnect();
+
+        $this->configBuilder
+            ->withEventsOnly([ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value])->withTablesIgnore(
+                ['test_3', 'test_4']
+            );
+
+        $this->connect();
+
+        $this->connection->executeStatement(
+            'CREATE TABLE test_2 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+        $this->connection->executeStatement(
+            'CREATE TABLE test_3 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+        $this->connection->executeStatement(
+            'CREATE TABLE test_4 (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+
+        $this->connection->executeStatement('INSERT INTO test_4 (data) VALUES (\'foo\')');
+        $this->connection->executeStatement('INSERT INTO test_3 (data) VALUES (\'bar\')');
+        $this->connection->executeStatement('INSERT INTO test_2 (data) VALUES (\'' . $expectedValue . '\')');
+
+        $event = $this->getEvent();
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+        self::assertEquals($expectedTable, $event->tableMap->table);
+        self::assertEquals($expectedValue, $event->values[0]['data']);
+    }
+
+    public function testShouldFilterDatabasesIgnore(): void
+    {
+        $ignoredDatabase = 'mysqlreplication_test_ignored';
+        $expectedValue = 'foobar';
+
+        $this->disconnect();
+
+        $this->configBuilder
+            ->withEventsOnly([ConstEventType::WRITE_ROWS_EVENT_V1->value, ConstEventType::WRITE_ROWS_EVENT_V2->value])
+            ->withDatabasesIgnore([$ignoredDatabase]);
+
+        $this->connect();
+
+        $this->connection->executeStatement('CREATE DATABASE ' . $ignoredDatabase);
+        $this->connection->executeStatement(
+            'CREATE TABLE ' . $ignoredDatabase . '.test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+        $this->connection->executeStatement(
+            'CREATE TABLE test (id INT NOT NULL AUTO_INCREMENT, data VARCHAR (50) NOT NULL, PRIMARY KEY (id))'
+        );
+
+        $this->connection->executeStatement('INSERT INTO ' . $ignoredDatabase . '.test (data) VALUES (\'ignored\')');
+        $this->connection->executeStatement('INSERT INTO test (data) VALUES (\'' . $expectedValue . '\')');
+
+        $event = $this->getEvent();
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+        self::assertEquals($this->database, $event->tableMap->database);
+        self::assertEquals($expectedValue, $event->values[0]['data']);
+
+        $this->connection->executeStatement('DROP DATABASE ' . $ignoredDatabase);
     }
 
     public function testShouldTruncateTable(): void
@@ -273,10 +353,7 @@ class BasicTest extends BaseCase
 
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
         self::assertEquals($expected, $event->values[0]['before']['j']);
-        self::assertEquals(
-            '{"age":22,"addr":{"code":100,"detail":{}},"name":"Alice"}',
-            $event->values[0]['after']['j']
-        );
+        self::assertEquals('{"age":22,"addr":{"code":100,"detail":{}},"name":"Alice"}', $event->values[0]['after']['j']);
     }
 
     public function testShouldJsonReplacePartialUpdateWithHoles(): void
@@ -303,10 +380,7 @@ class BasicTest extends BaseCase
 
         self::assertInstanceOf(UpdateRowsDTO::class, $event);
         self::assertEquals($expected, $event->values[0]['before']['j']);
-        self::assertEquals(
-            '{"age":22,"addr":{"code":100,"detail":{"ab":"9707"}},"name":"Alice"}',
-            $event->values[0]['after']['j']
-        );
+        self::assertEquals('{"age":22,"addr":{"code":100,"detail":{"ab":"9707"}},"name":"Alice"}', $event->values[0]['after']['j']);
     }
 
     public function testShouldRotateLog(): void
@@ -315,13 +389,7 @@ class BasicTest extends BaseCase
 
         self::assertInstanceOf(RotateDTO::class, $this->getEvent());
 
-        self::assertMatchesRegularExpression(
-            '/^[a-z-]+\.[\d]+$/',
-            $this->getEvent()
-                ->getEventInfo()
-                ->binLogCurrent
-                ->getBinFileName()
-        );
+        self::assertMatchesRegularExpression('/^[a-z-]+\.[\d]+$/', $this->getEvent() ->getEventInfo() ->binLogCurrent ->getBinFileName());
     }
 
     public function testShouldUseProvidedEventDispatcher(): void
@@ -347,12 +415,7 @@ class BasicTest extends BaseCase
 
     private function connectWithProvidedEventDispatcher(EventDispatcherInterface $eventDispatcher): void
     {
-        $this->mySQLReplicationFactory = new MySQLReplicationFactory(
-            $this->configBuilder->build(),
-            null,
-            null,
-            $eventDispatcher
-        );
+        $this->mySQLReplicationFactory = new MySQLReplicationFactory($this->configBuilder->build(), null, null, $eventDispatcher);
 
         $connection = $this->mySQLReplicationFactory->getDbConnection();
         if ($connection === null) {
