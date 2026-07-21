@@ -43,7 +43,10 @@ readonly class TableMapBuilder
 
         $tableMapMetadata = $this->parseMetadata($binaryDataReader, $eventInfo, $rawColumnDTOs);
 
-        if ($tableMapMetadata !== null) {
+        // binlog_row_metadata=MINIMAL still writes a metadata block (e.g. signedness) but
+        // never column names; only FULL emits COLUMN_NAME for every column, so an empty
+        // columnNames list means we don't actually have enough to skip information_schema.
+        if ($tableMapMetadata !== null && $tableMapMetadata->columnNames !== []) {
             $this->logger->debug('Resolving column metadata for ' . $schemaName . '.' . $tableName . ' from TABLE_MAP_EVENT metadata');
             $fieldDTOCollection = $this->makeFieldDTOCollectionFromMetadata($rawColumnDTOs, $tableMapMetadata);
         } else {
