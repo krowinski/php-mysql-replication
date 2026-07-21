@@ -11,6 +11,12 @@ use MySQLReplication\Repository\FieldDTO;
 
 readonly class ColumnDTO implements JsonSerializable
 {
+    private array $enumValues;
+
+    private array $setValues;
+
+    private bool $unsigned;
+
     public function __construct(
         public FieldDTO $fieldDTO,
         public int $type,
@@ -23,6 +29,9 @@ readonly class ColumnDTO implements JsonSerializable
         public int $bits,
         public int $bytes
     ) {
+        $this->enumValues = $this->type === ConstFieldType::ENUM ? explode(',', str_replace(['enum(', ')', '\''], '', $this->fieldDTO->columnType)) : [];
+        $this->setValues = $this->type === ConstFieldType::SET ? explode(',', str_replace(['set(', ')', '\''], '', $this->fieldDTO->columnType)) : [];
+        $this->unsigned = !(stripos($this->fieldDTO->columnType, 'unsigned') === false);
     }
 
     public static function make(int $columnType, FieldDTO $fieldDTO, BinaryDataReader $binaryDataReader): self
@@ -74,18 +83,7 @@ readonly class ColumnDTO implements JsonSerializable
             $bytes = (int)(($bits + 7) / 8);
         }
 
-        return new self(
-            $fieldDTO,
-            $columnType,
-            $maxLength,
-            $size,
-            $fsp,
-            $lengthSize,
-            $precision,
-            $decimals,
-            $bits,
-            $bytes
-        );
+        return new self($fieldDTO, $columnType, $maxLength, $size, $fsp, $lengthSize, $precision, $decimals, $bits, $bytes);
     }
 
     public function getName(): string
@@ -95,25 +93,17 @@ readonly class ColumnDTO implements JsonSerializable
 
     public function getEnumValues(): array
     {
-        if ($this->type === ConstFieldType::ENUM) {
-            return explode(',', str_replace(['enum(', ')', '\''], '', $this->fieldDTO->columnType));
-        }
-
-        return [];
+        return $this->enumValues;
     }
 
     public function getSetValues(): array
     {
-        if ($this->type === ConstFieldType::SET) {
-            return explode(',', str_replace(['set(', ')', '\''], '', $this->fieldDTO->columnType));
-        }
-
-        return [];
+        return $this->setValues;
     }
 
     public function isUnsigned(): bool
     {
-        return !(stripos($this->fieldDTO->columnType, 'unsigned') === false);
+        return $this->unsigned;
     }
 
     public function isPrimary(): bool

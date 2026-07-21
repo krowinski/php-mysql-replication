@@ -32,8 +32,17 @@ class MySQLReplicationFactory
     private Event $event;
     private BinLogSocketConnect $binLogSocketConnect;
 
-    public function __construct(Config $config, ?RepositoryInterface $repository = null, ?CacheInterface $cache = null, ?EventDispatcherInterface $eventDispatcher = null, ?SocketInterface $socket = null, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        Config $config,
+        ?RepositoryInterface $repository = null,
+        ?CacheInterface $cache = null,
+        ?EventDispatcherInterface $eventDispatcher = null,
+        ?SocketInterface $socket = null,
+        ?LoggerInterface $logger = null
+    ) {
+        $logger = $logger ?? new NullLogger();
+        $logger->debug('Current config', $config->toArray());
+
         $config->validate();
 
         if ($repository === null) {
@@ -49,7 +58,6 @@ class MySQLReplicationFactory
         }
 
         $cache = $cache ?? new ArrayCache($config->tableCacheSize);
-        $logger = $logger ?? new NullLogger();
         $socket = $socket ?? new Socket();
 
         $this->eventDispatcher = $eventDispatcher ?? new EventDispatcher();
@@ -58,7 +66,13 @@ class MySQLReplicationFactory
 
         $this->event = new Event(
             $this->binLogSocketConnect,
-            new RowEventFactory(new RowEventBuilder($repository, $cache, $config, $this->binLogSocketConnect->getBinLogServerInfo(), $logger)),
+            new RowEventFactory(new RowEventBuilder(
+                $repository,
+                $cache,
+                $config,
+                $this->binLogSocketConnect->getBinLogServerInfo(),
+                $logger
+            )),
             $this->eventDispatcher,
             $cache,
             $config,

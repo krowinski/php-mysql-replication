@@ -32,6 +32,10 @@ class ConfigBuilder
 
     private array $databasesOnly = [];
 
+    private array $tablesIgnore = [];
+
+    private array $databasesIgnore = [];
+
     private array $tablesRegex = [];
 
     private array $databasesRegex = [];
@@ -50,6 +54,8 @@ class ConfigBuilder
 
     private bool $semiSync = false;
 
+    private bool $useTableMapMetadata = true;
+
     public function withGtidAutoPosition(bool $gtidAutoPosition = true): self
     {
         $this->gtidAutoPosition = $gtidAutoPosition;
@@ -65,6 +71,22 @@ class ConfigBuilder
     public function withSemiSync(bool $semiSync = true): self
     {
         $this->semiSync = $semiSync;
+
+        return $this;
+    }
+
+    /**
+     * When true (default), column names/unsigned flags/ENUM-SET literals/primary key are read
+     * from the TABLE_MAP_EVENT's optional metadata fields (written when the server has
+     * binlog_row_metadata=FULL), avoiding an information_schema query per table. Falls back to
+     * information_schema when that metadata isn't present (binlog_row_metadata=MINIMAL, or a
+     * server/version that doesn't write it, e.g. MariaDB). Set to false to always use
+     * information_schema, e.g. if you need COLLATION_NAME/CHARACTER_SET_NAME/COLUMN_COMMENT,
+     * which aren't available from the binlog metadata.
+     */
+    public function withUseTableMapMetadata(bool $useTableMapMetadata = true): self
+    {
+        $this->useTableMapMetadata = $useTableMapMetadata;
 
         return $this;
     }
@@ -170,6 +192,20 @@ class ConfigBuilder
         return $this;
     }
 
+    public function withTablesIgnore(array $tablesIgnore): self
+    {
+        $this->tablesIgnore = $tablesIgnore;
+
+        return $this;
+    }
+
+    public function withDatabasesIgnore(array $databasesIgnore): self
+    {
+        $this->databasesIgnore = $databasesIgnore;
+
+        return $this;
+    }
+
     public function withDatabasesRegex(array $databasesRegex): self
     {
         $this->databasesRegex = $databasesRegex;
@@ -238,6 +274,9 @@ class ConfigBuilder
             $this->databasesRegex,
             $this->gtidAutoPosition,
             $this->semiSync,
+            $this->useTableMapMetadata,
+            $this->tablesIgnore,
+            $this->databasesIgnore,
         );
     }
 }

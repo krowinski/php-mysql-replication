@@ -108,6 +108,8 @@ Use `ConfigBuilder` or `ConfigFactory` to create configuration.
 | `eventsIgnore` | array of events to ignore (full list in [ConstEventType.php](https://github.com/krowinski/php-mysql-replication/blob/master/src/MySQLReplication/Definitions/ConstEventType.php)) |
 | `tablesOnly` | array to only listen on given tables (default all tables) |
 | `databasesOnly` | array to only listen on given databases (default all databases) |
+| `tablesIgnore` | array of tables to ignore (default none) |
+| `databasesIgnore` | array of databases to ignore (default none) |
 | `tablesRegex` | array of regex patterns to only listen on matching tables (default all tables) |
 | `databasesRegex` | array of regex patterns to only listen on matching databases (default all databases) |
 | `tableCacheSize` | some data is collected from the information schema; this data is cached |
@@ -116,6 +118,7 @@ Use `ConfigBuilder` or `ConfigFactory` to create configuration.
 | `slaveUuid` | sets slave uuid for identification (default `0015d2b6-8a06-4e5e-8c07-206ef3fbd274`) |
 | `gtidAutoPosition` | enables GTID auto positioning, letting the master decide where to start streaming from based on the GTID set already processed (default `false`) |
 | `semiSync` | opt in to semi-sync replication. If the master doesn't have `rpl_semi_sync_master_enabled`/`rpl_semi_sync_source_enabled` = `ON`, this is silently ignored and the connection falls back to async replication (default `false`) |
+| `useTableMapMetadata` | read column names/unsigned flags/ENUM-SET literals/primary key from the `TABLE_MAP_EVENT`'s optional metadata (requires `binlog_row_metadata=FULL` on the server), avoiding an `information_schema` query per table. Falls back to `information_schema` when that metadata isn't present. Set to `false` to always use `information_schema`, e.g. if you need `COLLATION_NAME`/`CHARACTER_SET_NAME`/`COLUMN_COMMENT` (default `true`) |
 
 ## 💡 Examples
 

@@ -108,6 +108,18 @@ class ConfigTest extends TestCase
         self::assertFalse($config->semiSync);
     }
 
+    public function testShouldSetUseTableMapMetadata(): void
+    {
+        $config = (new ConfigBuilder())->build();
+        self::assertTrue($config->useTableMapMetadata);
+
+        $config = (new ConfigBuilder())->withUseTableMapMetadata()->build();
+        self::assertTrue($config->useTableMapMetadata);
+
+        $config = (new ConfigBuilder())->withUseTableMapMetadata(false)->build();
+        self::assertFalse($config->useTableMapMetadata);
+    }
+
     public function testShouldCheckDataBasesOnly(): void
     {
         $config = (new ConfigBuilder())->withDatabasesOnly(['boo'])->build();
@@ -172,6 +184,30 @@ class ConfigTest extends TestCase
         self::assertTrue($config->checkTablesOnly('instanceX'));
     }
 
+    public function testShouldCheckDataBasesIgnore(): void
+    {
+        $config = (new ConfigBuilder())->build();
+        self::assertFalse($config->checkDataBasesIgnore('foo'));
+
+        $config = (new ConfigBuilder())->withDatabasesIgnore(['foo'])->build();
+        self::assertTrue($config->checkDataBasesIgnore('foo'));
+
+        $config = (new ConfigBuilder())->withDatabasesIgnore(['foo'])->build();
+        self::assertFalse($config->checkDataBasesIgnore('bar'));
+    }
+
+    public function testShouldCheckTablesIgnore(): void
+    {
+        $config = (new ConfigBuilder())->build();
+        self::assertFalse($config->checkTablesIgnore('foo'));
+
+        $config = (new ConfigBuilder())->withTablesIgnore(['foo'])->build();
+        self::assertTrue($config->checkTablesIgnore('foo'));
+
+        $config = (new ConfigBuilder())->withTablesIgnore(['foo'])->build();
+        self::assertFalse($config->checkTablesIgnore('bar'));
+    }
+
     public function testShouldCheckEvent(): void
     {
         $config = (new ConfigBuilder())->build();
@@ -192,9 +228,8 @@ class ConfigTest extends TestCase
         return [[0], [0.0], [0.001], [4294967], [2]];
     }
 
-    #[DataProvider('shouldCheckHeartbeatPeriodProvider')] public function testShouldCheckHeartbeatPeriod(
-        int|float $heartbeatPeriod
-    ): void {
+    #[DataProvider('shouldCheckHeartbeatPeriodProvider')] public function testShouldCheckHeartbeatPeriod(int|float $heartbeatPeriod): void
+    {
         $config = (new ConfigBuilder())->withHeartbeatPeriod($heartbeatPeriod)
             ->build();
         $config->validate();
@@ -215,34 +250,15 @@ class ConfigTest extends TestCase
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_MESSAGE,
                 ConfigException::BIN_LOG_FILE_POSITION_ERROR_CODE,
             ],
-            [
-                'tableCacheSize',
-                -1,
-                ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE,
-                ConfigException::TABLE_CACHE_SIZE_ERROR_CODE,
-            ],
-            [
-                'heartbeatPeriod',
-                4294968,
-                ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE,
-                ConfigException::HEARTBEAT_PERIOD_ERROR_CODE,
-            ],
-            [
-                'heartbeatPeriod',
-                -1,
-                ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE,
-                ConfigException::HEARTBEAT_PERIOD_ERROR_CODE,
-            ],
+            ['tableCacheSize', -1, ConfigException::TABLE_CACHE_SIZE_ERROR_MESSAGE, ConfigException::TABLE_CACHE_SIZE_ERROR_CODE],
+            ['heartbeatPeriod', 4294968, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
+            ['heartbeatPeriod', -1, ConfigException::HEARTBEAT_PERIOD_ERROR_MESSAGE, ConfigException::HEARTBEAT_PERIOD_ERROR_CODE],
         ];
     }
 
     #[DataProvider('shouldValidateProvider')]
-    public function testShouldValidate(
-        string $configKey,
-        mixed $configValue,
-        string $expectedMessage,
-        int $expectedCode
-    ): void {
+    public function testShouldValidate(string $configKey, mixed $configValue, string $expectedMessage, int $expectedCode): void
+    {
         $this->expectException(ConfigException::class);
         $this->expectExceptionMessage($expectedMessage);
         $this->expectExceptionCode($expectedCode);

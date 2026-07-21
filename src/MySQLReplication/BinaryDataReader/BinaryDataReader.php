@@ -38,14 +38,30 @@ class BinaryDataReader
 
     private int $readBytes = 0;
 
+    private int $offset = 0;
+
+    private string $pushback = '';
+
+    private bool $hasPushback = false;
+
     public function __construct(
-        private string $binaryData
+        private readonly string $binaryData
     ) {
     }
 
     public static function pack64bit(int $value): string
     {
-        return pack('C8', ($value >> 0) & 0xFF, ($value >> 8) & 0xFF, ($value >> 16) & 0xFF, ($value >> 24) & 0xFF, ($value >> 32) & 0xFF, ($value >> 40) & 0xFF, ($value >> 48) & 0xFF, ($value >> 56) & 0xFF);
+        return pack(
+            'C8',
+            ($value >> 0) & 0xFF,
+            ($value >> 8) & 0xFF,
+            ($value >> 16) & 0xFF,
+            ($value >> 24) & 0xFF,
+            ($value >> 32) & 0xFF,
+            ($value >> 40) & 0xFF,
+            ($value >> 48) & 0xFF,
+            ($value >> 56) & 0xFF
+        );
     }
 
     public function advance(int $length): void
@@ -60,17 +76,43 @@ class BinaryDataReader
 
     public function read(int $length): string
     {
-        $return = substr($this->binaryData, 0, $length);
         $this->readBytes += $length;
-        $this->binaryData = substr($this->binaryData, $length);
 
-        return $return;
+        // unread() is only ever used to push back a single byte that gets re-read immediately
+        // (peeking a marker/sign byte), so this flag keeps the hot, pushback-free path free of
+        // a strlen() call on every single field read.
+        if (!$this->hasPushback) {
+            $offset = $this->offset;
+            $this->offset = $offset + $length;
+
+            // Single-byte reads (readUInt8/readInt8/marker peeks/bitmap bytes) dominate call
+            // volume — direct offset access skips the substr() call entirely for that case.
+            return $length === 1 ? $this->binaryData[$offset] : substr($this->binaryData, $offset, $length);
+        }
+
+        $pushbackLength = strlen($this->pushback);
+        if ($length <= $pushbackLength) {
+            $result = substr($this->pushback, 0, $length);
+            $this->pushback = substr($this->pushback, $length);
+            $this->hasPushback = $this->pushback !== '';
+
+            return $result;
+        }
+
+        $fromBinary = $length - $pushbackLength;
+        $result = $this->pushback . substr($this->binaryData, $this->offset, $fromBinary);
+        $this->pushback = '';
+        $this->hasPushback = false;
+        $this->offset += $fromBinary;
+
+        return $result;
     }
 
     public function unread(string $data): void
     {
         $this->readBytes -= strlen($data);
-        $this->binaryData = $data . $this->binaryData;
+        $this->pushback = $data . $this->pushback;
+        $this->hasPushback = true;
     }
 
     public function readCodedBinary(): int|string|null
@@ -121,8 +163,13 @@ class BinaryDataReader
     public function unpackUInt64(string $binary): string
     {
         $data = self::unpack('V*', $binary);
+        $high = (int)$data[2];
+        // Value fits in 32 bits (the common case for ids/timestamps) — skip bcmath, it's slow and unneeded here.
+        if ($high === 0) {
+            return (string)(int)$data[1];
+        }
 
-        return bcadd((string)(int)$data[1], bcmul((string)(int)$data[2], bcpow('2', '32')));
+        return bcadd((string)(int)$data[1], bcmul((string)$high, bcpow('2', '32')));
     }
 
     public function readInt24(): int
@@ -140,8 +187,13 @@ class BinaryDataReader
     public function readInt64(): string
     {
         $data = self::unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
+        $high = (int)$data[2];
+        // Value fits in 32 bits (the common case for ids/timestamps) — skip bcmath, it's slow and unneeded here.
+        if ($high === 0) {
+            return (string)(int)$data[1];
+        }
 
-        return bcadd((string)(int)$data[1], (string)((int)$data[2] << 32));
+        return bcadd((string)(int)$data[1], (string)($high << 32));
     }
 
     public function readLengthString(int $size): string
@@ -298,12 +350,12 @@ class BinaryDataReader
 
     public function getBinaryDataLength(): int
     {
-        return strlen($this->binaryData);
+        return strlen($this->pushback) + strlen($this->binaryData) - $this->offset;
     }
 
     public function getBinaryData(): string
     {
-        return $this->binaryData;
+        return $this->pushback . substr($this->binaryData, $this->offset);
     }
 
     public function getBinarySlice(int $binary, int $start, int $size, int $binaryLength): int
@@ -344,7 +396,15 @@ class BinaryDataReader
 
     private function readUInt64AsIntOrString(): int|string
     {
-        $value = $this->readUInt64();
+        $data = self::unpack('V*', $this->read(self::UNSIGNED_INT64_LENGTH));
+        $high = (int)$data[2];
+        // Value fits in 32 bits (the common case for ids/timestamps) — skip bcmath, it's slow and unneeded here.
+        if ($high === 0) {
+            return (int)$data[1];
+        }
+
+        $value = bcadd((string)(int)$data[1], bcmul((string)$high, bcpow('2', '32')));
+
         return bccomp($value, (string)PHP_INT_MAX) <= 0 ? (int)$value : $value;
     }
 }
