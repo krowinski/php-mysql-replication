@@ -64,7 +64,7 @@ class BinLogSocketConnect
         if ($header === '') {
             return '';
         }
-        $dataLength = BinaryDataReader::unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
+        $dataLength = BinaryDataReader::unpack('V', $header[0] . $header[1] . $header[2] . chr(0))[1];
         $isMaxDataLength = $dataLength === $this->binaryDataMaxLength;
 
         $result = $this->socket->readFromSocket($dataLength);
@@ -78,7 +78,7 @@ class BinLogSocketConnect
             if ($header === '') {
                 return $result;
             }
-            $dataLength = BinaryDataReader::unpack('L', $header[0] . $header[1] . $header[2] . chr(0))[1];
+            $dataLength = BinaryDataReader::unpack('V', $header[0] . $header[1] . $header[2] . chr(0))[1];
             $isMaxDataLength = $dataLength === $this->binaryDataMaxLength;
             $next_result = $this->socket->readFromSocket($dataLength);
             $result .= $next_result;
@@ -111,7 +111,7 @@ class BinLogSocketConnect
             . BinaryDataReader::pack64bit((int)$this->binLogCurrent->getBinLogPosition())
             . $this->binLogCurrent->getBinFileName();
 
-        $this->socket->writeToSocket(pack('l', strlen($payload)) . $payload);
+        $this->socket->writeToSocket(pack('V', strlen($payload)) . $payload);
 
         $this->logger->debug('Semi-sync ACK sent for ' . $this->binLogCurrent->getBinFileName() . ':' . $this->binLogCurrent->getBinLogPosition());
     }
@@ -135,15 +135,15 @@ class BinLogSocketConnect
     {
         $this->logger->debug('Trying to authenticate user: ' . $this->config->user . ' using ' . $authPlugin->value . ' default plugin');
 
-        $data = pack('L', self::getCapabilities());
-        $data .= pack('L', $this->binaryDataMaxLength);
+        $data = pack('V', self::getCapabilities());
+        $data .= pack('V', $this->binaryDataMaxLength);
         $data .= chr(33);
         $data .= str_repeat(chr(0), 23);
         $data .= $this->config->user . chr(0);
         $auth = $this->getAuthData($authPlugin, $this->binLogServerInfo->salt);
         $data .= chr(strlen($auth) & 0xFF) . $auth;
         $data .= $authPlugin->value . chr(0);
-        $str = pack('L', strlen($data));
+        $str = pack('V', strlen($data));
         $s = $str[0] . $str[1] . $str[2];
         $data = $s . chr(1) . $data;
 
@@ -276,7 +276,7 @@ class BinLogSocketConnect
 
     private function executeSQL(string $sql): void
     {
-        $this->socket->writeToSocket(pack('LC', strlen($sql) + 1, 0x03) . $sql);
+        $this->socket->writeToSocket(pack('VC', strlen($sql) + 1, 0x03) . $sql);
         $this->getResponse();
     }
 
@@ -290,7 +290,7 @@ class BinLogSocketConnect
         $userLength = strlen($this->config->user);
         $passLength = strlen($this->config->password);
 
-        $data = pack('l', 18 + $hostLength + $userLength + $passLength);
+        $data = pack('V', 18 + $hostLength + $userLength + $passLength);
         $data .= chr(self::COM_REGISTER_SLAVE);
         $data .= pack('V', $this->config->slaveId);
         $data .= pack('C', $hostLength);
@@ -325,15 +325,15 @@ class BinLogSocketConnect
     {
         $collection = GtidCollection::makeCollectionFromString($gtid);
 
-        $data = pack('l', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
-        $data .= pack('S', 0);
-        $data .= pack('I', $this->config->slaveId);
-        $data .= pack('I', 3);
+        $data = pack('V', 26 + $collection->getEncodedLength()) . chr(self::COM_BINLOG_DUMP_GTID);
+        $data .= pack('v', 0);
+        $data .= pack('V', $this->config->slaveId);
+        $data .= pack('V', 3);
         $data .= chr(0);
         $data .= chr(0);
         $data .= chr(0);
         $data .= BinaryDataReader::pack64bit(4);
-        $data .= pack('I', $collection->getEncodedLength());
+        $data .= pack('V', $collection->getEncodedLength());
         $data .= $collection->getEncoded();
 
         $this->socket->writeToSocket($data);
@@ -362,10 +362,10 @@ class BinLogSocketConnect
             $binFileName = $masterStatusDTO->file;
         }
 
-        $data = pack('i', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
-        $data .= pack('I', $binFilePos);
+        $data = pack('V', strlen($binFileName) + 11) . chr(self::COM_BINLOG_DUMP);
+        $data .= pack('V', $binFilePos);
         $data .= pack('v', 0);
-        $data .= pack('I', $this->config->slaveId);
+        $data .= pack('V', $this->config->slaveId);
         $data .= $binFileName;
 
         $this->socket->writeToSocket($data);
@@ -387,7 +387,7 @@ class BinLogSocketConnect
 
         $this->logger->debug('Auth switch packet received, switching to ' . $authPluginSwitched->value);
 
-        $this->socket->writeToSocket(pack('L', (strlen($auth)) | (3 << 24)) . $auth);
+        $this->socket->writeToSocket(pack('V', (strlen($auth)) | (3 << 24)) . $auth);
 
         // caching_sha2_password sends an AuthMoreData packet (0x01 status byte)
         // followed by either fast_auth_success (0x03) or perform_full_authentication

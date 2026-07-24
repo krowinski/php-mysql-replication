@@ -71,7 +71,9 @@ class BinaryDataReader
 
     public function readInt16(): int
     {
-        return self::unpack('s', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $re = self::unpack('v', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+
+        return $re >= 0x8000 ? $re - 0x10000 : $re;
     }
 
     public function read(int $length): string
@@ -238,13 +240,13 @@ class BinaryDataReader
 
     public function readUInt32(): int
     {
-        return self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        return self::unpack('V', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
     }
 
     public function readUInt40(): int
     {
         $data1 = self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
-        $data2 = self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $data2 = self::unpack('V', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
 
         return $data1 + ($data2 << 8);
     }
@@ -259,8 +261,8 @@ class BinaryDataReader
     public function readUInt56(): int
     {
         $data1 = self::unpack('C', $this->read(self::UNSIGNED_CHAR_LENGTH))[1];
-        $data2 = self::unpack('S', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
-        $data3 = self::unpack('I', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $data2 = self::unpack('v', $this->read(self::UNSIGNED_SHORT_LENGTH))[1];
+        $data3 = self::unpack('V', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
 
         return $data1 + ($data2 << 8) + ($data3 << 24);
     }
@@ -325,17 +327,19 @@ class BinaryDataReader
 
     public function readInt32(): int
     {
-        return self::unpack('i', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+        $re = self::unpack('V', $this->read(self::UNSIGNED_INT32_LENGTH))[1];
+
+        return $re >= 0x80000000 ? $re - 0x100000000 : $re;
     }
 
     public function readFloat(): float
     {
-        return self::unpack('f', $this->read(self::UNSIGNED_FLOAT_LENGTH))[1];
+        return self::unpack('g', $this->read(self::UNSIGNED_FLOAT_LENGTH))[1];
     }
 
     public function readDouble(): float
     {
-        return self::unpack('d', $this->read(self::UNSIGNED_DOUBLE_LENGTH))[1];
+        return self::unpack('e', $this->read(self::UNSIGNED_DOUBLE_LENGTH))[1];
     }
 
     public function readTableId(): string

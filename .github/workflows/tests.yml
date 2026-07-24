@@ -1,5 +1,11 @@
 name: PHP Tests
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -53,3 +59,23 @@ jobs:
 
       - name: Run tests
         run: vendor/bin/phpunit --coverage-text --testdox
+
+  big-endian-unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests (big-endian / s390x)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: s390x
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest --ignore-platform-reqs
+
+      - name: Run unit tests under emulated big-endian arch
+        run: |
+          docker run --rm --platform linux/s390x -v "$PWD":/app -w /app php:8.4-cli \
+            sh -c 'docker-php-ext-install bcmath >/dev/null && php vendor/bin/phpunit --testsuite "Unit Suite"'

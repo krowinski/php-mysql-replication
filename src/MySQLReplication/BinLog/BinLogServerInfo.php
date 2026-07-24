@@ -42,7 +42,7 @@ readonly class BinLogServerInfo
         }
 
         //connection_id 4 bytes
-        $connectionId = BinaryDataReader::unpack('I', $data[$i] . $data[++$i] . $data[++$i] . $data[++$i])[1];
+        $connectionId = BinaryDataReader::unpack('V', $data[$i] . $data[++$i] . $data[++$i] . $data[++$i])[1];
         ++$i;
 
         //auth_plugin_data_part_1

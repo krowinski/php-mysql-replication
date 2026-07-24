@@ -127,5 +127,6 @@ class BinLogServerInfoTest extends TestCase
         self::assertSame(45, $info->characterSet);
         self::assertSame(10, $info->protocolVersion);
         self::assertSame('8.0.28', $info->serverVersion);
+        self::assertSame(7, $info->connectionId);
     }
 }

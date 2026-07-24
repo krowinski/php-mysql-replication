@@ -23,15 +23,15 @@ class BinaryDataReaderTest extends TestCase
     {
         self::assertSame(0, $this->getBinaryRead(pack('C', ''))->readCodedBinary());
         self::assertNull($this->getBinaryRead(pack('C', BinaryDataReader::NULL_COLUMN))->readCodedBinary());
-        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary());
-        self::assertSame(0, $this->getBinaryRead(pack('i', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary());
+        self::assertSame(0, $this->getBinaryRead(pack('V', BinaryDataReader::UNSIGNED_SHORT_COLUMN))->readCodedBinary());
+        self::assertSame(0, $this->getBinaryRead(pack('V', BinaryDataReader::UNSIGNED_INT24_COLUMN))->readCodedBinary());
     }
 
     public function testShouldThrowErrorOnUnknownCodedBinary(): void
     {
         $this->expectException(BinaryDataReaderException::class);
 
-        $this->getBinaryRead(pack('i', 255))
+        $this->getBinaryRead(pack('V', 255))
             ->readCodedBinary();
     }
 
@@ -59,10 +59,10 @@ class BinaryDataReaderTest extends TestCase
             [1, pack('c', 1), 1],
             [2, pack('v', 9999), 9999],
             [3, pack('CCC', 160, 190, 15), 1031840],
-            [4, pack('I', 123123543), 123123543],
-            [5, pack('CI', 71, 2570258120), 657986078791],
+            [4, pack('V', 123123543), 123123543],
+            [5, pack('CV', 71, 2570258120), 657986078791],
             [6, pack('v3', 2570258120, 2570258120, 2570258120), 7456176998088],
-            [7, pack('CSI', 66, 7890, 2570258120), 43121775657013826],
+            [7, pack('CvV', 66, 7890, 2570258120), 43121775657013826],
             [8, pack('C8', 1, 2, 3, 4, 5, 6, 7, 8), 578437695752307201],
         ];
     }
@@ -93,7 +93,7 @@ class BinaryDataReaderTest extends TestCase
 
     public static function dataProviderForBeInt(): array
     {
-        return [[1, pack('c', 4), 4], [2, pack('n', 9999), 9999], [3, pack('CCC', 160, 190, 15), -6242801], [4, pack('i', 123123543), 1471632903], [5, pack('NC', 71, 2570258120), 18376]];
+        return [[1, pack('c', 4), 4], [2, pack('n', 9999), 9999], [3, pack('CCC', 160, 190, 15), -6242801], [4, pack('N', 123123543), 123123543], [5, pack('NC', 71, 2570258120), 18376]];
     }
 
     #[DataProvider('dataProviderForBeInt')] public function testShouldReadIntBeBySize(int $size, string $data, int $expected): void
@@ -112,7 +112,7 @@ class BinaryDataReaderTest extends TestCase
     public function testShouldReadInt16(): void
     {
         $expected = 1000;
-        self::assertSame($expected, $this->getBinaryRead(pack('s', $expected))->readInt16());
+        self::assertSame($expected, $this->getBinaryRead(pack('v', $expected))->readInt16());
     }
 
     public function testShouldUnreadAdvance(): void
@@ -152,20 +152,20 @@ class BinaryDataReaderTest extends TestCase
     public function testShouldReadInt32(): void
     {
         $expected = 777333;
-        self::assertSame($expected, $this->getBinaryRead(pack('i', $expected))->readInt32());
+        self::assertSame($expected, $this->getBinaryRead(pack('V', $expected))->readInt32());
     }
 
     public function testShouldReadFloat(): void
     {
         $expected = 0.001;
         // we need to add round as php have problem with precision in floats
-        self::assertSame($expected, round($this->getBinaryRead(pack('f', $expected))->readFloat(), 3));
+        self::assertSame($expected, round($this->getBinaryRead(pack('g', $expected))->readFloat(), 3));
     }
 
     public function testShouldReadDouble(): void
     {
         $expected = 1321312312.143567586;
-        self::assertSame($expected, $this->getBinaryRead(pack('d', $expected))->readDouble());
+        self::assertSame($expected, $this->getBinaryRead(pack('e', $expected))->readDouble());
     }
 
     public function testShouldReadTableId(): void
@@ -196,5 +196,44 @@ class BinaryDataReaderTest extends TestCase
     private function getBinaryRead(string $data): BinaryDataReader
     {
         return new BinaryDataReader($data);
+    }
+
+    // The fixtures below are hand-built little-endian byte strings (never via pack('s'/'i'/'f'/'d'),
+    // which are native-byte-order and would silently mask the same bug on a little-endian host).
+    // Byte patterns are asymmetric so a big-endian misread produces a different, wrong value.
+
+    public function testShouldReadInt16LittleEndian(): void
+    {
+        self::assertSame(-32767, $this->getBinaryRead("\x01\x80")->readInt16());
+    }
+
+    public function testShouldReadInt32LittleEndian(): void
+    {
+        self::assertSame(-2147483647, $this->getBinaryRead("\x01\x00\x00\x80")->readInt32());
+    }
+
+    public function testShouldReadUInt32LittleEndian(): void
+    {
+        self::assertSame(2147483649, $this->getBinaryRead("\x01\x00\x00\x80")->readUInt32());
+    }
+
+    public function testShouldReadUInt40LittleEndian(): void
+    {
+        self::assertSame(591292919723, $this->getBinaryRead("\xAB\xEF\xCD\xAB\x89")->readUInt40());
+    }
+
+    public function testShouldReadUInt56LittleEndian(): void
+    {
+        self::assertSame(38750972784150017, $this->getBinaryRead("\x01\x06\x80\xEF\xCD\xAB\x89")->readUInt56());
+    }
+
+    public function testShouldReadFloatLittleEndian(): void
+    {
+        self::assertSame(-1.5, $this->getBinaryRead("\x00\x00\xC0\xBF")->readFloat());
+    }
+
+    public function testShouldReadDoubleLittleEndian(): void
+    {
+        self::assertSame(-1.5, $this->getBinaryRead("\x00\x00\x00\x00\x00\x00\xF8\xBF")->readDouble());
     }
 }

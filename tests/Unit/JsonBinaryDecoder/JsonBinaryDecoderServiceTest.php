@@ -37,7 +37,7 @@ class JsonBinaryDecoderServiceTest extends TestCase
     public function testShouldParseInt16Scalar(): void
     {
         // type=INT16(5) + int16 value 42
-        $binary = pack('C', JsonBinaryDecoderService::INT16) . pack('s', 42);
+        $binary = pack('C', JsonBinaryDecoderService::INT16) . pack('v', 42);
         $service = JsonBinaryDecoderService::makeJsonBinaryDecoder($binary);
         self::assertSame('"42"', $service->parseToString());
     }
@@ -53,7 +53,7 @@ class JsonBinaryDecoderServiceTest extends TestCase
     public function testShouldParseDouble(): void
     {
         // type=DOUBLE(11) + double value
-        $binary = pack('C', JsonBinaryDecoderService::DOUBLE) . pack('d', 3.14);
+        $binary = pack('C', JsonBinaryDecoderService::DOUBLE) . pack('e', 3.14);
         $service = JsonBinaryDecoderService::makeJsonBinaryDecoder($binary);
         $result = $service->parseToString();
         self::assertStringContainsString('3.14', $result);

@@ -71,3 +71,20 @@ services:
     ports:
       - "3401:3306/tcp"
     restart: unless-stopped
+
+  tests-big-endian:
+    container_name: php-s390x-tests
+    image: php:8.4-cli
+    platform: linux/s390x
+    profiles: ["big-endian"]
+    depends_on:
+      - replication-test-mysql
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - DB_HOST=replication-test-mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root
+    command: sh -c "docker-php-ext-install bcmath sockets pdo_mysql >/dev/null && php vendor/bin/phpunit"
