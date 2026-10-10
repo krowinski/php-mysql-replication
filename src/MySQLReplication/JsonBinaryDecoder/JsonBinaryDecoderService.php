@@ -238,13 +238,15 @@ readonly class JsonBinaryDecoderService
         $type = $this->binaryDataReader->readUInt8();
 
         if (self::isInLinedType($type, $intSize)) {
+            $start = $this->binaryDataReader->getReadBytes();
             $scalar = $this->parseScalar($type);
 
-            // In binlog format, JSON arrays are fixed width elements, even though type value can be smaller.
-            // In order to properly process this case, we need to move cursor to the next element, which is on position 1 + $valueEntrySize (1 is length of type)
-            if ($type === self::UINT16 || $type === self::INT16) {
-                $readNextBytes = $valueEntrySize - 2 - 1;
-                $this->binaryDataReader->read($readNextBytes);
+            // Value entries are fixed width (1 type byte + 2 bytes small / 4 bytes large) even when
+            // the inlined value is shorter, e.g. a literal or an int16 in a large (> 64 KiB)
+            // document. Skip the rest of the slot so the next entry is read from its own start.
+            $slack = $valueEntrySize - 1 - ($this->binaryDataReader->getReadBytes() - $start);
+            if ($slack > 0) {
+                $this->binaryDataReader->read($slack);
             }
 
             return $scalar;
