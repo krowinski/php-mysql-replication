@@ -47,6 +47,27 @@ class TableMapMetadataTest extends TestCase
         self::assertFalse($metadata->isPrimaryKey(1));
     }
 
+    public function testYearAndOldDecimalColumnsOccupyASignednessBit(): void
+    {
+        // MySQL/MariaDB write a SIGNEDNESS bit for every column whose binlog type carries a sign
+        // modifier, which includes YEAR and the pre-5.0 DECIMAL (has_signedess_information_type()).
+        // Columns: YEAR, INT UNSIGNED, old DECIMAL, BIGINT (signed), INT UNSIGNED -> bits 0,1,0,0,1
+        $types = [
+            0 => ConstFieldType::YEAR,
+            1 => ConstFieldType::LONG,
+            2 => ConstFieldType::DECIMAL,
+            3 => ConstFieldType::LONGLONG,
+            4 => ConstFieldType::LONG,
+        ];
+        $blob = chr(ConstTableMapMetadataFieldType::SIGNEDNESS) . chr(1) . chr(0b01001000);
+
+        $metadata = TableMapMetadata::parse(new BinaryDataReader($blob), strlen($blob), $types);
+
+        self::assertTrue($metadata->isUnsigned(1));
+        self::assertFalse($metadata->isUnsigned(3));
+        self::assertTrue($metadata->isUnsigned(4));
+    }
+
     public function testShouldFallBackToGeneratedNameWhenMissing(): void
     {
         $metadata = TableMapMetadata::parse(new BinaryDataReader(''), 0, self::RESOLVED_COLUMN_TYPES);

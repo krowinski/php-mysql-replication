@@ -16,15 +16,24 @@ use MySQLReplication\Definitions\ConstTableMapMetadataFieldType;
  */
 readonly class TableMapMetadata
 {
+    /**
+     * Binlog types that own a bit in the SIGNEDNESS field. Must match the server's
+     * has_signedess_information_type() (sql/field_common_properties.h in MySQL 8.0/8.4;
+     * MariaDB's Field_year inherits Field_num signedness too): YEAR and the pre-5.0 DECIMAL
+     * carry a sign modifier and therefore a bit, even though it is ignored for YEAR.
+     * Leaving one out shifts every later numeric column's unsigned flag.
+     */
     private const NUMERIC_TYPES = [
         ConstFieldType::TINY,
         ConstFieldType::SHORT,
         ConstFieldType::INT24,
         ConstFieldType::LONG,
         ConstFieldType::LONGLONG,
-        ConstFieldType::NEWDECIMAL,
+        ConstFieldType::YEAR,
         ConstFieldType::FLOAT,
         ConstFieldType::DOUBLE,
+        ConstFieldType::DECIMAL,
+        ConstFieldType::NEWDECIMAL,
     ];
 
     public function __construct(

@@ -51,6 +51,33 @@ class TableMapMetadataTest extends BaseCase
         $this->assertColumnMetadataAndValues($event);
     }
 
+    public function testYearColumnDoesNotShiftTheSignednessOfLaterNumericColumns(): void
+    {
+        // MySQL 8.0 defaults to MINIMAL metadata; FULL adds the column names that make the
+        // decoder use the TABLE_MAP signedness bits instead of information_schema.
+        $variable = $this->connection->fetchAssociative("SHOW GLOBAL VARIABLES LIKE 'binlog_row_metadata'");
+        if ($variable === false) {
+            self::markTestSkipped('Server has no binlog_row_metadata');
+        }
+        $previous = $variable['Value'];
+        $this->connection->executeStatement('SET GLOBAL binlog_row_metadata = FULL');
+        try {
+            $event = $this->createAndInsertValue(
+                'CREATE TABLE test (y YEAR, a INT UNSIGNED, b INT, c BIGINT UNSIGNED, d TINYINT)',
+                'INSERT INTO test VALUES (2020, 4294967295, -1, 18446744073709551615, -5)'
+            );
+        } finally {
+            $this->connection->executeStatement('SET GLOBAL binlog_row_metadata = ' . $previous);
+        }
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+
+        self::assertSame(2020, $event->values[0]['y']);
+        self::assertSame(4294967295, $event->values[0]['a']);
+        self::assertSame(-1, $event->values[0]['b']);
+        self::assertSame('18446744073709551615', $event->values[0]['c']);
+        self::assertSame(-5, $event->values[0]['d']);
+    }
+
     private function assertColumnMetadataAndValues(WriteRowsDTO $event): void
     {
         $columns = $event->tableMap->columnDTOCollection;
