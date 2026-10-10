@@ -766,6 +766,44 @@ class TypesTest extends BaseCase
         self::assertEquals('12:33:07.123456', $event->values[0]['test6']);
     }
 
+    public function testShouldKeepLeadingZerosOfTimeAndTimestampFractions(): void
+    {
+        if ($this->checkForVersion(5.6)) {
+            self::markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
+        $event = $this->createAndInsertValue(
+            'CREATE TABLE test (ts3 TIMESTAMP(3) NULL, ts6 TIMESTAMP(6) NULL, ts1 TIMESTAMP(1) NULL, t3 TIME(3), t6 TIME(6), t1 TIME(1))',
+            'INSERT INTO test VALUES ("1984-12-03 12:33:07.012", "1984-12-03 12:33:07.000012", "1984-12-03 12:33:07.0", "00:00:01.012", "00:00:01.000012", "00:00:01.0")'
+        );
+
+        self::assertSame('1984-12-03 12:33:07.012000', $event->values[0]['ts3']);
+        self::assertSame('1984-12-03 12:33:07.000012', $event->values[0]['ts6']);
+        self::assertSame('1984-12-03 12:33:07.000000', $event->values[0]['ts1']);
+        self::assertSame('00:00:01.012000', $event->values[0]['t3']);
+        self::assertSame('00:00:01.000012', $event->values[0]['t6']);
+        self::assertSame('00:00:01.000000', $event->values[0]['t1']);
+    }
+
+    public function testShouldDecodeTimeBeyondADayAndNegativeTime(): void
+    {
+        if ($this->checkForVersion(5.6)) {
+            self::markTestIncomplete('Only for mysql 5.6 or higher');
+        }
+
+        $event = $this->createAndInsertValue(
+            'CREATE TABLE test (a TIME, b TIME, c TIME(2), d TIME(4), e TIME(6), f TIME(6))',
+            'INSERT INTO test VALUES ("30:00:00", "-01:02:03", "-837:59:59.99", "-00:00:00.0001", "838:59:59.000000", "-12:33:07.123456")'
+        );
+
+        self::assertSame('30:00:00', $event->values[0]['a']);
+        self::assertSame('-01:02:03', $event->values[0]['b']);
+        self::assertSame('-837:59:59.990000', $event->values[0]['c']);
+        self::assertSame('-00:00:00.000100', $event->values[0]['d']);
+        self::assertSame('838:59:59.000000', $event->values[0]['e']);
+        self::assertSame('-12:33:07.123456', $event->values[0]['f']);
+    }
+
     public function testShouldBeJson(): void
     {
         if ($this->checkForVersion(5.7) || $this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
