@@ -27,7 +27,7 @@
     "monolog/monolog": "^3.5",
     "phpstan/phpstan": "^2.2",
     "phpstan/phpstan-strict-rules": "^2.0",
-    "phpunit/phpunit": "^12.0",
+    "phpunit/phpunit": "^11.5 || ^12.0",
     "symplify/easy-coding-standard": "^12.1"
   },
   "license": "MIT",
