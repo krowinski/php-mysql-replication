@@ -66,6 +66,67 @@ class BasicTest extends BaseCase
         self::assertEquals('World', $event->values[0]['after']['data']);
     }
 
+    public function testShouldDecodeRowEventsOfAPartitionedTable(): void
+    {
+        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
+            self::markTestSkipped('MariaDB writes no partition info into rows events');
+        }
+
+        // MySQL 8.0.16+ writes the partition id into the extra-row-info of every v2 rows event of a
+        // partitioned table, so the extra data block is longer than its own 2-byte length field.
+        $event = $this->createAndInsertValue(
+            'CREATE TABLE test (id INT NOT NULL, data VARCHAR(50) NOT NULL, PRIMARY KEY (id)) PARTITION BY HASH(id) PARTITIONS 4',
+            'INSERT INTO test VALUES (1, \'Hello\'), (2, \'There\')'
+        );
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+        self::assertSame([[
+            'id' => 1,
+            'data' => 'Hello',
+        ]], $event->values);
+        // the second row lands in another partition, so MySQL writes it as its own rows event
+        $event = $this->getEvent();
+        self::assertInstanceOf(WriteRowsDTO::class, $event);
+        self::assertSame([[
+            'id' => 2,
+            'data' => 'There',
+        ]], $event->values);
+
+        // moving the row to another partition writes both the source and the target partition id
+        $this->connection->executeStatement('UPDATE test SET data = \'World\', id = 3 WHERE id = 1');
+
+        self::assertInstanceOf(XidDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
+
+        /** @var UpdateRowsDTO $event */
+        $event = $this->getEvent();
+        self::assertInstanceOf(UpdateRowsDTO::class, $event);
+        self::assertSame([[
+            'before' => [
+                'id' => 1,
+                'data' => 'Hello',
+            ],
+            'after' => [
+                'id' => 3,
+                'data' => 'World',
+            ],
+        ]], $event->values);
+
+        $this->connection->executeStatement('DELETE FROM test WHERE id = 2');
+
+        self::assertInstanceOf(XidDTO::class, $this->getEvent());
+        self::assertInstanceOf(QueryDTO::class, $this->getEvent());
+        self::assertInstanceOf(TableMapDTO::class, $this->getEvent());
+
+        /** @var DeleteRowsDTO $event */
+        $event = $this->getEvent();
+        self::assertInstanceOf(DeleteRowsDTO::class, $event);
+        self::assertSame([[
+            'id' => 2,
+            'data' => 'There',
+        ]], $event->values);
+    }
+
     public function testShouldGetWriteEventDropTable(): void
     {
         // exercises the information_schema fallback's "table no longer exists" guard, so force it
