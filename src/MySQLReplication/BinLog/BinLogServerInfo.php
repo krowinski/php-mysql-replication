@@ -110,6 +110,8 @@ readonly class BinLogServerInfo
     /**
      * Whether a YEAR column owns a bit in the TABLE_MAP SIGNEDNESS field: always on MariaDB,
      * and on MySQL/Percona from 8.0.22 (before that, is_numeric_type() in sql/field.h left YEAR out).
+     * This follows the connected server, not the server that wrote the binlog file: a file written
+     * with binlog_row_metadata=FULL before an in-place upgrade across 8.0.22 is read with the newer layout.
      */
     public function writesYearSignedness(): bool
     {
