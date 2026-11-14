@@ -721,30 +721,43 @@ class RowEvent extends EventCommon
     }
 
     /**
-     * TIME encoding for non-fractional part:
-     * 1 bit sign    (1= non-negative, 0= negative)
-     * 1 bit unused  (reserved for future extensions)
-     * 10 bits hour   (0-838)
-     * 6 bits minute (0-59)
-     * 6 bits second (0-59)
-     * ---------------------
-     * 24 bits = 3 bytes
+     * TIME2 (MySQL 5.6.4+), my_time_packed_from_binary() in mysys/my_time.cc: a big-endian
+     * integer part offset by 0x800000 (1 bit sign, 1 unused, 10 bits hour, 6 bits minute,
+     * 6 bits second), then 0-3 bytes of fraction whose sign follows the integer part.
+     * Hours run to 838 and values can be negative, so this must not go through DateTime.
      */
     protected function getTime2(ColumnDTO $columnDTO): string
     {
-        $data = $this->binaryDataReader->readInt24Be();
+        $intPart = $this->readUInt24Be() - 0x800000;
+        $fsp = $columnDTO->fsp;
 
-        $hour = $this->binaryDataReader->getBinarySlice($data, 2, 10, 24);
-        $minute = $this->binaryDataReader->getBinarySlice($data, 12, 6, 24);
-        $second = $this->binaryDataReader->getBinarySlice($data, 18, 6, 24);
+        // fraction bytes and the factor that turns them into microseconds
+        [$fracBytes, $scale] = match ($fsp) {
+            1, 2 => [1, 10000],
+            3, 4 => [2, 100],
+            5, 6 => [3, 1],
+            default => [0, 0],
+        };
 
-        $time = (new DateTime())->setTime($hour, $minute, $second)->format('H:i:s');
-        $fsp = $this->getFSP($columnDTO);
-        if ($fsp !== '') {
-            $time .= '.' . $fsp;
+        $frac = match ($fracBytes) {
+            1 => $this->binaryDataReader->readUInt8(),
+            2 => $this->readUInt16Be(),
+            3 => $this->readUInt24Be(),
+            default => 0,
+        };
+        // a negative value stores its fraction as a borrow from the integer part
+        if ($intPart < 0 && $frac !== 0) {
+            ++$intPart;
+            $frac -= 1 << (8 * $fracBytes);
         }
+        $microseconds = $frac * $scale;
 
-        return $time;
+        // keep the parts apart rather than packing them into one 48-bit value, so this also fits 32-bit PHP
+        $sign = $intPart < 0 || $microseconds < 0 ? '-' : '';
+        $hms = abs($intPart);
+        $time = sprintf('%s%02d:%02d:%02d', $sign, ($hms >> 12) & 0x3FF, ($hms >> 6) & 0x3F, $hms & 0x3F);
+
+        return $fsp > 0 ? $time . '.' . sprintf('%06d', abs($microseconds)) : $time;
     }
 
     protected function getTimestamp2(ColumnDTO $columnDTO): string
@@ -752,10 +765,25 @@ class RowEvent extends EventCommon
         $datetime = date('Y-m-d H:i:s', $this->binaryDataReader->readInt32Be());
         $fsp = $this->getFSP($columnDTO);
         if ($fsp !== '') {
-            $datetime .= '.' . $fsp;
+            // getFSP() returns microseconds without leading zeros (.012 -> "12000")
+            $datetime .= '.' . str_pad($fsp, 6, '0', STR_PAD_LEFT);
         }
 
         return $datetime;
+    }
+
+    private function readUInt24Be(): int
+    {
+        $bytes = $this->binaryDataReader->read(3);
+
+        return (ord($bytes[0]) << 16) | (ord($bytes[1]) << 8) | ord($bytes[2]);
+    }
+
+    private function readUInt16Be(): int
+    {
+        $bytes = $this->binaryDataReader->read(2);
+
+        return (ord($bytes[0]) << 8) | ord($bytes[1]);
     }
 
     protected function getDate(): ?string
