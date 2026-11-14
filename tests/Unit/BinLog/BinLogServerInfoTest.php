@@ -8,6 +8,7 @@ namespace MySQLReplication\Tests\Unit\BinLog;
 
 use MySQLReplication\BinLog\BinLogAuthPluginMode;
 use MySQLReplication\BinLog\BinLogServerInfo;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class BinLogServerInfoTest extends TestCase
@@ -128,5 +129,36 @@ class BinLogServerInfoTest extends TestCase
         self::assertSame(10, $info->protocolVersion);
         self::assertSame('8.0.28', $info->serverVersion);
         self::assertSame(7, $info->connectionId);
+    }
+
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function yearSignednessProvider(): array
+    {
+        return [
+            'MySQL 8.0.21' => ['8.0.21', 'MySQL', false],
+            'MySQL 8.0.22' => ['8.0.22', 'MySQL', true],
+            'MySQL 8.4 with suffix' => ['8.4.13-log', 'MySQL', true],
+            'Percona 8.0.20' => ['8.0.20-11', 'Percona', false],
+            'MariaDB' => ['5.5.5-10.6.5-MariaDB', 'MariaDB', true],
+        ];
+    }
+
+    #[DataProvider('yearSignednessProvider')]
+    public function testShouldKnowWhetherYearOwnsASignednessBit(string $serverVersion, string $versionName, bool $expected): void
+    {
+        $info = new BinLogServerInfo(
+            10,
+            $serverVersion,
+            1,
+            'salt',
+            45,
+            BinLogAuthPluginMode::MysqlNativePassword,
+            $versionName,
+            (float)$serverVersion
+        );
+
+        self::assertSame($expected, $info->writesYearSignedness());
     }
 }

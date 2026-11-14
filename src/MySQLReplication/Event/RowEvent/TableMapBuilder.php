@@ -23,7 +23,8 @@ readonly class TableMapBuilder
     public function __construct(
         private RepositoryInterface $repository,
         private Config $config,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private bool $yearHasSignedness = true
     ) {
     }
 
@@ -96,7 +97,8 @@ readonly class TableMapBuilder
         return TableMapMetadata::parse(
             $binaryDataReader,
             $metadataLength,
-            array_map(static fn (ColumnDTO $columnDTO): int => $columnDTO->type, $rawColumnDTOs)
+            array_map(static fn (ColumnDTO $columnDTO): int => $columnDTO->type, $rawColumnDTOs),
+            $this->yearHasSignedness
         );
     }
 

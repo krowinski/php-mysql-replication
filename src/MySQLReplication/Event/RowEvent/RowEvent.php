@@ -304,7 +304,7 @@ class RowEvent extends EventCommon
     ) {
         parent::__construct($eventInfo, $binaryDataReader, $binLogServerInfo);
 
-        $this->tableMapBuilder = new TableMapBuilder($repository, $config, $logger);
+        $this->tableMapBuilder = new TableMapBuilder($repository, $config, $logger, $binLogServerInfo->writesYearSignedness());
     }
 
     /**
