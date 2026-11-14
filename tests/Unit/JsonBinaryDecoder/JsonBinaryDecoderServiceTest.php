@@ -59,6 +59,33 @@ class JsonBinaryDecoderServiceTest extends TestCase
         self::assertStringContainsString('3.14', $result);
     }
 
+    public function testShouldSkipTheWholeInlinedSlotInLargeArrays(): void
+    {
+        // [true, 7, null] in the large format: value entries are 1 type byte + 4 bytes, even
+        // when the inlined value is a 1-byte literal or a 2-byte int16
+        $binary = pack('C', JsonBinaryDecoderService::LARGE_ARRAY)
+            . pack('VV', 3, 8 + 3 * 5)
+            . pack('CV', JsonBinaryDecoderService::LITERAL, JsonBinaryDecoderService::LITERAL_TRUE)
+            . pack('CV', JsonBinaryDecoderService::INT16, 7)
+            . pack('CV', JsonBinaryDecoderService::LITERAL, JsonBinaryDecoderService::LITERAL_NULL);
+        $service = JsonBinaryDecoderService::makeJsonBinaryDecoder($binary);
+        self::assertSame('[true,7,null]', $service->parseToString());
+    }
+
+    public function testShouldSkipTheWholeInlinedSlotInLargeObjects(): void
+    {
+        // {"a":true,"b":7} in the large format: key entries (4-byte offset + 2-byte length),
+        // then value entries of 1 type byte + 4 bytes, then the key names at offsets 30 and 31
+        $binary = pack('C', JsonBinaryDecoderService::LARGE_OBJECT)
+            . pack('VV', 2, 32)
+            . pack('Vv', 30, 1) . pack('Vv', 31, 1)
+            . pack('CV', JsonBinaryDecoderService::LITERAL, JsonBinaryDecoderService::LITERAL_TRUE)
+            . pack('CV', JsonBinaryDecoderService::INT16, 7)
+            . 'ab';
+        $service = JsonBinaryDecoderService::makeJsonBinaryDecoder($binary);
+        self::assertSame('{"a":true,"b":7}', $service->parseToString());
+    }
+
     public function testShouldThrowExceptionForUnknownType(): void
     {
         $this->expectException(JsonBinaryDecoderException::class);
