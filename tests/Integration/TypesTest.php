@@ -792,8 +792,8 @@ class TypesTest extends BaseCase
         }
 
         $event = $this->createAndInsertValue(
-            'CREATE TABLE test (a TIME, b TIME, c TIME(2), d TIME(4), e TIME(6), f TIME(6))',
-            'INSERT INTO test VALUES ("30:00:00", "-01:02:03", "-837:59:59.99", "-00:00:00.0001", "838:59:59.000000", "-12:33:07.123456")'
+            'CREATE TABLE test (a TIME, b TIME, c TIME(2), d TIME(4), e TIME(6), f TIME(6), g TIME(1), h TIME(3), i TIME(5), j TIME(2), k TIME(4))',
+            'INSERT INTO test VALUES ("30:00:00", "-01:02:03", "-837:59:59.99", "-00:00:00.0001", "838:59:59.000000", "-12:33:07.123456", "-00:00:01.5", "-10:00:00.001", "-00:00:00.00001", "-00:00:01.00", "-02:00:00.0000")'
         );
 
         self::assertSame('30:00:00', $event->values[0]['a']);
@@ -802,6 +802,11 @@ class TypesTest extends BaseCase
         self::assertSame('-00:00:00.000100', $event->values[0]['d']);
         self::assertSame('838:59:59.000000', $event->values[0]['e']);
         self::assertSame('-12:33:07.123456', $event->values[0]['f']);
+        self::assertSame('-00:00:01.500000', $event->values[0]['g']);
+        self::assertSame('-10:00:00.001000', $event->values[0]['h']);
+        self::assertSame('-00:00:00.000010', $event->values[0]['i']);
+        self::assertSame('-00:00:01.000000', $event->values[0]['j']);
+        self::assertSame('-02:00:00.000000', $event->values[0]['k']);
     }
 
     public function testShouldBeJson(): void

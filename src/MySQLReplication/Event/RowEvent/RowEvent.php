@@ -731,32 +731,33 @@ class RowEvent extends EventCommon
         $intPart = $this->readUInt24Be() - 0x800000;
         $fsp = $columnDTO->fsp;
 
-        if ($fsp === 1 || $fsp === 2) {
-            $frac = $this->binaryDataReader->readUInt8();
-            if ($intPart < 0 && $frac !== 0) {
-                ++$intPart;
-                $frac -= 0x100;
-            }
-            $packed = $intPart * 0x1000000 + $frac * 10000;
-        } elseif ($fsp === 3 || $fsp === 4) {
-            $frac = $this->readUInt16Be();
-            if ($intPart < 0 && $frac !== 0) {
-                ++$intPart;
-                $frac -= 0x10000;
-            }
-            $packed = $intPart * 0x1000000 + $frac * 100;
-        } elseif ($fsp === 5 || $fsp === 6) {
-            $packed = ($intPart + 0x800000) * 0x1000000 + $this->readUInt24Be() - 0x800000000000;
-        } else {
-            $packed = $intPart * 0x1000000;
-        }
+        // fraction bytes and the factor that turns them into microseconds
+        [$fracBytes, $scale] = match ($fsp) {
+            1, 2 => [1, 10000],
+            3, 4 => [2, 100],
+            5, 6 => [3, 1],
+            default => [0, 0],
+        };
 
-        $sign = $packed < 0 ? '-' : '';
-        $packed = abs($packed);
-        $hms = $packed >> 24;
+        $frac = match ($fracBytes) {
+            1 => $this->binaryDataReader->readUInt8(),
+            2 => $this->readUInt16Be(),
+            3 => $this->readUInt24Be(),
+            default => 0,
+        };
+        // a negative value stores its fraction as a borrow from the integer part
+        if ($intPart < 0 && $frac !== 0) {
+            ++$intPart;
+            $frac -= 1 << (8 * $fracBytes);
+        }
+        $microseconds = $frac * $scale;
+
+        // keep the parts apart rather than packing them into one 48-bit value, so this also fits 32-bit PHP
+        $sign = $intPart < 0 || $microseconds < 0 ? '-' : '';
+        $hms = abs($intPart);
         $time = sprintf('%s%02d:%02d:%02d', $sign, ($hms >> 12) & 0x3FF, ($hms >> 6) & 0x3F, $hms & 0x3F);
 
-        return $fsp > 0 ? $time . '.' . sprintf('%06d', $packed % 0x1000000) : $time;
+        return $fsp > 0 ? $time . '.' . sprintf('%06d', abs($microseconds)) : $time;
     }
 
     protected function getTimestamp2(ColumnDTO $columnDTO): string
