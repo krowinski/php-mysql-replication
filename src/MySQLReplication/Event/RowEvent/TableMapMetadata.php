@@ -18,9 +18,10 @@ readonly class TableMapMetadata
 {
     /**
      * Binlog types that own a bit in the SIGNEDNESS field. Must match the server's
-     * has_signedess_information_type() (sql/field_common_properties.h in MySQL 8.0/8.4;
+     * has_signedess_information_type() (sql/field_common_properties.h in MySQL 8.4;
      * MariaDB's Field_year inherits Field_num signedness too): YEAR and the pre-5.0 DECIMAL
      * carry a sign modifier and therefore a bit, even though it is ignored for YEAR.
+     * MySQL before 8.0.22 wrote no bit for YEAR, see BinLogServerInfo::writesYearSignedness().
      * Leaving one out shifts every later numeric column's unsigned flag.
      */
     private const NUMERIC_TYPES = [
@@ -47,14 +48,19 @@ readonly class TableMapMetadata
 
     /**
      * @param array<int, int> $resolvedColumnTypes column offset => resolved ConstFieldType (ENUM/SET already resolved)
+     * @param bool $yearHasSignedness false for MySQL before 8.0.22, which wrote no SIGNEDNESS bit for YEAR
      */
-    public static function parse(BinaryDataReader $binaryDataReader, int $totalBytes, array $resolvedColumnTypes): self
-    {
+    public static function parse(
+        BinaryDataReader $binaryDataReader,
+        int $totalBytes,
+        array $resolvedColumnTypes,
+        bool $yearHasSignedness = true
+    ): self {
         $numericOffsets = [];
         $enumOffsets = [];
         $setOffsets = [];
         foreach ($resolvedColumnTypes as $offset => $type) {
-            if (in_array($type, self::NUMERIC_TYPES, true)) {
+            if (in_array($type, self::NUMERIC_TYPES, true) && ($yearHasSignedness || $type !== ConstFieldType::YEAR)) {
                 $numericOffsets[] = $offset;
             } elseif ($type === ConstFieldType::ENUM) {
                 $enumOffsets[] = $offset;

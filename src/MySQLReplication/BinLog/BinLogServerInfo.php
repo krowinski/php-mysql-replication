@@ -108,6 +108,20 @@ readonly class BinLogServerInfo
     }
 
     /**
+     * Whether a YEAR column owns a bit in the TABLE_MAP SIGNEDNESS field: always on MariaDB,
+     * and on MySQL/Percona from 8.0.22 (before that, is_numeric_type() in sql/field.h left YEAR out).
+     */
+    public function writesYearSignedness(): bool
+    {
+        if ($this->isMariaDb()) {
+            return true;
+        }
+
+        return preg_match('/^\d+\.\d+\.\d+/', $this->serverVersion, $matches) === 1
+            && version_compare($matches[0], '8.0.22', '>=');
+    }
+
+    /**
      * @see http://stackoverflow.com/questions/37317869/determine-if-mysql-or-percona-or-mariadb
      */
     private static function parseVersion(string $version): string

@@ -51,7 +51,8 @@ class TableMapMetadataTest extends TestCase
     {
         // MySQL/MariaDB write a SIGNEDNESS bit for every column whose binlog type carries a sign
         // modifier, which includes YEAR and the pre-5.0 DECIMAL (has_signedess_information_type()).
-        // Columns: YEAR, INT UNSIGNED, old DECIMAL, BIGINT (signed), INT UNSIGNED -> bits 0,1,0,0,1
+        // Columns: YEAR, INT UNSIGNED, old DECIMAL, BIGINT (signed), INT UNSIGNED -> bits 1,1,0,0,1
+        // (the server builds YEAR as unsigned)
         $types = [
             0 => ConstFieldType::YEAR,
             1 => ConstFieldType::LONG,
@@ -59,13 +60,31 @@ class TableMapMetadataTest extends TestCase
             3 => ConstFieldType::LONGLONG,
             4 => ConstFieldType::LONG,
         ];
-        $blob = chr(ConstTableMapMetadataFieldType::SIGNEDNESS) . chr(1) . chr(0b01001000);
+        $blob = chr(ConstTableMapMetadataFieldType::SIGNEDNESS) . chr(1) . chr(0b11001000);
 
         $metadata = TableMapMetadata::parse(new BinaryDataReader($blob), strlen($blob), $types);
 
         self::assertTrue($metadata->isUnsigned(1));
         self::assertFalse($metadata->isUnsigned(3));
         self::assertTrue($metadata->isUnsigned(4));
+    }
+
+    public function testYearOwnsNoSignednessBitBeforeMySql8022(): void
+    {
+        // MySQL 8.0.1-8.0.21: YEAR, INT UNSIGNED, BIGINT (signed), INT UNSIGNED -> bits 1,0,1
+        $types = [
+            0 => ConstFieldType::YEAR,
+            1 => ConstFieldType::LONG,
+            2 => ConstFieldType::LONGLONG,
+            3 => ConstFieldType::LONG,
+        ];
+        $blob = chr(ConstTableMapMetadataFieldType::SIGNEDNESS) . chr(1) . chr(0b10100000);
+
+        $metadata = TableMapMetadata::parse(new BinaryDataReader($blob), strlen($blob), $types, false);
+
+        self::assertTrue($metadata->isUnsigned(1));
+        self::assertFalse($metadata->isUnsigned(2));
+        self::assertTrue($metadata->isUnsigned(3));
     }
 
     public function testShouldFallBackToGeneratedNameWhenMissing(): void
