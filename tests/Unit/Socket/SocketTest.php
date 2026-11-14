@@ -11,6 +11,7 @@ use InvalidArgumentException;
 use MySQLReplication\Socket\Socket;
 use MySQLReplication\Socket\SocketException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -18,6 +19,9 @@ use RuntimeException;
  * Exercises the socket against real loopback peers. A guard alarm turns a read that would block forever
  * (the behaviour without a timeout) into a failure instead of a hung test run.
  */
+#[RequiresPhpExtension('pcntl')]
+#[RequiresPhpExtension('posix')]
+#[RequiresPhpExtension('sockets')]
 class SocketTest extends TestCase
 {
     private const GUARD_SECONDS = 8;
@@ -36,10 +40,6 @@ class SocketTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!function_exists('pcntl_alarm')) {
-            self::markTestSkipped('pcntl is required for the guard alarm.');
-        }
-
         pcntl_async_signals(true);
         pcntl_signal(SIGALRM, static function (): void {
             throw new RuntimeException('Guard alarm: the call blocked past ' . self::GUARD_SECONDS . ' s.');
@@ -224,7 +224,7 @@ class SocketTest extends TestCase
 
         $started = hrtime(true);
         try {
-            $socket->writeToSocket(str_repeat('x', 64 * 1024 * 1024));
+            $socket->writeToSocket(str_repeat('x', 32 * 1024 * 1024));
             self::fail('Expected a SocketException.');
         } catch (SocketException $exception) {
             self::assertSame(SocketException::SOCKET_WRITE_TIMEOUT_CODE, $exception->getCode());
@@ -334,11 +334,11 @@ class SocketTest extends TestCase
         $this->peer = $this->accept();
 
         try {
-            $socket->writeToSocket(str_repeat('x', 64 * 1024 * 1024));
+            $socket->writeToSocket(str_repeat('x', 32 * 1024 * 1024));
             self::fail('Expected a SocketException.');
         } catch (SocketException $exception) {
             self::assertSame(SocketException::SOCKET_WRITE_TIMEOUT_CODE, $exception->getCode());
-            self::assertMatchesRegularExpression('/^Wrote \d+ of 67108864 bytes before the write timeout of 0.5 s\.$/', $exception->getMessage());
+            self::assertMatchesRegularExpression('/^Wrote \d+ of 33554432 bytes before the write timeout of 0.5 s\.$/', $exception->getMessage());
         }
     }
 
