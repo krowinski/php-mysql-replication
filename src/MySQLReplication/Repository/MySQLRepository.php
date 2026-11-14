@@ -113,9 +113,12 @@ class MySQLRepository implements RepositoryInterface, PingableConnection
 
     public function getMasterStatus(): MasterStatusDTO
     {
+        $version = $this->getVersion();
         $query = 'SHOW MASTER STATUS';
 
-        if (str_starts_with($this->getVersion(), '8.4')) {
+        // MySQL 8.4 removed SHOW MASTER STATUS; MariaDB keeps it, and its "10.x"/"11.x"
+        // version string must not be compared against the MySQL version line.
+        if (!str_contains($version, 'MariaDB') && version_compare($version, '8.4.0') >= 0) {
             $query = 'SHOW BINARY LOG STATUS';
         }
 

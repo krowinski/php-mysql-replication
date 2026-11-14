@@ -12,8 +12,10 @@ use Doctrine\DBAL\Platforms\MySQLPlatform;
 use MySQLReplication\Repository\FieldDTOCollection;
 use MySQLReplication\Repository\MasterStatusDTO;
 use MySQLReplication\Repository\MySQLRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class MySQLRepositoryTest extends TestCase
 {
@@ -228,6 +230,47 @@ class MySQLRepositoryTest extends TestCase
             ->willReturn($expected);
 
         self::assertEquals(MasterStatusDTO::makeFromArray($expected), $this->mySQLRepositoryTest->getMasterStatus());
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function masterStatusQueryProvider(): iterable
+    {
+        yield 'MySQL 5.7' => ['5.7.44-log', 'SHOW MASTER STATUS'];
+        yield 'MySQL 8.0' => ['8.0.46', 'SHOW MASTER STATUS'];
+        yield 'MySQL 8.4' => ['8.4.13', 'SHOW BINARY LOG STATUS'];
+        yield 'MySQL 9.7' => ['9.7.4', 'SHOW BINARY LOG STATUS'];
+        yield 'MySQL 26.10' => ['26.10.0', 'SHOW BINARY LOG STATUS'];
+        yield 'MariaDB 10.6' => ['10.6.24-MariaDB-log', 'SHOW MASTER STATUS'];
+        yield 'MariaDB 11.4' => ['11.4.13-MariaDB-log', 'SHOW MASTER STATUS'];
+    }
+
+    #[DataProvider('masterStatusQueryProvider')]
+    public function testShouldGetMasterStatusWithVersionSpecificQuery(string $version, string $expectedQuery): void
+    {
+        $status = [
+            'File' => 'binlog.000002',
+            'Position' => 4,
+            'Binlog_Do_DB' => '',
+            'Binlog_Ignore_DB' => '',
+            'Executed_Gtid_Set' => '',
+        ];
+
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::exactly(2))
+            ->method('fetchAssociative')
+            ->willReturnCallback(static fn (string $query): array => match ($query) {
+                'SHOW VARIABLES LIKE "version"' => [
+                    'Value' => $version,
+                ],
+                $expectedQuery => $status,
+                default => throw new RuntimeException('Unexpected query: ' . $query),
+            });
+
+        $repository = new MySQLRepository($connection);
+
+        self::assertEquals(MasterStatusDTO::makeFromArray($status), $repository->getMasterStatus());
     }
 
     public function testShouldReconnect(): void
