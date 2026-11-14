@@ -59,6 +59,19 @@ class JsonBinaryDecoderServiceTest extends TestCase
         self::assertStringContainsString('3.14', $result);
     }
 
+    public function testShouldSkipTheWholeInlinedSlotInLargeArrays(): void
+    {
+        // [true, 7, null] in the large format: value entries are 1 type byte + 4 bytes, even
+        // when the inlined value is a 1-byte literal or a 2-byte int16
+        $binary = pack('C', JsonBinaryDecoderService::LARGE_ARRAY)
+            . pack('VV', 3, 8 + 3 * 5)
+            . pack('CV', JsonBinaryDecoderService::LITERAL, JsonBinaryDecoderService::LITERAL_TRUE)
+            . pack('CV', JsonBinaryDecoderService::INT16, 7)
+            . pack('CV', JsonBinaryDecoderService::LITERAL, JsonBinaryDecoderService::LITERAL_NULL);
+        $service = JsonBinaryDecoderService::makeJsonBinaryDecoder($binary);
+        self::assertSame('[true,7,null]', $service->parseToString());
+    }
+
     public function testShouldThrowExceptionForUnknownType(): void
     {
         $this->expectException(JsonBinaryDecoderException::class);
