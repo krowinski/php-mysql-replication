@@ -152,12 +152,15 @@ readonly class Event
      */
     private function createEventInfo(BinaryDataReader $binaryDataReader): EventInfo
     {
+        // timestamp, server id, event size and next-event position are all unsigned 32-bit
+        // fields; reading them signed turned positions past 2 GiB negative, which EventInfo then
+        // ignored, so the resume position silently stopped advancing
         return new EventInfo(
-            $binaryDataReader->readInt32(),
+            $binaryDataReader->readUInt32(),
             $binaryDataReader->readUInt8(),
-            $binaryDataReader->readInt32(),
-            $binaryDataReader->readInt32(),
-            (string)$binaryDataReader->readInt32(),
+            $binaryDataReader->readUInt32(),
+            $binaryDataReader->readUInt32(),
+            (string)$binaryDataReader->readUInt32(),
             $binaryDataReader->readUInt16(),
             $this->binLogSocketConnect->getCheckSum(),
             $this->binLogSocketConnect->getBinLogCurrent()

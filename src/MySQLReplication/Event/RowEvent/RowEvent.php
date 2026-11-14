@@ -417,7 +417,12 @@ class RowEvent extends EventCommon
             ],
             true
         )) {
-            $this->binaryDataReader->read((int)($this->binaryDataReader->readUInt16() / 8));
+            // v2 extra data: a 2-byte length that counts itself, then extra-row-info such as the
+            // partition id MySQL 8.0.16+ writes for partitioned tables (and NDB info). Skip it whole.
+            $extraDataLength = $this->binaryDataReader->readUInt16();
+            if ($extraDataLength > 2) {
+                $this->binaryDataReader->advance($extraDataLength - 2);
+            }
         }
 
         $this->binaryDataReader->readCodedBinary();
