@@ -68,8 +68,11 @@ class BasicTest extends BaseCase
 
     public function testShouldDecodeRowEventsOfAPartitionedTable(): void
     {
-        if ($this->mySQLReplicationFactory?->getServerInfo()->isMariaDb()) {
-            self::markTestSkipped('MariaDB writes no partition info into rows events');
+        $serverInfo = $this->mySQLReplicationFactory?->getServerInfo();
+        if ($serverInfo === null || $serverInfo->isMariaDb()
+            || preg_match('/^\d+\.\d+\.\d+/', $serverInfo->serverVersion, $version) !== 1
+            || version_compare($version[0], '8.0.16', '<')) {
+            self::markTestSkipped('Needs MySQL 8.0.16+, which writes the partition id into rows events');
         }
 
         // MySQL 8.0.16+ writes the partition id into the extra-row-info of every v2 rows event of a
